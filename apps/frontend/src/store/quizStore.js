@@ -31,10 +31,15 @@ export const useQuizStore = create((set) => ({
     set({ isLoading: true });
     try {
       const response = await classAPI.getMyClasses();
-      set({ classes: response.data, isLoading: false });
-      return response.data;
+      // Backend returns: { success, data: { classes: [...] } }
+      const classesArray = response.data?.data?.classes || response.data?.classes || [];
+      console.log('[QuizStore] getMyClasses response:', response.data);
+      console.log('[QuizStore] Extracted classes:', classesArray);
+      set({ classes: Array.isArray(classesArray) ? classesArray : [], isLoading: false });
+      return classesArray;
     } catch (error) {
-      set({ error: 'Failed to fetch classes', isLoading: false });
+      console.error('[QuizStore] Failed to fetch classes:', error);
+      set({ error: 'Failed to fetch classes', classes: [], isLoading: false });
       return [];
     }
   },

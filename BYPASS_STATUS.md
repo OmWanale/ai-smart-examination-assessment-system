@@ -8,7 +8,7 @@
    - Mock user object (Demo Teacher, role: teacher)
    - Bypass logic in all auth methods (login, register, getMe, logout)
    - All changes marked as TEMPORARY
-
+ 
 2. **ProtectedRoute.jsx** - No changes needed
    - Already checks for token and user
    - Since bypass sets these values, routes will work

@@ -2,7 +2,7 @@
 node_modules/
 apps/**/node_modules/
 
-# build outputs
+# builds
 apps/frontend/build/
 apps/desktop/dist/
 apps/desktop/out/
@@ -10,14 +10,17 @@ apps/desktop/out/
 # env files
 .env
 .env.local
-.env.development.local
+.env.*.local
 
 # logs
-*.log
+npm-debug.log*
+build.log
 
-# OS
-.DS_Store
-Thumbs.db
-
-# editor
+# OS / editor
 .vscode/
+.DS_Store
+
+# local logs & scripts
+backend-log.txt
+test-*.ps1
+start-backend.*

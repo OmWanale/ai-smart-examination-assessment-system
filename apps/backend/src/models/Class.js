@@ -65,6 +65,7 @@ ClassSchema.virtual("quizCount").get(function () {
 
 // Method to check if user is teacher
 ClassSchema.methods.isTeacher = function (userId) {
+  if (!this.teacher) return false;
   return this.teacher.toString() === userId.toString();
 };
 
