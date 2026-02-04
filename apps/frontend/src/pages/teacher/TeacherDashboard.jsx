@@ -75,13 +75,13 @@ export function TeacherDashboard() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {safeClasses.map((cls) => (
-                <Link key={cls._id} to={`/teacher/class/${cls._id}`}>
+                <Link key={cls.id || cls._id} to={`/teacher/class/${cls.id || cls._id}`}>
                   <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                     <h3 className="text-xl font-bold text-text-dark mb-2">{cls.name}</h3>
                     <p className="text-gray-600 text-sm mb-4">{cls.description}</p>
                     <div className="flex justify-between items-center">
                       <div className="text-sm text-gray-500">
-                        <Badge variant="secondary">{cls.students?.length || 0} students</Badge>
+                        <Badge variant="secondary">{cls.studentCount || cls.students?.length || 0} students</Badge>
                       </div>
                       <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">
                         {cls.joinCode}

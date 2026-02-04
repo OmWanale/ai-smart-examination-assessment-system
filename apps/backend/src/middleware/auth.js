@@ -1,24 +1,5 @@
 const { verifyToken, extractTokenFromHeader } = require("../utils/jwt");
 const User = require("../models/User");
-const mongoose = require("mongoose");
-
-// ============================================
-// DEV AUTH BYPASS – REMOVE BEFORE PROD
-// Allow mock token in development for frontend testing
-// ============================================
-const DEV_BYPASS_TOKEN = 'DEV_FAKE_JWT_TOKEN';
-const DEV_MOCK_USER_ID = new mongoose.Types.ObjectId('507f1f77bcf86cd799439011'); // Valid ObjectId
-const DEV_MOCK_USER = {
-  _id: DEV_MOCK_USER_ID,
-  id: DEV_MOCK_USER_ID.toString(),
-  name: 'Demo Teacher',
-  email: 'demo@teacher.com',
-  role: 'teacher',
-  isEmailVerified: true,
-  createdAt: new Date(),
-  toObject: function() { return this; }
-};
-// ============================================
 
 /**
  * Middleware to authenticate JWT token
@@ -39,19 +20,6 @@ const authenticate = async (req, res, next) => {
         success: false,
         message: "Access denied. No token provided.",
       });
-    }
-
-    // DEV AUTH BYPASS – REMOVE BEFORE PROD
-    // Accept mock token in development mode (check dynamically)
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    console.log('[AUTH] Checking token:', token.substring(0, 20) + '...');
-    console.log('[AUTH] NODE_ENV:', process.env.NODE_ENV);
-    console.log('[AUTH] isDevelopment:', isDevelopment);
-    
-    if (isDevelopment && token === DEV_BYPASS_TOKEN) {
-      console.log('[DEV BYPASS] Mock token accepted - bypassing JWT verification');
-      req.user = DEV_MOCK_USER;
-      return next();
     }
 
     // Verify token

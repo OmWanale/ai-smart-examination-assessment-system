@@ -199,8 +199,134 @@ const googleCallback = asyncHandler(async (req, res) => {
   res.redirect(`${redirectUrl}/auth/callback?token=${token}`);
 });
 
+/**
+ * @route   POST /api/auth/register/teacher
+ * @desc    Register new teacher
+ * @access  Public
+ */
+const registerTeacher = asyncHandler(async (req, res) => {
+  const { email, password, name } = req.body;
+
+  // Validation
+  if (!email || !password || !name) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide email, password, and name",
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters",
+    });
+  }
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: "User with this email already exists",
+    });
+  }
+
+  // Create teacher user
+  const user = await User.create({
+    email,
+    passwordHash: password,
+    name,
+    role: "teacher",
+  });
+
+  // Generate token with role
+  const token = generateToken({
+    id: user._id,
+    role: user.role,
+    email: user.email,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Teacher registered successfully",
+    data: {
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      token,
+    },
+  });
+});
+
+/**
+ * @route   POST /api/auth/register/student
+ * @desc    Register new student
+ * @access  Public
+ */
+const registerStudent = asyncHandler(async (req, res) => {
+  const { email, password, name } = req.body;
+
+  // Validation
+  if (!email || !password || !name) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide email, password, and name",
+    });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "Password must be at least 6 characters",
+    });
+  }
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: "User with this email already exists",
+    });
+  }
+
+  // Create student user
+  const user = await User.create({
+    email,
+    passwordHash: password,
+    name,
+    role: "student",
+  });
+
+  // Generate token with role
+  const token = generateToken({
+    id: user._id,
+    role: user.role,
+    email: user.email,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Student registered successfully",
+    data: {
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+      token,
+    },
+  });
+});
+
 module.exports = {
   register,
+  registerTeacher,
+  registerStudent,
   login,
   getMe,
   googleCallback,

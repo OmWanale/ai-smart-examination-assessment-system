@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { OAuthCallback } from './pages/OAuthCallback';
 import { NotFoundPage, UnauthorizedPage } from './pages/ErrorPages';
@@ -17,11 +19,34 @@ import { useAuthStore } from './store/authStore';
 import './App.css';
 
 function App() {
-  const { user } = useAuthStore();
+  const { user, initializeAuth, isInitialized } = useAuthStore();
+
+  useEffect(() => {
+    initializeAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Show loading screen while initializing
+  if (!isInitialized) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        backgroundColor: '#f5f5f5',
+        fontSize: '18px',
+        color: '#666'
+      }}>
+        Loading...
+      </div>
+    );
+  }
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
         {/* Public Routes */}
         <Route
           path="/login"
@@ -95,7 +120,8 @@ function App() {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

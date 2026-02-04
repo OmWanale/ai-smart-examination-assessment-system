@@ -29,18 +29,27 @@ export function CreateClass() {
       return;
     }
 
-    // Create class
-    const result = await createClass(name.trim(), description.trim());
-    if (result.success) {
-      setCreatedClass(result.data);
-    } else {
-      setErrors({ submit: result.error });
+    try {
+      // Create class
+      const result = await createClass(name.trim(), description.trim());
+      if (result.success) {
+        console.log('[CreateClass] Class created successfully:', result.data);
+        setCreatedClass(result.data);
+      } else {
+        console.error('[CreateClass] Failed to create class:', result.error);
+        setErrors({ submit: result.error });
+      }
+    } catch (error) {
+      console.error('[CreateClass] Exception during class creation:', error);
+      setErrors({ submit: 'An unexpected error occurred while creating the class' });
     }
   };
 
   const handleGoToClass = () => {
     if (createdClass) {
-      navigate(`/teacher/class/${createdClass._id}`);
+      // Use .id (from backend response) or ._id (from Mongoose document)
+      const classId = createdClass.id || createdClass._id;
+      navigate(`/teacher/class/${classId}`);
     }
   };
 

@@ -7,6 +7,18 @@ const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
 let mainWindow;
 let expressServer;
 
+// Catch any uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit, keep the app running
+});
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit, keep the app running
+});
+
 // Disable GPU acceleration on Windows to avoid issues
 app.disableHardwareAcceleration();
 
@@ -95,10 +107,10 @@ function createWindow() {
     console.log('✅ Window is now VISIBLE');
   });
 
-  // Open DevTools in development
-  if (isDevelopment) {
-    mainWindow.webContents.openDevTools();
-  }
+  // Open DevTools in development (disabled for now - may cause issues)
+  // if (isDevelopment) {
+  //   mainWindow.webContents.openDevTools();
+  // }
 
   // Handle window closed
   mainWindow.on('closed', () => {
@@ -108,8 +120,15 @@ function createWindow() {
 
   // Handle any unhandled exceptions
   mainWindow.webContents.on('crashed', () => {
-    console.error('Renderer process crashed');
+    console.error('🔴 Renderer process crashed');
     mainWindow.reload();
+  });
+
+  // Handle renderer process errors and exceptions
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('🔴 Render process gone:', details);
+    console.error('   Reason:', details.reason);
+    console.error('   Exit code:', details.exitCode);
   });
 }
 
@@ -132,18 +151,19 @@ app.on('ready', async () => {
  * Handle app quit
  */
 app.on('window-all-closed', () => {
-  console.log('📋 window-all-closed event fired');
-  // Close Express server
+  console.log('📋 window-all-closed event fired - NOT quitting');
+  // Don't quit - keep app running even if window is closed
+  // User can manually close app with Ctrl+C or window close button
+  // Close Express server gracefully
   if (expressServer) {
     console.log('   Closing Express server...');
     expressServer.close();
   }
   // On macOS, keep app active until explicitly quit
-  if (process.platform !== 'darwin') {
-    console.log('   Platform is Windows/Linux - calling app.quit()');
-    app.quit();
-  } else {
+  if (process.platform === 'darwin') {
     console.log('   Platform is macOS - keeping app alive');
+  } else {
+    console.log('   Keeping app alive to prevent premature exit');
   }
 });
 

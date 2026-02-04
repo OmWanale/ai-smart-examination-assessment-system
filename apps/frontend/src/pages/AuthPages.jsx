@@ -7,6 +7,7 @@ import { AuthLayout } from '../components/Layout.jsx';
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState('student');
   const [errors, setErrors] = useState({});
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -37,8 +38,16 @@ export function LoginPage() {
 
     const result = await login(email, password);
     if (result.success) {
-      const user = JSON.parse(localStorage.getItem('user'));
-      navigate(user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', {
+      // Check if user's actual role matches selected role
+      if (result.user.role !== role) {
+        setErrors((prev) => ({ 
+          ...prev, 
+          submit: `This account is registered as a ${result.user.role}, not a ${role}. Please select the correct role or use the right account.` 
+        }));
+        return;
+      }
+      
+      navigate(result.user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', {
         replace: true,
       });
     } else {
@@ -75,6 +84,37 @@ export function LoginPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Role Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setRole('student')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  role === 'student'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl mb-1">👨‍🎓</span>
+                <span className="block font-medium">Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('teacher')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  role === 'teacher'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl mb-1">👨‍🏫</span>
+                <span className="block font-medium">Teacher</span>
+              </button>
+            </div>
+          </div>
+
           <Input
             label="Email"
             type="email"
@@ -99,7 +139,7 @@ export function LoginPage() {
                 <span className="animate-spin">⏳</span> Logging in...
               </span>
             ) : (
-              'Login'
+              `Login as ${role === 'teacher' ? 'Teacher' : 'Student'}`
             )}
           </Button>
         </form>
@@ -156,6 +196,8 @@ export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('student');
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
@@ -168,6 +210,10 @@ export function RegisterPage() {
 
     let hasErrors = false;
 
+    if (!name) {
+      setErrors((prev) => ({ ...prev, name: 'Name is required' }));
+      hasErrors = true;
+    }
     if (!email) {
       setErrors((prev) => ({ ...prev, email: 'Email is required' }));
       hasErrors = true;
@@ -189,10 +235,9 @@ export function RegisterPage() {
 
     if (hasErrors) return;
 
-    const result = await register(email, password);
+    const result = await register(email, password, name, role);
     if (result.success) {
-      const user = JSON.parse(localStorage.getItem('user'));
-      navigate(user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', {
+      navigate(result.user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', {
         replace: true,
       });
     } else {
@@ -223,6 +268,46 @@ export function RegisterPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Role Selector */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setRole('student')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  role === 'student'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl mb-1">👨‍🎓</span>
+                <span className="block font-medium">Student</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRole('teacher')}
+                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
+                  role === 'teacher'
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl mb-1">👨‍🏫</span>
+                <span className="block font-medium">Teacher</span>
+              </button>
+            </div>
+          </div>
+
+          <Input
+            label="Full Name"
+            type="text"
+            placeholder="John Doe"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            error={errors.name}
+            autoComplete="name"
+          />
           <Input
             label="Email"
             type="email"
@@ -256,7 +341,7 @@ export function RegisterPage() {
                 <span className="animate-spin">⏳</span> Creating account...
               </span>
             ) : (
-              'Sign Up'
+              `Sign Up as ${role === 'teacher' ? 'Teacher' : 'Student'}`
             )}
           </Button>
         </form>

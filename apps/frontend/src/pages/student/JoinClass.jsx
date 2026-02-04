@@ -26,11 +26,20 @@ export function JoinClass() {
       return;
     }
 
-    const result = await joinClass(joinCode.trim().toUpperCase());
-    if (result.success) {
-      navigate(`/student/class/${result.data._id}`);
-    } else {
-      setErrors({ submit: result.error });
+    try {
+      const result = await joinClass(joinCode.trim().toUpperCase());
+      if (result.success) {
+        console.log('[JoinClass] Successfully joined class:', result.data);
+        // Use .id (from backend response) or ._id (from Mongoose document)
+        const classId = result.data.id || result.data._id;
+        navigate(`/student/class/${classId}`);
+      } else {
+        console.error('[JoinClass] Failed to join class:', result.error);
+        setErrors({ submit: result.error });
+      }
+    } catch (error) {
+      console.error('[JoinClass] Exception during class join:', error);
+      setErrors({ submit: 'An unexpected error occurred while joining the class' });
     }
   };
 

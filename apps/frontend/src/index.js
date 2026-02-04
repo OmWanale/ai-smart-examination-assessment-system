@@ -14,6 +14,22 @@ const isElectron = () => {
   );
 };
 
+// Add global error handlers to catch all unhandled errors
+window.addEventListener('error', (event) => {
+  console.error('🔴 GLOBAL ERROR:', event.error);
+  console.error('Stack:', event.error?.stack);
+  console.error('Message:', event.message);
+  console.error('Filename:', event.filename);
+  console.error('Line:', event.lineno, 'Col:', event.colno);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('🔴 UNHANDLED PROMISE REJECTION:', event.reason);
+  if (event.reason?.stack) {
+    console.error('Stack:', event.reason.stack);
+  }
+});
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 // DEVELOPMENT FIX: Disable StrictMode in Electron to prevent flickering

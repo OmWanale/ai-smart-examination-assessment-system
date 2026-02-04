@@ -2,6 +2,8 @@ const express = require("express");
 const passport = require("passport");
 const {
   register,
+  registerTeacher,
+  registerStudent,
   login,
   getMe,
   googleCallback,
@@ -12,10 +14,24 @@ const router = express.Router();
 
 /**
  * @route   POST /api/auth/register
- * @desc    Register new user
+ * @desc    Register new user (legacy - accepts role in body)
  * @access  Public
  */
 router.post("/register", register);
+
+/**
+ * @route   POST /api/auth/register/teacher
+ * @desc    Register new teacher
+ * @access  Public
+ */
+router.post("/register/teacher", registerTeacher);
+
+/**
+ * @route   POST /api/auth/register/student
+ * @desc    Register new student
+ * @access  Public
+ */
+router.post("/register/student", registerStudent);
 
 /**
  * @route   POST /api/auth/login

@@ -55,25 +55,29 @@ ClassSchema.index({ students: 1 });
 
 // Virtual for student count
 ClassSchema.virtual("studentCount").get(function () {
-  return this.students.length;
+  return this.students ? this.students.length : 0;
 });
 
 // Virtual for quiz count
 ClassSchema.virtual("quizCount").get(function () {
-  return this.quizzes.length;
+  return this.quizzes ? this.quizzes.length : 0;
 });
 
 // Method to check if user is teacher
 ClassSchema.methods.isTeacher = function (userId) {
   if (!this.teacher) return false;
-  return this.teacher.toString() === userId.toString();
+  // Handle both ObjectId and populated teacher object
+  const teacherId = this.teacher._id || this.teacher;
+  return teacherId.toString() === userId.toString();
 };
 
 // Method to check if user is student
 ClassSchema.methods.isStudent = function (userId) {
-  return this.students.some(
-    (studentId) => studentId.toString() === userId.toString()
-  );
+  return this.students.some((student) => {
+    // Handle both ObjectId and populated student object
+    const studentId = student._id || student;
+    return studentId.toString() === userId.toString();
+  });
 };
 
 // Method to add student

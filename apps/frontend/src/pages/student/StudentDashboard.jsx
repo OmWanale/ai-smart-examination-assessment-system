@@ -69,7 +69,7 @@ export function StudentDashboard() {
         ) : (
           <div className="space-y-4">
             {classes.map((classItem) => (
-              <Link key={classItem._id} to={`/student/class/${classItem._id}`}>
+              <Link key={classItem.id || classItem._id} to={`/student/class/${classItem.id || classItem._id}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <div className="flex justify-between items-start mb-3">
                     <div>
@@ -79,15 +79,15 @@ export function StudentDashboard() {
                       )}
                     </div>
                     <Badge variant="primary">
-                      {classItem.quizzes?.length || 0} quizzes
+                      {classItem.quizCount || classItem.quizzes?.length || 0} quizzes
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="text-gray-600">
-                      Taught by <strong>{classItem.teacher?.email || 'Unknown'}</strong>
+                      Taught by <strong>{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
                     </div>
                     <div className="text-gray-500">
-                      {classItem.students?.length || 0} students
+                      {classItem.studentCount || classItem.students?.length || 0} students
                     </div>
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-200">

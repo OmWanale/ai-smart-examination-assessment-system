@@ -17,8 +17,6 @@ apiClient.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      // DEV AUTH BYPASS – REMOVE BEFORE PROD
-      console.log('[API Client] Attaching token to:', config.url);
     }
     
     return config;
@@ -37,13 +35,18 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );
 
 export const authAPI = {
-  register: (email, password) =>
-    apiClient.post('/auth/register', { email, password }),
+  register: (email, password, name, role) =>
+    apiClient.post('/auth/register', { email, password, name, role }),
+  registerTeacher: (email, password, name) =>
+    apiClient.post('/auth/register/teacher', { email, password, name }),
+  registerStudent: (email, password, name) =>
+    apiClient.post('/auth/register/student', { email, password, name }),
   login: (email, password) =>
     apiClient.post('/auth/login', { email, password }),
   getMe: () => apiClient.get('/auth/me'),
