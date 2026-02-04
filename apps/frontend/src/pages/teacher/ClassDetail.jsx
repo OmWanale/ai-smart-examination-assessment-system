@@ -25,8 +25,22 @@ export function ClassDetail() {
     setError(null);
     try {
       const response = await classAPI.getClass(classId);
-      setClassData(response.data);
+      // Backend returns: { success, data: { class: { ... } } }
+      const rawData = response.data?.data?.class || response.data?.class || response.data;
+      console.log('[ClassDetail] Raw API response:', response.data);
+      console.log('[ClassDetail] Extracted class data:', rawData);
+      
+      // Normalize data - ensure students and quizzes are always arrays
+      const normalizedData = {
+        ...rawData,
+        students: Array.isArray(rawData?.students) ? rawData.students : [],
+        quizzes: Array.isArray(rawData?.quizzes) ? rawData.quizzes : [],
+      };
+      console.log('[ClassDetail] Normalized class data:', normalizedData);
+      
+      setClassData(normalizedData);
     } catch (err) {
+      console.error('[ClassDetail] Error loading class:', err);
       setError(err.response?.data?.message || 'Failed to load class details');
     } finally {
       setIsLoading(false);
@@ -136,7 +150,7 @@ export function ClassDetail() {
         {/* Students List */}
         <Card className="mt-6">
           <h2 className="text-xl font-semibold text-text-dark mb-4">Enrolled Students</h2>
-          {!classData.students || classData.students.length === 0 ? (
+          {!Array.isArray(classData.students) || classData.students.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400 mb-3"
@@ -156,7 +170,7 @@ export function ClassDetail() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {classData.students.map((student, index) => (
+              {(classData.students || []).map((student, index) => (
                 <div
                   key={student._id || index}
                   className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
@@ -188,7 +202,7 @@ export function ClassDetail() {
             </Link>
           </div>
 
-          {!quizzes || quizzes.length === 0 ? (
+          {!Array.isArray(quizzes) || quizzes.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400 mb-3"
@@ -208,7 +222,7 @@ export function ClassDetail() {
             </div>
           ) : (
             <div className="space-y-3">
-              {quizzes.map((quiz) => (
+              {(quizzes || []).map((quiz) => (
                 <div
                   key={quiz._id}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"

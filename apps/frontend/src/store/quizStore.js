@@ -15,11 +15,15 @@ export const useQuizStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await classAPI.createClass(name, description);
+      // Backend returns: { success, message, data: { class: { ... } } }
+      const classData = response.data?.data?.class || response.data?.class || response.data;
+      console.log('[QuizStore] createClass response:', response.data);
+      console.log('[QuizStore] Extracted class data:', classData);
       set((state) => ({
-        classes: [...state.classes, response.data],
+        classes: [...state.classes, classData],
         isLoading: false,
       }));
-      return { success: true, data: response.data };
+      return { success: true, data: classData };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to create class';
       set({ error: message, isLoading: false });
@@ -48,11 +52,15 @@ export const useQuizStore = create((set) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await classAPI.joinByCode(joinCode);
+      // Backend returns: { success, message, data: { class: { ... } } }
+      const classData = response.data?.data?.class || response.data?.class || response.data;
+      console.log('[QuizStore] joinClass response:', response.data);
+      console.log('[QuizStore] Extracted class data:', classData);
       set((state) => ({
-        classes: [...state.classes, response.data],
+        classes: [...state.classes, classData],
         isLoading: false,
       }));
-      return { success: true, data: response.data };
+      return { success: true, data: classData };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to join class';
       set({ error: message, isLoading: false });
@@ -108,10 +116,17 @@ export const useQuizStore = create((set) => ({
     set({ isLoading: true });
     try {
       const response = await quizAPI.getQuizzesForClass(classId);
-      set({ quizzes: response.data, isLoading: false });
-      return response.data;
+      // Backend may return: { success, data: { quizzes: [...] } } or { quizzes: [...] } or [...]
+      const rawData = response.data?.data?.quizzes || response.data?.quizzes || response.data;
+      console.log('[QuizStore] getQuizzesForClass raw response:', response.data);
+      console.log('[QuizStore] Extracted quizzes:', rawData);
+      // Ensure we always have an array
+      const quizzesArray = Array.isArray(rawData) ? rawData : [];
+      set({ quizzes: quizzesArray, isLoading: false });
+      return quizzesArray;
     } catch (error) {
-      set({ error: 'Failed to fetch quizzes', isLoading: false });
+      console.error('[QuizStore] Failed to fetch quizzes:', error);
+      set({ error: 'Failed to fetch quizzes', quizzes: [], isLoading: false });
       return [];
     }
   },

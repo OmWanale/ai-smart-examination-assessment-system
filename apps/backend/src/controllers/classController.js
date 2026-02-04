@@ -158,9 +158,9 @@ const getMyClasses = asyncHandler(async (req, res) => {
       .sort({ createdAt: -1 });
   } else {
     // Students see classes they're enrolled in
+    // We need to keep students to compute count, but not return it
     classes = await Class.find({ students: userId })
       .populate("teacher", "name email")
-      .select("-students") // Don't show other students to students
       .sort({ createdAt: -1 });
   }
 
@@ -213,6 +213,14 @@ const getClassById = asyncHandler(async (req, res) => {
     });
   }
 
+  // Log the raw data for debugging
+  console.log('[getClassById] Raw classData:', JSON.stringify({
+    id: classData._id,
+    name: classData.name,
+    students: classData.students,
+    quizzes: classData.quizzes,
+  }, null, 2));
+
   res.json({
     success: true,
     data: {
@@ -222,7 +230,9 @@ const getClassById = asyncHandler(async (req, res) => {
         description: classData.description,
         joinCode: isTeacher ? classData.joinCode : undefined,
         teacher: classData.teacher,
-        students: isTeacher ? classData.students : undefined,
+        // Always return arrays, never undefined - use empty array as fallback
+        students: isTeacher ? (Array.isArray(classData.students) ? classData.students : []) : [],
+        quizzes: Array.isArray(classData.quizzes) ? classData.quizzes : [],
         studentCount: classData.studentCount,
         quizCount: classData.quizCount,
         createdAt: classData.createdAt,
