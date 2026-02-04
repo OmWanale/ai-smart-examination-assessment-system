@@ -68,13 +68,8 @@ export const quizAPI = {
   getQuizzesForClass: (classId) =>
     apiClient.get(`/quizzes/class/${classId}`),
   getQuiz: (quizId) => apiClient.get(`/quizzes/${quizId}`),
-  generateWithAI: (classId, topic, difficulty, questionCount) =>
-    apiClient.post('/quizzes/ai-generate', {
-      classId,
-      topic,
-      difficulty,
-      questionCount,
-    }),
+  generateWithAI: (data) =>
+    apiClient.post('/quizzes/ai-generate', data),
 };
 
 export const submissionAPI = {

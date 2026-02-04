@@ -74,37 +74,68 @@ export const useQuizStore = create((set) => ({
   createQuiz: async (classId, quizData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await quizAPI.createQuiz({
-        class: classId,
-        ...quizData,
-      });
+      // Transform frontend format to backend format
+      const transformedQuestions = (quizData.questions || []).map((q) => ({
+        questionText: q.question || q.questionText,
+        options: q.options,
+        correctOptionIndex: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.correctOptionIndex,
+      }));
+
+      const payload = {
+        classId,
+        title: quizData.title,
+        description: quizData.description,
+        difficulty: quizData.difficulty || 'medium',
+        durationMinutes: quizData.timeLimit || quizData.durationMinutes || 30,
+        questions: transformedQuestions,
+      };
+
+      console.log('[QuizStore] createQuiz payload:', payload);
+
+      const response = await quizAPI.createQuiz(payload);
+      // Backend returns: { success, data: { quiz: { ... } } }
+      const quizResult = response.data?.data?.quiz || response.data?.quiz || response.data;
+      console.log('[QuizStore] createQuiz response:', response.data);
+      console.log('[QuizStore] Extracted quiz:', quizResult);
+
       set((state) => ({
-        quizzes: [...state.quizzes, response.data],
+        quizzes: [...state.quizzes, quizResult],
         isLoading: false,
       }));
-      return { success: true, data: response.data };
+      return { success: true, data: quizResult };
     } catch (error) {
+      console.error('[QuizStore] createQuiz error:', error.response?.data || error.message);
       const message = error.response?.data?.message || 'Failed to create quiz';
       set({ error: message, isLoading: false });
       return { success: false, error: message };
     }
   },
 
-  generateQuizWithAI: async (classId, topic, difficulty, questionCount) => {
+  generateQuizWithAI: async (classId, topic, difficulty, questionCount, durationMinutes = 30) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await quizAPI.generateWithAI(
+      const payload = {
         classId,
         topic,
         difficulty,
-        questionCount
-      );
+        numberOfQuestions: questionCount,
+        durationMinutes,
+      };
+      console.log('[QuizStore] generateQuizWithAI payload:', payload);
+
+      const response = await quizAPI.generateWithAI(payload);
+      // Backend returns: { success, data: { quiz: { ... } } }
+      const quizResult = response.data?.data?.quiz || response.data?.quiz || response.data;
+      console.log('[QuizStore] generateQuizWithAI response:', response.data);
+      console.log('[QuizStore] Extracted quiz:', quizResult);
+
       set((state) => ({
-        quizzes: [...state.quizzes, response.data],
+        quizzes: [...state.quizzes, quizResult],
         isLoading: false,
       }));
-      return { success: true, data: response.data };
+      return { success: true, data: quizResult };
     } catch (error) {
+      console.error('[QuizStore] generateQuizWithAI error:', error.response?.data || error.message);
       const message =
         error.response?.data?.message || 'Failed to generate quiz';
       set({ error: message, isLoading: false });

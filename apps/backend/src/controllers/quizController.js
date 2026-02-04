@@ -58,9 +58,13 @@ const createQuizRecord = async ({
     createdBy: teacherId,
   });
 
+  console.log('[createQuizRecord] Quiz created:', quiz._id, quiz.title);
+
   // Add quiz to class
   classData.quizzes.push(quiz._id);
   await classData.save();
+
+  console.log('[createQuizRecord] Quiz added to class:', classId);
 
   return { quiz };
 };
@@ -71,6 +75,8 @@ const createQuizRecord = async ({
  * @access  Private/Teacher
  */
 const createQuiz = asyncHandler(async (req, res) => {
+  console.log('[createQuiz] Request body:', JSON.stringify(req.body, null, 2));
+  
   const {
     classId,
     title,
@@ -138,6 +144,8 @@ const createQuiz = asyncHandler(async (req, res) => {
  * @access  Private/Teacher
  */
 const generateQuizWithAI = asyncHandler(async (req, res) => {
+  console.log('[generateQuizWithAI] Request body:', JSON.stringify(req.body, null, 2));
+  
   const {
     classId,
     title,

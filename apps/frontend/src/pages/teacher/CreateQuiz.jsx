@@ -124,7 +124,9 @@ export function CreateQuiz() {
       return;
     }
 
-    const result = await generateQuizWithAI(classId, topic.trim(), difficulty, count);
+    const duration = parseInt(timeLimit) || 30; // Default 30 minutes if not set
+
+    const result = await generateQuizWithAI(classId, topic.trim(), difficulty, count, duration);
     if (result.success) {
       navigate(`/teacher/class/${classId}`);
     } else {
