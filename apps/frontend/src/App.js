@@ -10,11 +10,15 @@ import { CreateClass } from './pages/teacher/CreateClass';
 import { ClassDetail } from './pages/teacher/ClassDetail';
 import { CreateQuiz } from './pages/teacher/CreateQuiz';
 import { Leaderboard } from './pages/teacher/Leaderboard';
+import { TeacherQuizReview } from './pages/teacher/TeacherQuizReview';
 import { StudentDashboard } from './pages/student/StudentDashboard';
+import { StudentClasses } from './pages/student/StudentClasses';
+import { StudentQuizzes } from './pages/student/StudentQuizzes';
 import { JoinClass } from './pages/student/JoinClass';
 import { StudentClassDetail } from './pages/student/StudentClassDetail';
 import { QuizAttempt } from './pages/student/QuizAttempt';
 import { QuizResult } from './pages/student/QuizResult';
+import { StudentQuizReview } from './pages/student/StudentQuizReview';
 import { useAuthStore } from './store/authStore';
 import './App.css';
 
@@ -93,6 +97,7 @@ function App() {
                 <Route path="class/:classId" element={<ClassDetail />} />
                 <Route path="create-quiz" element={<CreateQuiz />} />
                 <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
+                <Route path="quiz/:quizId/review" element={<TeacherQuizReview />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>
@@ -106,10 +111,13 @@ function App() {
             <ProtectedRoute requiredRole="student">
               <Routes>
                 <Route path="dashboard" element={<StudentDashboard />} />
+                <Route path="classes" element={<StudentClasses />} />
+                <Route path="quizzes" element={<StudentQuizzes />} />
                 <Route path="join-class" element={<JoinClass />} />
                 <Route path="class/:classId" element={<StudentClassDetail />} />
                 <Route path="quiz/:quizId/attempt" element={<QuizAttempt />} />
                 <Route path="quiz/:quizId/result" element={<QuizResult />} />
+                <Route path="quiz/:quizId/review" element={<StudentQuizReview />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>

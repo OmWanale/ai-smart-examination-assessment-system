@@ -27,6 +27,16 @@ const QuestionSchema = new mongoose.Schema(
         message: "Correct option index must be valid",
       },
     },
+    explanation: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    difficulty: {
+      type: String,
+      enum: ["easy", "medium", "hard"],
+      default: "medium",
+    },
   },
   { _id: false }
 );
@@ -79,6 +89,22 @@ const QuizSchema = new mongoose.Schema(
       index: true,
     },
     isActive: {
+      type: Boolean,
+      default: true,
+    },
+    isDraft: {
+      type: Boolean,
+      default: false,
+    },
+    showCorrectAnswers: {
+      type: Boolean,
+      default: true,
+    },
+    showExplanations: {
+      type: Boolean,
+      default: true,
+    },
+    showResultsToStudents: {
       type: Boolean,
       default: true,
     },

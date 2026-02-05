@@ -143,6 +143,71 @@ export const useQuizStore = create((set) => ({
     }
   },
 
+  // Preview AI quiz without saving
+  previewQuizWithAI: async (classId, topic, difficulty, questionCount, durationMinutes) => {
+    set({ isLoading: true, error: null });
+    try {
+      const payload = {
+        classId,
+        topic,
+        difficulty,
+        numberOfQuestions: questionCount,
+        durationMinutes,
+      };
+      console.log('[QuizStore] previewQuizWithAI payload:', payload);
+
+      const response = await quizAPI.previewWithAI(payload);
+      // Backend returns: { success, data: { preview: { ... } } }
+      const previewData = response.data?.data?.preview || response.data?.preview || response.data;
+      console.log('[QuizStore] previewQuizWithAI response:', response.data);
+      console.log('[QuizStore] Preview data:', previewData);
+
+      set({ isLoading: false });
+      return { success: true, data: previewData };
+    } catch (error) {
+      console.error('[QuizStore] previewQuizWithAI error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to generate quiz preview';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Publish a previewed quiz
+  publishQuizFromPreview: async (classId, quizData) => {
+    set({ isLoading: true, error: null });
+    try {
+      const payload = {
+        classId,
+        title: quizData.title,
+        description: quizData.description,
+        difficulty: quizData.difficulty,
+        durationMinutes: quizData.durationMinutes,
+        questions: quizData.questions,
+        showCorrectAnswers: quizData.showCorrectAnswers ?? true,
+        showExplanations: quizData.showExplanations ?? true,
+        showResultsToStudents: quizData.showResultsToStudents ?? true,
+      };
+      console.log('[QuizStore] publishQuizFromPreview payload:', payload);
+
+      const response = await quizAPI.publishFromPreview(payload);
+      // Backend returns: { success, data: { quiz: { ... } } }
+      const quizResult = response.data?.data?.quiz || response.data?.quiz || response.data;
+      console.log('[QuizStore] publishQuizFromPreview response:', response.data);
+      console.log('[QuizStore] Published quiz:', quizResult);
+
+      set((state) => ({
+        quizzes: [...state.quizzes, quizResult],
+        isLoading: false,
+      }));
+      return { success: true, data: quizResult };
+    } catch (error) {
+      console.error('[QuizStore] publishQuizFromPreview error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to publish quiz';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
   getQuizzesForClass: async (classId) => {
     set({ isLoading: true });
     try {
@@ -168,10 +233,15 @@ export const useQuizStore = create((set) => ({
   submitQuiz: async (quizId, answers) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('[QuizStore] submitQuiz payload:', { quizId, answers });
       const response = await submissionAPI.submitQuiz(quizId, answers);
+      console.log('[QuizStore] submitQuiz response:', response.data);
+      // Backend returns: { success, message, data: { submission: {...} } }
+      const submissionData = response.data?.data?.submission || response.data?.submission || response.data;
       set({ isLoading: false });
-      return { success: true, data: response.data };
+      return { success: true, data: submissionData };
     } catch (error) {
+      console.error('[QuizStore] submitQuiz error:', error.response?.data || error.message);
       const message =
         error.response?.data?.message || 'Failed to submit quiz';
       set({ error: message, isLoading: false });

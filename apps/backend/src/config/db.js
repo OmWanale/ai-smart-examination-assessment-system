@@ -16,7 +16,7 @@ const connectDB = async () => {
   
   try {
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Increased for Atlas
+      serverSelectionTimeoutMS: 30000, // Increased for Atlas cold start
       socketTimeoutMS: 45000, // Increased for Atlas
     });
 

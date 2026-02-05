@@ -46,11 +46,11 @@ export const useAuthStore = create((set, get) => ({
   // Clear error
   clearError: () => set({ error: null }),
 
-  // Login with email/password
-  login: async (email, password) => {
+  // Login with email/password and role
+  login: async (email, password, role) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(email, password, role);
       const { token, user } = response.data.data;
       
       localStorage.setItem('authToken', token);

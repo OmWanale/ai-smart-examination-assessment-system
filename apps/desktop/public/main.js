@@ -2,10 +2,12 @@ const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const isDev = require('electron-is-dev');
 const path = require('path');
 const express = require('express');
+const { spawn } = require('child_process');
 const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
 
 let mainWindow;
 let expressServer;
+let backendProcess;
 
 // Catch any uncaught exceptions
 process.on('uncaughtException', (error) => {
@@ -46,6 +48,77 @@ function startExpressServer() {
     }).on('error', (err) => {
       console.error('❌ Failed to start Express server:', err);
       reject(err);
+    });
+  });
+}
+
+/**
+ * Start the backend server (port 5000)
+ */
+function startBackendServer() {
+  return new Promise((resolve, reject) => {
+    console.log('🔧 Starting backend server...');
+    const backendPath = path.join(__dirname, '../../backend');
+    
+    // Check if backend directory exists
+    const fs = require('fs');
+    const backendServerPath = path.join(backendPath, 'src', 'server.js');
+    
+    if (!fs.existsSync(backendServerPath)) {
+      console.warn('⚠️  Backend server.js not found at:', backendServerPath);
+      console.warn('   Assuming backend is running externally');
+      resolve();
+      return;
+    }
+    
+    // Spawn backend process
+    backendProcess = spawn('node', ['src/server.js'], {
+      cwd: backendPath,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, PORT: '5000' },
+      shell: true,
+    });
+    
+    let started = false;
+    let startupTimeout;
+    
+    // Set timeout for backend startup
+    startupTimeout = setTimeout(() => {
+      if (!started) {
+        console.warn('⚠️  Backend startup timeout - continuing anyway');
+        resolve();
+      }
+    }, 15000);
+    
+    backendProcess.stdout.on('data', (data) => {
+      const output = data.toString();
+      console.log('📦 Backend:', output.trim());
+      
+      // Check if backend started successfully
+      if (output.includes('Server running on port') || output.includes('Backend ready')) {
+        if (!started) {
+          started = true;
+          clearTimeout(startupTimeout);
+          console.log('✅ Backend server started on port 5000');
+          resolve();
+        }
+      }
+    });
+    
+    backendProcess.stderr.on('data', (data) => {
+      console.error('📦 Backend Error:', data.toString().trim());
+    });
+    
+    backendProcess.on('error', (err) => {
+      console.error('❌ Failed to start backend:', err);
+      clearTimeout(startupTimeout);
+      // Don't reject - allow app to continue without backend
+      resolve();
+    });
+    
+    backendProcess.on('close', (code) => {
+      console.log(`📦 Backend process exited with code ${code}`);
+      backendProcess = null;
     });
   });
 }
@@ -136,9 +209,15 @@ function createWindow() {
  * Handle app ready event
  */
 app.on('ready', async () => {
-  console.log('⚙️  App ready, starting Express server...');
+  console.log('⚙️  App ready, starting servers...');
   try {
+    // Start backend first (port 5000)
+    await startBackendServer();
+    
+    // Then start Express server for frontend (port 4000)
     await startExpressServer();
+    
+    // Finally create the window
     createWindow();
     createMenu();
   } catch (err) {
@@ -151,20 +230,23 @@ app.on('ready', async () => {
  * Handle app quit
  */
 app.on('window-all-closed', () => {
-  console.log('📋 window-all-closed event fired - NOT quitting');
-  // Don't quit - keep app running even if window is closed
-  // User can manually close app with Ctrl+C or window close button
+  console.log('📋 window-all-closed event fired');
+  
+  // Close backend process
+  if (backendProcess) {
+    console.log('   Stopping backend server...');
+    backendProcess.kill('SIGTERM');
+    backendProcess = null;
+  }
+  
   // Close Express server gracefully
   if (expressServer) {
     console.log('   Closing Express server...');
     expressServer.close();
   }
-  // On macOS, keep app active until explicitly quit
-  if (process.platform === 'darwin') {
-    console.log('   Platform is macOS - keeping app alive');
-  } else {
-    console.log('   Keeping app alive to prevent premature exit');
-  }
+  
+  // Quit on all platforms
+  app.quit();
 });
 
 /**
@@ -174,6 +256,17 @@ app.on('activate', () => {
   // On macOS, re-create window when dock icon is clicked
   if (mainWindow === null) {
     createWindow();
+  }
+});
+
+/**
+ * Handle before-quit to clean up processes
+ */
+app.on('before-quit', () => {
+  console.log('🔴 App is quitting...');
+  if (backendProcess) {
+    backendProcess.kill('SIGTERM');
+    backendProcess = null;
   }
 });
 

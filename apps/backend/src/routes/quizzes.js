@@ -2,8 +2,12 @@ const express = require("express");
 const {
   createQuiz,
   generateQuizWithAI,
+  previewQuizWithAI,
+  publishQuizFromPreview,
   getQuizzesForClass,
   getQuizById,
+  getQuizForTeacher,
+  getQuizReviewForStudent,
 } = require("../controllers/quizController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -21,10 +25,24 @@ router.post("/", authorize("teacher"), createQuiz);
 
 /**
  * @route   POST /api/quizzes/ai-generate
- * @desc    Generate a quiz using AI
+ * @desc    Generate a quiz using AI (direct create)
  * @access  Private/Teacher
  */
 router.post("/ai-generate", authorize("teacher"), generateQuizWithAI);
+
+/**
+ * @route   POST /api/quizzes/ai-preview
+ * @desc    Preview AI generated quiz without saving
+ * @access  Private/Teacher
+ */
+router.post("/ai-preview", authorize("teacher"), previewQuizWithAI);
+
+/**
+ * @route   POST /api/quizzes/ai-publish
+ * @desc    Publish a previewed AI quiz
+ * @access  Private/Teacher
+ */
+router.post("/ai-publish", authorize("teacher"), publishQuizFromPreview);
 
 /**
  * @route   GET /api/quizzes/class/:classId
@@ -32,6 +50,20 @@ router.post("/ai-generate", authorize("teacher"), generateQuizWithAI);
  * @access  Private (teacher or enrolled student)
  */
 router.get("/class/:classId", getQuizzesForClass);
+
+/**
+ * @route   GET /api/quizzes/:id/teacher-view
+ * @desc    Get full quiz details for teacher (includes answers and explanations)
+ * @access  Private/Teacher (creator only)
+ */
+router.get("/:id/teacher-view", authorize("teacher"), getQuizForTeacher);
+
+/**
+ * @route   GET /api/quizzes/:id/student-review
+ * @desc    Get quiz review for student (based on permissions)
+ * @access  Private/Student (must have submitted)
+ */
+router.get("/:id/student-review", authorize("student"), getQuizReviewForStudent);
 
 /**
  * @route   GET /api/quizzes/:id

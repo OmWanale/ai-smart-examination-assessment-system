@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { AuthLayout } from '../components/Layout.jsx';
-import { Card } from '../components/UI.jsx';
+import { Card, Spinner } from '../components/UI.jsx';
 
 export function OAuthCallback() {
   const navigate = useNavigate();
@@ -52,10 +52,10 @@ export function OAuthCallback() {
 
   return (
     <AuthLayout>
-      <Card>
+      <Card className="text-center">
         <div className="flex flex-col items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-600">Completing sign in...</p>
+          <Spinner size="lg" />
+          <p className="mt-4 text-neutral-600 dark:text-dark-muted">Completing sign in...</p>
         </div>
       </Card>
     </AuthLayout>

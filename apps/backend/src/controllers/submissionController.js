@@ -254,7 +254,16 @@ const getSubmissionById = asyncHandler(async (req, res) => {
   // Populate class to check teacher
   await submission.quiz.populate("class", "teacher");
 
-  const isOwner = submission.isOwner(req.user._id);
+  // Debug logging
+  const studentId = submission.student._id || submission.student;
+  console.log('getSubmissionById: checking access', {
+    submissionStudentId: studentId.toString(),
+    requestUserId: req.user._id.toString(),
+    studentMatch: studentId.toString() === req.user._id.toString(),
+    teacherId: submission.quiz.class.teacher.toString(),
+  });
+
+  const isOwner = studentId.toString() === req.user._id.toString();
   const isTeacher =
     submission.quiz.class.teacher.toString() === req.user._id.toString();
 

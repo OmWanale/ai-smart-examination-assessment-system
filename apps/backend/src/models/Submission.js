@@ -70,7 +70,9 @@ SubmissionSchema.index({ quiz: 1, score: -1, submittedAt: 1 });
 
 // Method to check if submission belongs to user
 SubmissionSchema.methods.isOwner = function (userId) {
-  return this.student.toString() === userId.toString();
+  // Handle both populated and non-populated student field
+  const studentId = this.student._id || this.student;
+  return studentId.toString() === userId.toString();
 };
 
 // Static method to check if student already submitted

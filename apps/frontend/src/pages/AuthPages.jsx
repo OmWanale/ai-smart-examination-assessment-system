@@ -1,8 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Input, Alert, Card } from '../components/UI.jsx';
+import { Button, Input, Alert, Card, Spinner } from '../components/UI.jsx';
 import { useAuthStore } from '../store/authStore';
 import { AuthLayout } from '../components/Layout.jsx';
+
+// Role Selection Button Component
+function RoleButton({ role, selectedRole, onClick, icon, label }) {
+  const isSelected = role === selectedRole;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
+        isSelected
+          ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-900/20 text-primary-700 dark:text-primary-400 shadow-warm'
+          : 'border-stone-200 dark:border-dark-border bg-white dark:bg-dark-surface text-text-muted dark:text-stone-400 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/50 dark:hover:bg-dark-hover'
+      }`}
+    >
+      <span className="text-3xl">{icon}</span>
+      <span className="font-semibold">{label}</span>
+      {isSelected && (
+        <span className="text-xs text-primary-600 dark:text-primary-400">Selected</span>
+      )}
+    </button>
+  );
+}
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -36,17 +58,8 @@ export function LoginPage() {
       return;
     }
 
-    const result = await login(email, password);
+    const result = await login(email, password, role);
     if (result.success) {
-      // Check if user's actual role matches selected role
-      if (result.user.role !== role) {
-        setErrors((prev) => ({ 
-          ...prev, 
-          submit: `This account is registered as a ${result.user.role}, not a ${role}. Please select the correct role or use the right account.` 
-        }));
-        return;
-      }
-      
       navigate(result.user.role === 'teacher' ? '/teacher/dashboard' : '/student/dashboard', {
         replace: true,
       });
@@ -64,8 +77,13 @@ export function LoginPage() {
 
   return (
     <AuthLayout>
-      <Card>
-        <h2 className="text-2xl font-bold text-text-dark mb-6">Login to Quiz Desktop</h2>
+      <Card className="shadow-lg dark:shadow-dark">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-stone-100 mb-2">
+          Welcome Back
+        </h2>
+        <p className="text-text-muted dark:text-stone-400 mb-6">
+          Sign in to continue to your dashboard
+        </p>
 
         {error && (
           <Alert type="error" className="mb-4">
@@ -83,35 +101,25 @@ export function LoginPage() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Role Selector */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+          <div>
+            <label className="label">I am a...</label>
             <div className="flex gap-4">
-              <button
-                type="button"
+              <RoleButton
+                role="student"
+                selectedRole={role}
                 onClick={() => setRole('student')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
-                  role === 'student'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-2xl mb-1">👨‍🎓</span>
-                <span className="block font-medium">Student</span>
-              </button>
-              <button
-                type="button"
+                icon="👨‍🎓"
+                label="Student"
+              />
+              <RoleButton
+                role="teacher"
+                selectedRole={role}
                 onClick={() => setRole('teacher')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
-                  role === 'teacher'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-2xl mb-1">👨‍🏫</span>
-                <span className="block font-medium">Teacher</span>
-              </button>
+                icon="👨‍🏫"
+                label="Teacher"
+              />
             </div>
           </div>
 
@@ -123,6 +131,11 @@ export function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             error={errors.email}
             autoComplete="email"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
           />
           <Input
             label="Password"
@@ -132,24 +145,37 @@ export function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
             autoComplete="current-password"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            }
           />
+          
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin">⏳</span> Logging in...
+                <Spinner size="sm" /> Signing in...
               </span>
             ) : (
-              `Login as ${role === 'teacher' ? 'Teacher' : 'Student'}`
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Login as {role === 'teacher' ? 'Teacher' : 'Student'}
+              </span>
             )}
           </Button>
         </form>
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="divider w-full"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-stone-400">
+              Or continue with
+            </span>
           </div>
         </div>
 
@@ -181,9 +207,9 @@ export function LoginPage() {
           Sign in with Google
         </Button>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-text-muted dark:text-stone-400 mt-6">
           Don't have an account?{' '}
-          <Link to="/register" className="text-primary-600 font-medium hover:underline">
+          <Link to="/register" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">
             Sign up
           </Link>
         </p>
@@ -253,8 +279,13 @@ export function RegisterPage() {
 
   return (
     <AuthLayout>
-      <Card>
-        <h2 className="text-2xl font-bold text-text-dark mb-6">Create Account</h2>
+      <Card className="shadow-lg dark:shadow-dark">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-stone-100 mb-2">
+          Create Account
+        </h2>
+        <p className="text-text-muted dark:text-stone-400 mb-6">
+          Join our learning platform today
+        </p>
 
         {error && (
           <Alert type="error" className="mb-4">
@@ -267,35 +298,25 @@ export function RegisterPage() {
           </Alert>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Role Selector */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+          <div>
+            <label className="label">I am a...</label>
             <div className="flex gap-4">
-              <button
-                type="button"
+              <RoleButton
+                role="student"
+                selectedRole={role}
                 onClick={() => setRole('student')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
-                  role === 'student'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-2xl mb-1">👨‍🎓</span>
-                <span className="block font-medium">Student</span>
-              </button>
-              <button
-                type="button"
+                icon="👨‍🎓"
+                label="Student"
+              />
+              <RoleButton
+                role="teacher"
+                selectedRole={role}
                 onClick={() => setRole('teacher')}
-                className={`flex-1 py-3 px-4 rounded-lg border-2 transition-all ${
-                  role === 'teacher'
-                    ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
-                }`}
-              >
-                <span className="text-2xl mb-1">👨‍🏫</span>
-                <span className="block font-medium">Teacher</span>
-              </button>
+                icon="👨‍🏫"
+                label="Teacher"
+              />
             </div>
           </div>
 
@@ -307,6 +328,11 @@ export function RegisterPage() {
             onChange={(e) => setName(e.target.value)}
             error={errors.name}
             autoComplete="name"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
           />
           <Input
             label="Email"
@@ -316,6 +342,11 @@ export function RegisterPage() {
             onChange={(e) => setEmail(e.target.value)}
             error={errors.email}
             autoComplete="email"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
           />
           <Input
             label="Password"
@@ -325,6 +356,12 @@ export function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             error={errors.password}
             autoComplete="new-password"
+            helper="Must be at least 6 characters"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            }
           />
           <Input
             label="Confirm Password"
@@ -334,24 +371,37 @@ export function RegisterPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             error={errors.confirmPassword}
             autoComplete="new-password"
+            icon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            }
           />
+          
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
-                <span className="animate-spin">⏳</span> Creating account...
+                <Spinner size="sm" /> Creating account...
               </span>
             ) : (
-              `Sign Up as ${role === 'teacher' ? 'Teacher' : 'Student'}`
+              <span className="flex items-center justify-center gap-2">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Sign Up as {role === 'teacher' ? 'Teacher' : 'Student'}
+              </span>
             )}
           </Button>
         </form>
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300"></div>
+            <div className="divider w-full"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-stone-400">
+              Or continue with
+            </span>
           </div>
         </div>
 
@@ -383,9 +433,9 @@ export function RegisterPage() {
           Sign up with Google
         </Button>
 
-        <p className="text-center text-sm text-gray-600 mt-6">
+        <p className="text-center text-sm text-text-muted dark:text-stone-400 mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-primary-600 font-medium hover:underline">
+          <Link to="/login" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">
             Login
           </Link>
         </p>

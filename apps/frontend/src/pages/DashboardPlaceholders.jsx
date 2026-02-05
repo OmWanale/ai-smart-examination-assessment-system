@@ -1,14 +1,14 @@
-import { Card } from '../components/UI.jsx';
+import { Card, Spinner } from '../components/UI.jsx';
 import { MainLayout } from '../components/Layout.jsx';
 
 export function TeacherDashboardPlaceholder() {
   return (
     <MainLayout>
-      <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-dark mb-4">Teacher Dashboard</h1>
-        <Card>
-          <p className="text-gray-600">Teacher dashboard coming soon...</p>
-        </Card>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-neutral-600 dark:text-dark-muted">Loading teacher dashboard...</p>
+        </div>
       </div>
     </MainLayout>
   );
@@ -17,11 +17,11 @@ export function TeacherDashboardPlaceholder() {
 export function StudentDashboardPlaceholder() {
   return (
     <MainLayout>
-      <div className="p-6 max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-dark mb-4">Student Dashboard</h1>
-        <Card>
-          <p className="text-gray-600">Student dashboard coming soon...</p>
-        </Card>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-neutral-600 dark:text-dark-muted">Loading student dashboard...</p>
+        </div>
       </div>
     </MainLayout>
   );

@@ -106,7 +106,7 @@ const register = asyncHandler(async (req, res) => {
  * @access  Public
  */
 const login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   // Validation
   if (!email || !password) {
@@ -125,6 +125,14 @@ const login = asyncHandler(async (req, res) => {
     return res.status(401).json({
       success: false,
       message: error.message || "Invalid credentials",
+    });
+  }
+
+  // Validate role if provided - must match stored role
+  if (role && role !== user.role) {
+    return res.status(401).json({
+      success: false,
+      message: `This account is registered as a ${user.role}, not a ${role}. Please select the correct role.`,
     });
   }
 

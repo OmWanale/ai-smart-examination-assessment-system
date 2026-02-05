@@ -1,22 +1,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { MainLayout } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge } from '../../components/UI.jsx';
+import { MainLayout, PageHeader } from '../../components/Layout.jsx';
+import { Card, Button, Alert, Badge, Spinner, ProgressBar } from '../../components/UI.jsx';
 import { submissionAPI, quizAPI } from '../../api/client';
 
 export function QuizResult() {
   const { quizId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Get data from navigation state (passed from QuizAttempt)
+  const stateSubmission = location.state?.submission;
+  const stateQuiz = location.state?.quiz;
   const submissionId = location.state?.submissionId;
 
-  const [submission, setSubmission] = useState(null);
-  const [quiz, setQuiz] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [submission, setSubmission] = useState(stateSubmission || null);
+  const [quiz, setQuiz] = useState(stateQuiz || null);
+  const [isLoading, setIsLoading] = useState(!stateSubmission || !stateQuiz);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadData();
+    // Only fetch if we don't have the data from state
+    if (!stateSubmission || !stateQuiz) {
+      loadData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId, submissionId]);
 
@@ -30,10 +37,17 @@ export function QuizResult() {
       ]);
 
       if (subResponse) {
-        setSubmission(subResponse.data);
+        // Extract submission from nested response
+        const submissionData = subResponse.data?.data?.submission || subResponse.data?.submission || subResponse.data;
+        console.log('QuizResult: loaded submission:', submissionData);
+        setSubmission(submissionData);
       }
-      setQuiz(quizResponse.data);
+      // Extract quiz from nested response
+      const quizData = quizResponse.data?.data?.quiz || quizResponse.data?.quiz || quizResponse.data;
+      console.log('QuizResult: loaded quiz:', quizData);
+      setQuiz(quizData);
     } catch (err) {
+      console.error('QuizResult: load error:', err);
       setError(err.response?.data?.message || 'Failed to load result');
     } finally {
       setIsLoading(false);
@@ -43,8 +57,11 @@ export function QuizResult() {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
+        <div className="flex items-center justify-center py-16">
+          <div className="text-center">
+            <Spinner size="xl" />
+            <p className="text-text-muted dark:text-stone-400 mt-4">Loading result...</p>
+          </div>
         </div>
       </MainLayout>
     );
@@ -76,195 +93,210 @@ export function QuizResult() {
     );
   }
 
-  const percentage = ((submission.score / (quiz.questions?.length || 1)) * 100).toFixed(1);
+  // Use submission's percentage if available, otherwise calculate
+  const totalQuestions = submission.totalQuestions || quiz.questions?.length || 1;
+  const percentage = submission.percentage 
+    ? parseFloat(submission.percentage) 
+    : ((submission.score / totalQuestions) * 100).toFixed(1);
   const passed = percentage >= 70;
 
-  const getPerformanceColor = () => {
-    if (percentage >= 90) return 'text-green-600';
-    if (percentage >= 70) return 'text-blue-600';
-    if (percentage >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+  const getPerformanceConfig = () => {
+    if (percentage >= 90) return { 
+      color: 'text-success-600 dark:text-success-400', 
+      bg: 'from-success-500 to-success-600',
+      label: 'Excellent!',
+      emoji: '🏆'
+    };
+    if (percentage >= 70) return { 
+      color: 'text-primary-600 dark:text-primary-400', 
+      bg: 'from-primary-500 to-primary-600',
+      label: 'Great Job!',
+      emoji: '🎉'
+    };
+    if (percentage >= 50) return { 
+      color: 'text-warning-600 dark:text-warning-400', 
+      bg: 'from-warning-500 to-warning-600',
+      label: 'Good Try!',
+      emoji: '💪'
+    };
+    return { 
+      color: 'text-error-600 dark:text-error-400', 
+      bg: 'from-error-500 to-error-600',
+      label: 'Keep Practicing!',
+      emoji: '📚'
+    };
   };
 
-  const getPerformanceLabel = () => {
-    if (percentage >= 90) return 'Excellent!';
-    if (percentage >= 70) return 'Great Job!';
-    if (percentage >= 50) return 'Good Try!';
-    return 'Keep Practicing!';
-  };
+  const performance = getPerformanceConfig();
 
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto">
         {/* Result Summary Card */}
-        <Card className="mb-6">
-          <div className="text-center py-8">
-            {passed ? (
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-                <svg
-                  className="h-8 w-8 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </div>
-            ) : (
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4">
-                <svg
-                  className="h-8 w-8 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4v2m0 4v2M12 3a9 9 0 110 18 9 9 0 010-18z"
-                  />
-                </svg>
-              </div>
-            )}
-
-            <h2 className="text-3xl font-bold text-text-dark mb-2">{quiz.title}</h2>
-            <p className={`text-2xl font-bold mb-4 ${getPerformanceColor()}`}>
-              {getPerformanceLabel()}
+        <Card className="mb-6 overflow-hidden">
+          <div className={`bg-gradient-to-r ${performance.bg} p-8 -m-6 mb-6`}>
+            <div className="text-center text-white">
+              <div className="text-6xl mb-4">{performance.emoji}</div>
+              <h2 className="text-3xl font-display font-bold mb-2">{quiz.title}</h2>
+              <p className="text-xl opacity-90">{performance.label}</p>
+            </div>
+          </div>
+          
+          <div className="text-center py-4">
+            <div className={`text-6xl font-display font-bold ${performance.color} mb-2`}>
+              {percentage}%
+            </div>
+            <p className="text-text-muted dark:text-stone-400">
+              You answered <strong className="text-text-dark dark:text-stone-200">{submission.score}</strong> out of <strong className="text-text-dark dark:text-stone-200">{totalQuestions}</strong> questions correctly
             </p>
           </div>
         </Card>
 
-        {/* Score Card */}
+        {/* Score Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <div className="text-center">
-              <div className={`text-4xl font-bold mb-2 ${getPerformanceColor()}`}>
-                {percentage}%
-              </div>
-              <p className="text-gray-600">Your Score</p>
+          <Card className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-success-400 to-success-600 flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
+            <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400 mb-1">
+              {submission.score}
+            </div>
+            <p className="text-text-muted dark:text-stone-400 text-sm">Correct Answers</p>
           </Card>
 
-          <Card>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-primary-600 mb-2">
-                {submission.score}
-              </div>
-              <p className="text-gray-600">
-                Out of {quiz.questions?.length || submission.maxScore}
-              </p>
+          <Card className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-error-400 to-error-600 flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </div>
+            <div className="text-3xl font-display font-bold text-error-600 dark:text-error-400 mb-1">
+              {totalQuestions - submission.score}
+            </div>
+            <p className="text-text-muted dark:text-stone-400 text-sm">Incorrect Answers</p>
           </Card>
 
-          <Card>
-            <div className="text-center">
-              <div className="text-4xl font-bold text-secondary-600 mb-2">
-                {Math.floor((submission.timeSpent || 0) / 60)}m
-              </div>
-              <p className="text-gray-600">Time Spent</p>
+          <Card className="text-center">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center mx-auto mb-3 shadow-lg">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
             </div>
+            <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400 mb-1">
+              {Math.floor((submission.timeSpent || 0) / 60)}m
+            </div>
+            <p className="text-text-muted dark:text-stone-400 text-sm">Time Spent</p>
           </Card>
         </div>
 
-        {/* Correct/Incorrect Breakdown */}
+        {/* Performance Breakdown */}
         <Card className="mb-6">
-          <h3 className="text-xl font-semibold text-text-dark mb-4">Performance Breakdown</h3>
+          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-6 flex items-center gap-2">
+            <span>📊</span> Performance Breakdown
+          </h3>
 
-          <div className="space-y-3">
+          <div className="space-y-6">
             {/* Correct */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Correct Answers</span>
-                <Badge variant="secondary">{submission.score}</Badge>
+                <span className="text-text-muted dark:text-stone-400 flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-success-500"></span>
+                  Correct Answers
+                </span>
+                <Badge variant="success">{submission.score}</Badge>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-green-500 h-3 rounded-full transition-all"
-                  style={{
-                    width: `${(submission.score / (quiz.questions?.length || 1)) * 100}%`,
-                  }}
-                ></div>
-              </div>
+              <ProgressBar 
+                value={submission.score} 
+                max={totalQuestions} 
+                variant="success"
+              />
             </div>
 
             {/* Incorrect */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Incorrect Answers</span>
-                <Badge variant="primary">
-                  {(quiz.questions?.length || 1) - submission.score}
-                </Badge>
+                <span className="text-text-muted dark:text-stone-400 flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-full bg-error-500"></span>
+                  Incorrect Answers
+                </span>
+                <Badge variant="error">{totalQuestions - submission.score}</Badge>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-red-500 h-3 rounded-full transition-all"
-                  style={{
-                    width: `${
-                      (((quiz.questions?.length || 1) - submission.score) /
-                        (quiz.questions?.length || 1)) *
-                      100
-                    }%`,
-                  }}
-                ></div>
-              </div>
+              <ProgressBar 
+                value={totalQuestions - submission.score} 
+                max={totalQuestions} 
+                variant="error"
+              />
             </div>
           </div>
         </Card>
 
         {/* Details */}
         <Card className="mb-6">
-          <h3 className="text-lg font-semibold text-text-dark mb-4">Details</h3>
+          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+            <span>📋</span> Quiz Details
+          </h3>
 
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Submitted at</span>
-              <span className="font-medium text-text-dark">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center py-2 border-b border-primary-100 dark:border-dark-border">
+              <span className="text-text-muted dark:text-stone-400">Submitted at</span>
+              <span className="font-medium text-text-dark dark:text-stone-200">
                 {new Date(submission.submittedAt).toLocaleString()}
               </span>
             </div>
             {quiz.difficulty && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Difficulty</span>
-                <span className="font-medium text-text-dark capitalize">{quiz.difficulty}</span>
+              <div className="flex justify-between items-center py-2 border-b border-primary-100 dark:border-dark-border">
+                <span className="text-text-muted dark:text-stone-400">Difficulty</span>
+                <Badge variant={quiz.difficulty === 'hard' ? 'error' : quiz.difficulty === 'medium' ? 'warning' : 'success'}>
+                  {quiz.difficulty}
+                </Badge>
               </div>
             )}
             {quiz.timeLimit && (
-              <div className="flex justify-between">
-                <span className="text-gray-600">Time Limit</span>
-                <span className="font-medium text-text-dark">{quiz.timeLimit} minutes</span>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-text-muted dark:text-stone-400">Time Limit</span>
+                <span className="font-medium text-text-dark dark:text-stone-200">{quiz.timeLimit} minutes</span>
               </div>
             )}
           </div>
         </Card>
 
         {/* Actions */}
-        <div className="flex gap-3 justify-between">
-          <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 justify-between">
+          <div className="flex flex-wrap gap-3">
             <Button
-              variant="outline"
-              onClick={() =>
-                navigate(`/student/class/${quiz.class}`, { replace: true })
-              }
+              variant="ghost"
+              onClick={() => navigate(`/student/class/${quiz.class}`, { replace: true })}
             >
-              Back to Class
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Class
+              </span>
             </Button>
             <Button
               variant="outline"
               onClick={() => navigate('/student/dashboard', { replace: true })}
             >
-              Dashboard
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Dashboard
+              </span>
             </Button>
           </div>
           {submission && (
             <Link to={`/teacher/quiz/${quizId}/leaderboard`}>
-              <Button variant="outline">
-                View Leaderboard →
+              <Button>
+                <span className="flex items-center gap-2">
+                  View Leaderboard
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
               </Button>
             </Link>
           )}

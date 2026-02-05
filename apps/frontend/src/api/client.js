@@ -47,8 +47,8 @@ export const authAPI = {
     apiClient.post('/auth/register/teacher', { email, password, name }),
   registerStudent: (email, password, name) =>
     apiClient.post('/auth/register/student', { email, password, name }),
-  login: (email, password) =>
-    apiClient.post('/auth/login', { email, password }),
+  login: (email, password, role) =>
+    apiClient.post('/auth/login', { email, password, role }),
   getMe: () => apiClient.get('/auth/me'),
   googleLogin: (code) =>
     apiClient.post('/auth/google', { code }),
@@ -68,8 +68,14 @@ export const quizAPI = {
   getQuizzesForClass: (classId) =>
     apiClient.get(`/quizzes/class/${classId}`),
   getQuiz: (quizId) => apiClient.get(`/quizzes/${quizId}`),
+  getQuizForTeacher: (quizId) => apiClient.get(`/quizzes/${quizId}/teacher-view`),
+  getQuizReviewForStudent: (quizId) => apiClient.get(`/quizzes/${quizId}/student-review`),
   generateWithAI: (data) =>
     apiClient.post('/quizzes/ai-generate', data),
+  previewWithAI: (data) =>
+    apiClient.post('/quizzes/ai-preview', data),
+  publishFromPreview: (data) =>
+    apiClient.post('/quizzes/ai-publish', data),
 };
 
 export const submissionAPI = {

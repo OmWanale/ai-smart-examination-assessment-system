@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MainLayout } from '../../components/Layout.jsx';
-import { Card, Button, Input, Alert } from '../../components/UI.jsx';
+import { MainLayout, PageHeader } from '../../components/Layout.jsx';
+import { Card, Button, Input, Alert, Spinner } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
 
 export function JoinClass() {
@@ -30,7 +30,6 @@ export function JoinClass() {
       const result = await joinClass(joinCode.trim().toUpperCase());
       if (result.success) {
         console.log('[JoinClass] Successfully joined class:', result.data);
-        // Use .id (from backend response) or ._id (from Mongoose document)
         const classId = result.data.id || result.data._id;
         navigate(`/student/class/${classId}`);
       } else {
@@ -46,30 +45,35 @@ export function JoinClass() {
   return (
     <MainLayout>
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-dark mb-6">Join a Class</h1>
+        <PageHeader
+          title="Join a Class"
+          subtitle="Enter the code provided by your teacher"
+        />
 
         <Card>
-          <div className="mb-6">
-            <svg
-              className="mx-auto h-16 w-16 text-primary-200 mb-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-              />
-            </svg>
-            <p className="text-center text-gray-600">
+          <div className="mb-8 text-center">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <svg
+                className="h-10 w-10 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                />
+              </svg>
+            </div>
+            <p className="text-text-muted dark:text-stone-400">
               Enter the join code provided by your teacher to access the class
             </p>
           </div>
 
           {(error || errors.submit) && (
-            <Alert type="error" className="mb-4">
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => { setErrors({}); clearError(); }}>
               {error || errors.submit}
             </Alert>
           )}
@@ -85,13 +89,18 @@ export function JoinClass() {
               autoComplete="off"
               autoFocus
               maxLength="12"
-              className="uppercase"
+              className="uppercase text-center text-2xl tracking-widest font-display font-bold"
+              icon={
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+              }
             />
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4">
               <div className="flex">
                 <svg
-                  className="h-5 w-5 text-blue-400 mr-2 flex-shrink-0"
+                  className="h-5 w-5 text-primary-500 mr-3 flex-shrink-0 mt-0.5"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -102,7 +111,7 @@ export function JoinClass() {
                   />
                 </svg>
                 <div>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-primary-700 dark:text-primary-300">
                     Ask your teacher for the join code. It's usually displayed on the board or
                     sent via email.
                   </p>
@@ -111,18 +120,23 @@ export function JoinClass() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading} className="flex-1">
                 {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin">⏳</span> Joining...
+                  <span className="flex items-center justify-center gap-2">
+                    <Spinner size="sm" /> Joining...
                   </span>
                 ) : (
-                  'Join Class'
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Join Class
+                  </span>
                 )}
               </Button>
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => navigate('/student/dashboard')}
               >
                 Cancel

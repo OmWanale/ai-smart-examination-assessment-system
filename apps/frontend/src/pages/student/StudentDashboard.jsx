@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MainLayout } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge } from '../../components/UI.jsx';
+import { MainLayout, PageHeader } from '../../components/Layout.jsx';
+import { Card, Button, Alert, Badge, Spinner, EmptyState } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
 
 export function StudentDashboard() {
@@ -14,9 +14,10 @@ export function StudentDashboard() {
 
   return (
     <MainLayout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-text-dark">My Classes</h1>
+      <PageHeader
+        title="My Classes"
+        subtitle="View your enrolled classes and available quizzes"
+        action={
           <Link to="/student/join-class">
             <Button>
               <span className="flex items-center gap-2">
@@ -27,80 +28,84 @@ export function StudentDashboard() {
               </span>
             </Button>
           </Link>
+        }
+      />
+
+      {error && (
+        <Alert type="error" className="mb-6">
+          {error}
+        </Alert>
+      )}
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-16">
+          <Spinner size="lg" />
         </div>
-
-        {error && (
-          <Alert type="error" className="mb-4">
-            {error}
-          </Alert>
-        )}
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent"></div>
-          </div>
-        ) : classes.length === 0 ? (
-          <Card>
-            <div className="text-center py-12">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No classes yet</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Get started by joining a class with its join code.
-              </p>
-              <div className="mt-6">
-                <Link to="/student/join-class">
-                  <Button>Join Your First Class</Button>
-                </Link>
-              </div>
-            </div>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            {classes.map((classItem) => (
-              <Link key={classItem.id || classItem._id} to={`/student/class/${classItem.id || classItem._id}`}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="text-xl font-semibold text-text-dark">{classItem.name}</h3>
-                      {classItem.description && (
-                        <p className="text-gray-600 text-sm mt-1">{classItem.description}</p>
-                      )}
-                    </div>
-                    <Badge variant="primary">
-                      {classItem.quizCount || classItem.quizzes?.length || 0} quizzes
-                    </Badge>
+      ) : classes.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon="📚"
+            title="No classes yet"
+            description="Get started by joining a class with its unique code from your teacher"
+            action={
+              <Link to="/student/join-class">
+                <Button>Join Your First Class</Button>
+              </Link>
+            }
+          />
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {classes.map((classItem) => (
+            <Link key={classItem.id || classItem._id} to={`/student/class/${classItem.id || classItem._id}`}>
+              <Card hover className="h-full">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-2xl shadow-md flex-shrink-0">
+                    📚
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="text-gray-600">
-                      Taught by <strong>{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
-                    </div>
-                    <div className="text-gray-500">
-                      {classItem.studentCount || classItem.students?.length || 0} students
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 truncate">
+                      {classItem.name}
+                    </h3>
+                    {classItem.description && (
+                      <p className="text-text-muted dark:text-stone-400 text-sm line-clamp-2 mt-1">
+                        {classItem.description}
+                      </p>
+                    )}
                   </div>
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <span className="text-xs text-gray-500">
-                      Joined {new Date(classItem.createdAt).toLocaleDateString()}
+                </div>
+
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge variant="primary">
+                    📝 {classItem.quizCount || classItem.quizzes?.length || 0} quizzes
+                  </Badge>
+                  <Badge variant="neutral">
+                    👥 {classItem.studentCount || classItem.students?.length || 0} students
+                  </Badge>
+                </div>
+
+                <div className="pt-4 border-t border-primary-100 dark:border-dark-border">
+                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-300 to-secondary-300 flex items-center justify-center text-white text-xs font-semibold">
+                      {(classItem.teacher?.name || classItem.teacher?.email || 'T').charAt(0).toUpperCase()}
+                    </div>
+                    <span>
+                      Taught by <strong className="text-text-dark dark:text-stone-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
                     </span>
                   </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
+                  <p className="text-xs text-text-light dark:text-stone-500 mt-2">
+                    Joined {new Date(classItem.createdAt).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
     </MainLayout>
   );
 }
