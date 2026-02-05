@@ -288,18 +288,30 @@ export function QuizResult() {
               </span>
             </Button>
           </div>
-          {submission && (
-            <Link to={`/teacher/quiz/${quizId}/leaderboard`}>
-              <Button>
+          <div className="flex flex-wrap gap-3">
+            <Link to={`/student/quiz/${quizId}/review`}>
+              <Button variant="outline">
                 <span className="flex items-center gap-2">
-                  View Leaderboard
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
+                  Review Answers
                 </span>
               </Button>
             </Link>
-          )}
+            {submission && (
+              <Link to={`/student/quiz/${quizId}/leaderboard`}>
+                <Button>
+                  <span className="flex items-center gap-2">
+                    View Leaderboard
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </span>
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </MainLayout>

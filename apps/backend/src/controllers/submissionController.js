@@ -10,6 +10,12 @@ const asyncHandler = require("../utils/asyncHandler");
  */
 const submitQuiz = asyncHandler(async (req, res) => {
   const { quizId, answers, timeTakenMinutes } = req.body;
+  const studentId = req.user._id;
+
+  console.log('[submitQuiz] Request received');
+  console.log('[submitQuiz] Quiz ID:', quizId);
+  console.log('[submitQuiz] Student ID:', studentId);
+  console.log('[submitQuiz] Answers count:', answers?.length);
 
   // Validation
   if (!quizId || !answers || !Array.isArray(answers)) {
@@ -112,6 +118,11 @@ const submitQuiz = asyncHandler(async (req, res) => {
     timeTakenMinutes: timeTakenMinutes || null,
     submittedAt: new Date(),
   });
+
+  console.log('[submitQuiz] Submission created successfully');
+  console.log('[submitQuiz] Submission ID:', submission._id);
+  console.log('[submitQuiz] Stored Quiz ID:', submission.quiz);
+  console.log('[submitQuiz] Stored Student ID:', submission.student);
 
   // Populate student info
   await submission.populate("student", "name email");

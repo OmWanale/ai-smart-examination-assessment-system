@@ -6,6 +6,8 @@ const {
   publishQuizFromPreview,
   getQuizzesForClass,
   getQuizById,
+  getQuizForAttempt,
+  getQuizSubmissions,
   getQuizForTeacher,
   getQuizReviewForStudent,
 } = require("../controllers/quizController");
@@ -57,6 +59,20 @@ router.get("/class/:classId", getQuizzesForClass);
  * @access  Private/Teacher (creator only)
  */
 router.get("/:id/teacher-view", authorize("teacher"), getQuizForTeacher);
+
+/**
+ * @route   GET /api/quizzes/:id/submissions
+ * @desc    Get all submissions for a quiz
+ * @access  Private/Teacher (creator only)
+ */
+router.get("/:id/submissions", authorize("teacher"), getQuizSubmissions);
+
+/**
+ * @route   GET /api/quizzes/:id/attempt
+ * @desc    Get quiz for student attempt (without answers)
+ * @access  Private/Student (enrolled in class)
+ */
+router.get("/:id/attempt", authorize("student"), getQuizForAttempt);
 
 /**
  * @route   GET /api/quizzes/:id/student-review

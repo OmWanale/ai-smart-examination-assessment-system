@@ -69,6 +69,8 @@ export const quizAPI = {
     apiClient.get(`/quizzes/class/${classId}`),
   getQuiz: (quizId) => apiClient.get(`/quizzes/${quizId}`),
   getQuizForTeacher: (quizId) => apiClient.get(`/quizzes/${quizId}/teacher-view`),
+  getQuizForAttempt: (quizId) => apiClient.get(`/quizzes/${quizId}/attempt`),
+  getQuizSubmissions: (quizId) => apiClient.get(`/quizzes/${quizId}/submissions`),
   getQuizReviewForStudent: (quizId) => apiClient.get(`/quizzes/${quizId}/student-review`),
   generateWithAI: (data) =>
     apiClient.post('/quizzes/ai-generate', data),

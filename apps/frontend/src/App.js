@@ -11,6 +11,7 @@ import { ClassDetail } from './pages/teacher/ClassDetail';
 import { CreateQuiz } from './pages/teacher/CreateQuiz';
 import { Leaderboard } from './pages/teacher/Leaderboard';
 import { TeacherQuizReview } from './pages/teacher/TeacherQuizReview';
+import { TeacherSubmissionView } from './pages/teacher/TeacherSubmissionView';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import { StudentClasses } from './pages/student/StudentClasses';
 import { StudentQuizzes } from './pages/student/StudentQuizzes';
@@ -98,6 +99,7 @@ function App() {
                 <Route path="create-quiz" element={<CreateQuiz />} />
                 <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
                 <Route path="quiz/:quizId/review" element={<TeacherQuizReview />} />
+                <Route path="quiz/:quizId/submissions" element={<TeacherSubmissionView />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>
@@ -118,6 +120,7 @@ function App() {
                 <Route path="quiz/:quizId/attempt" element={<QuizAttempt />} />
                 <Route path="quiz/:quizId/result" element={<QuizResult />} />
                 <Route path="quiz/:quizId/review" element={<StudentQuizReview />} />
+                <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>

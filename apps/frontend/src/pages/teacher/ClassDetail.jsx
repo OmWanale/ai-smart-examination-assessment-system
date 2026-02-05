@@ -267,7 +267,28 @@ export function ClassDetail() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Link to={`/teacher/quiz/${quiz._id}/leaderboard`}>
+                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/review`}>
+                      <Button variant="ghost" size="sm">
+                        <span className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          View
+                        </span>
+                      </Button>
+                    </Link>
+                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/submissions`}>
+                      <Button variant="outline" size="sm">
+                        <span className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                          </svg>
+                          Submissions
+                        </span>
+                      </Button>
+                    </Link>
+                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/leaderboard`}>
                       <Button variant="outline" size="sm">
                         <span className="flex items-center gap-2">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

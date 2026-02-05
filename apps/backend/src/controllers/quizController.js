@@ -600,6 +600,172 @@ const publishQuizFromPreview = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @route   GET /api/quizzes/:id/attempt
+ * @desc    Get quiz for student attempt (without correct answers)
+ * @access  Private/Student (enrolled in class)
+ */
+const getQuizForAttempt = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  console.log('[getQuizForAttempt] Quiz ID:', id, 'User ID:', req.user._id);
+
+  const quiz = await Quiz.findById(id)
+    .populate("class", "name students");
+
+  if (!quiz) {
+    return res.status(404).json({
+      success: false,
+      message: "Quiz not found",
+    });
+  }
+
+  // Check if student is enrolled in the class
+  const isEnrolled = quiz.class.students.some(
+    (studentId) => studentId.toString() === req.user._id.toString()
+  );
+
+  if (!isEnrolled) {
+    return res.status(403).json({
+      success: false,
+      message: "You are not enrolled in this class",
+    });
+  }
+
+  // Check if quiz is active
+  if (!quiz.isActive) {
+    return res.status(403).json({
+      success: false,
+      message: "This quiz is not currently active",
+    });
+  }
+
+  // Check if student already submitted
+  const existingSubmission = await Submission.findOne({
+    quiz: id,
+    student: req.user._id,
+  });
+
+  if (existingSubmission) {
+    return res.status(403).json({
+      success: false,
+      message: "You have already submitted this quiz",
+      data: {
+        submissionId: existingSubmission._id,
+        submittedAt: existingSubmission.submittedAt,
+      },
+    });
+  }
+
+  // Return quiz WITHOUT correct answers and explanations
+  res.json({
+    success: true,
+    data: {
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        description: quiz.description,
+        difficulty: quiz.difficulty,
+        durationMinutes: quiz.durationMinutes,
+        totalMarks: quiz.totalMarks,
+        questionCount: quiz.questions.length,
+        questions: quiz.questions.map((q, idx) => ({
+          questionIndex: idx,
+          questionText: q.questionText,
+          options: q.options,
+          // NO correctOptionIndex
+          // NO explanation
+        })),
+        class: {
+          id: quiz.class._id,
+          name: quiz.class.name,
+        },
+      },
+    },
+  });
+});
+
+/**
+ * @route   GET /api/quizzes/:id/submissions
+ * @desc    Get all submissions for a quiz (teacher only)
+ * @access  Private/Teacher (creator only)
+ */
+const getQuizSubmissions = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  console.log('[getQuizSubmissions] Quiz ID:', id, 'User ID:', req.user._id);
+
+  const quiz = await Quiz.findById(id)
+    .populate("createdBy", "name email");
+
+  if (!quiz) {
+    return res.status(404).json({
+      success: false,
+      message: "Quiz not found",
+    });
+  }
+
+  // Only the teacher who created this quiz can access
+  const isCreator = quiz.createdBy._id.toString() === req.user._id.toString();
+  
+  if (!isCreator) {
+    return res.status(403).json({
+      success: false,
+      message: "Only the quiz creator can view submissions",
+    });
+  }
+
+  // Get all submissions for this quiz
+  const submissions = await Submission.find({ quiz: id })
+    .populate("student", "name email")
+    .sort({ score: -1, submittedAt: 1 })
+    .lean();
+
+  // Enrich submissions with detailed answer info
+  const enrichedSubmissions = submissions.map((sub) => {
+    const answersWithDetails = sub.answers.map((answer) => {
+      const question = quiz.questions[answer.questionIndex];
+      return {
+        questionIndex: answer.questionIndex,
+        questionText: question?.questionText || 'Question not found',
+        selectedOptionIndex: answer.selectedOptionIndex,
+        selectedOption: question?.options[answer.selectedOptionIndex] || 'N/A',
+        correctOptionIndex: question?.correctOptionIndex,
+        correctOption: question?.options[question?.correctOptionIndex] || 'N/A',
+        isCorrect: answer.selectedOptionIndex === question?.correctOptionIndex,
+        explanation: question?.explanation || '',
+      };
+    });
+
+    return {
+      id: sub._id,
+      student: {
+        id: sub.student._id,
+        name: sub.student.name,
+        email: sub.student.email,
+      },
+      score: sub.score,
+      totalQuestions: sub.totalQuestions,
+      percentage: sub.percentage,
+      timeTakenMinutes: sub.timeTakenMinutes,
+      submittedAt: sub.submittedAt,
+      answers: answersWithDetails,
+    };
+  });
+
+  res.json({
+    success: true,
+    data: {
+      quiz: {
+        id: quiz._id,
+        title: quiz.title,
+        totalMarks: quiz.totalMarks,
+        questionCount: quiz.questions.length,
+      },
+      submissionCount: submissions.length,
+      submissions: enrichedSubmissions,
+    },
+  });
+});
+
+/**
  * @route   GET /api/quizzes/:id/teacher-view
  * @desc    Get full quiz details for teacher (includes all answers and explanations)
  * @access  Private/Teacher (creator only)
@@ -676,45 +842,121 @@ const getQuizForTeacher = asyncHandler(async (req, res) => {
  */
 const getQuizReviewForStudent = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log('[getQuizReviewForStudent] Quiz ID:', id, 'User ID:', req.user._id);
+  const studentId = req.user._id;
+  const mongoose = require('mongoose');
+  
+  console.log('[getQuizReviewForStudent] Request received');
+  console.log('[getQuizReviewForStudent] Quiz ID from params:', id, 'type:', typeof id);
+  console.log('[getQuizReviewForStudent] Student ID from token:', studentId, 'type:', typeof studentId);
 
-  const quiz = await Quiz.findById(id)
+  // Validate quiz ID format
+  if (!id || id === 'undefined') {
+    console.log('[getQuizReviewForStudent] Invalid quiz ID');
+    return res.status(400).json({
+      success: false,
+      message: "Invalid quiz ID",
+    });
+  }
+
+  // Convert to ObjectId if valid
+  let quizObjectId;
+  try {
+    quizObjectId = new mongoose.Types.ObjectId(id);
+    console.log('[getQuizReviewForStudent] Quiz ObjectId:', quizObjectId);
+  } catch (e) {
+    console.log('[getQuizReviewForStudent] Invalid ObjectId format:', e.message);
+    return res.status(400).json({
+      success: false,
+      message: "Invalid quiz ID format",
+    });
+  }
+
+  const quiz = await Quiz.findById(quizObjectId)
     .populate("class", "name students");
 
   if (!quiz) {
+    console.log('[getQuizReviewForStudent] Quiz not found:', id);
     return res.status(404).json({
       success: false,
       message: "Quiz not found",
     });
   }
 
+  console.log('[getQuizReviewForStudent] Quiz found:', quiz.title, 'Quiz _id:', quiz._id);
+  console.log('[getQuizReviewForStudent] Class students count:', quiz.class?.students?.length);
+
   // Check if student is enrolled in the class
   const isEnrolled = quiz.class.students.some(
-    (studentId) => studentId.toString() === req.user._id.toString()
+    (sid) => sid.toString() === studentId.toString()
   );
 
   if (!isEnrolled) {
+    console.log('[getQuizReviewForStudent] Student not enrolled in class');
     return res.status(403).json({
       success: false,
       message: "You are not enrolled in this class",
     });
   }
 
-  // Check if student has attempted this quiz
-  const submission = await Submission.findOne({
-    quiz: id,
-    student: req.user._id,
+  console.log('[getQuizReviewForStudent] Student is enrolled, looking for submission...');
+
+  // Try multiple lookup strategies
+  let submission = null;
+  
+  // Strategy 1: Use ObjectIds
+  submission = await Submission.findOne({
+    quiz: quizObjectId,
+    student: studentId,
   });
+  console.log('[getQuizReviewForStudent] Strategy 1 (ObjectIds):', submission ? 'FOUND' : 'NOT FOUND');
+  
+  // Strategy 2: Use strings
+  if (!submission) {
+    submission = await Submission.findOne({
+      quiz: id,
+      student: studentId.toString(),
+    });
+    console.log('[getQuizReviewForStudent] Strategy 2 (strings):', submission ? 'FOUND' : 'NOT FOUND');
+  }
+
+  // Strategy 3: Raw query with aggregation for debugging
+  if (!submission) {
+    const allSubmissions = await Submission.find({}).limit(10);
+    console.log('[getQuizReviewForStudent] Total submissions in DB:', allSubmissions.length);
+    
+    const quizSubmissions = await Submission.find({ quiz: quizObjectId });
+    console.log('[getQuizReviewForStudent] Submissions for this quiz:', quizSubmissions.length);
+    
+    if (quizSubmissions.length > 0) {
+      console.log('[getQuizReviewForStudent] Sample submission:');
+      console.log('  - quiz:', quizSubmissions[0].quiz, 'type:', typeof quizSubmissions[0].quiz);
+      console.log('  - student:', quizSubmissions[0].student, 'type:', typeof quizSubmissions[0].student);
+      console.log('  - Comparing student IDs:', quizSubmissions[0].student.toString(), '===', studentId.toString(), '=', quizSubmissions[0].student.toString() === studentId.toString());
+      
+      // Find matching by iterating
+      submission = quizSubmissions.find(s => s.student.toString() === studentId.toString());
+      console.log('[getQuizReviewForStudent] Strategy 3 (iteration):', submission ? 'FOUND' : 'NOT FOUND');
+    }
+  }
+
+  console.log('[getQuizReviewForStudent] Final submission found:', submission ? 'YES' : 'NO');
+  
+  if (submission) {
+    console.log('[getQuizReviewForStudent] Submission ID:', submission._id);
+    console.log('[getQuizReviewForStudent] Submission quiz ID:', submission.quiz);
+    console.log('[getQuizReviewForStudent] Submission student ID:', submission.student);
+  }
 
   if (!submission) {
-    return res.status(403).json({
+    return res.status(404).json({
       success: false,
-      message: "You must attempt the quiz before viewing the review",
+      message: "Submission not found. You must attempt the quiz before viewing the review.",
     });
   }
 
   // Check if teacher allows results to students
   if (!quiz.showResultsToStudents) {
+    console.log('[getQuizReviewForStudent] Results disabled by teacher');
     return res.status(403).json({
       success: false,
       message: "The teacher has disabled result viewing for this quiz",
@@ -747,6 +989,8 @@ const getQuizReviewForStudent = asyncHandler(async (req, res) => {
 
     return questionData;
   });
+
+  console.log('[getQuizReviewForStudent] Returning review data');
 
   res.json({
     success: true,
@@ -782,6 +1026,8 @@ module.exports = {
   publishQuizFromPreview,
   getQuizzesForClass,
   getQuizById,
+  getQuizForAttempt,
+  getQuizSubmissions,
   getQuizForTeacher,
   getQuizReviewForStudent,
 };

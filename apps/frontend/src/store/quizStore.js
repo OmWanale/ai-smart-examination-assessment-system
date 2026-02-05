@@ -261,5 +261,73 @@ export const useQuizStore = create((set) => ({
     }
   },
 
+  // Teacher: Get full quiz with answers
+  getQuizForTeacher: async (quizId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await quizAPI.getQuizForTeacher(quizId);
+      const quizData = response.data?.data?.quiz || response.data?.quiz || response.data;
+      console.log('[QuizStore] getQuizForTeacher:', quizData);
+      set({ currentQuiz: quizData, isLoading: false });
+      return { success: true, data: quizData };
+    } catch (error) {
+      console.error('[QuizStore] getQuizForTeacher error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to load quiz';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Student: Get quiz for attempt (no answers)
+  getQuizForAttempt: async (quizId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await quizAPI.getQuizForAttempt(quizId);
+      const quizData = response.data?.data?.quiz || response.data?.quiz || response.data;
+      console.log('[QuizStore] getQuizForAttempt:', quizData);
+      set({ currentQuiz: quizData, isLoading: false });
+      return { success: true, data: quizData };
+    } catch (error) {
+      console.error('[QuizStore] getQuizForAttempt error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to load quiz';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Teacher: Get all submissions for a quiz
+  getQuizSubmissions: async (quizId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await quizAPI.getQuizSubmissions(quizId);
+      const data = response.data?.data || response.data;
+      console.log('[QuizStore] getQuizSubmissions:', data);
+      set({ isLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      console.error('[QuizStore] getQuizSubmissions error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to load submissions';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
+  // Student: Get quiz review after submission
+  getQuizReviewForStudent: async (quizId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await quizAPI.getQuizReviewForStudent(quizId);
+      const data = response.data?.data || response.data;
+      console.log('[QuizStore] getQuizReviewForStudent:', data);
+      set({ isLoading: false });
+      return { success: true, data };
+    } catch (error) {
+      console.error('[QuizStore] getQuizReviewForStudent error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to load review';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
   clearError: () => set({ error: null }),
 }));
