@@ -3,7 +3,15 @@ const isDev = require('electron-is-dev');
 const path = require('path');
 const express = require('express');
 const { spawn } = require('child_process');
+const fs = require('fs');
+
+// Determine if we're in development or production
 const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
+const isPackaged = app.isPackaged;
+
+console.log('🚀 Electron starting...');
+console.log('   isDevelopment:', isDevelopment);
+console.log('   isPackaged:', isPackaged);
 
 let mainWindow;
 let expressServer;
@@ -31,7 +39,26 @@ app.disableHardwareAcceleration();
 function startExpressServer() {
   return new Promise((resolve, reject) => {
     const app_express = express();
-    const frontendBuildPath = path.join(__dirname, '../../frontend/build');
+    
+    // Determine frontend build path based on packaging state
+    let frontendBuildPath;
+    if (isPackaged) {
+      // In packaged app, frontend is in resources/frontend-build
+      frontendBuildPath = path.join(process.resourcesPath, 'frontend-build');
+    } else {
+      // In development, use relative path
+      frontendBuildPath = path.join(__dirname, '../../frontend/build');
+    }
+    
+    console.log('📁 Frontend build path:', frontendBuildPath);
+    console.log('   Path exists:', fs.existsSync(frontendBuildPath));
+    
+    // Verify build exists
+    if (!fs.existsSync(frontendBuildPath)) {
+      console.error('❌ Frontend build not found at:', frontendBuildPath);
+      reject(new Error('Frontend build not found'));
+      return;
+    }
     
     // Serve static files from build directory
     app_express.use(express.static(frontendBuildPath));
@@ -54,14 +81,41 @@ function startExpressServer() {
 
 /**
  * Start the backend server (port 5000)
+ * In packaged production mode, backend is expected to run externally
  */
 function startBackendServer() {
   return new Promise((resolve, reject) => {
+    // In packaged mode, don't try to start backend - it should run externally
+    if (isPackaged) {
+      console.log('📦 Packaged mode - backend should be running externally at http://localhost:5000');
+      console.log('   Verifying backend availability...');
+      
+      // Quick check if backend is running
+      const http = require('http');
+      const req = http.get('http://localhost:5000/api/health', (res) => {
+        console.log('✅ Backend is accessible (status:', res.statusCode, ')');
+        resolve();
+      });
+      req.on('error', (err) => {
+        console.warn('⚠️  Backend not accessible at localhost:5000 - app may not work fully');
+        console.warn('   Error:', err.message);
+        console.warn('   Please ensure backend server is running.');
+        // Continue anyway - let user know they need to start backend
+        resolve();
+      });
+      req.setTimeout(3000, () => {
+        console.warn('⚠️  Backend check timed out - continuing anyway');
+        req.destroy();
+        resolve();
+      });
+      return;
+    }
+    
+    // Development mode - try to start backend
     console.log('🔧 Starting backend server...');
     const backendPath = path.join(__dirname, '../../backend');
     
     // Check if backend directory exists
-    const fs = require('fs');
     const backendServerPath = path.join(backendPath, 'src', 'server.js');
     
     if (!fs.existsSync(backendServerPath)) {
@@ -128,6 +182,9 @@ function startBackendServer() {
  */
 function createWindow() {
   console.log('📦 Creating BrowserWindow...');
+  // Check for icon (optional)
+  const iconPath = path.join(__dirname, '../assets/icon.png');
+  const hasIcon = fs.existsSync(iconPath) && fs.statSync(iconPath).size > 100;
   
   mainWindow = new BrowserWindow({
     width: 1400,
@@ -143,7 +200,7 @@ function createWindow() {
       sandbox: true,  // Enable sandbox for security
       spellcheck: true,
     },
-    icon: path.join(__dirname, '../assets/icon.png'),
+    ...(hasIcon && { icon: iconPath }),
     show: false,  // Don't show until ready
   });
 
@@ -303,7 +360,7 @@ function createMenu() {
       submenu: [
         { role: 'reload' },
         { role: 'forceReload' },
-        { role: 'toggleDevTools' },
+        ...(isDevelopment ? [{ role: 'toggleDevTools' }] : []),
         { type: 'separator' },
         { role: 'resetZoom' },
         { role: 'zoomIn' },
@@ -368,31 +425,27 @@ app.on('web-contents-created', (event, contents) => {
   contents.on('will-navigate', (event, navigationUrl) => {
     const parsedUrl = new URL(navigationUrl);
     
-    // Allow localhost URLs in development
-    if (isDevelopment) {
-      if (parsedUrl.origin !== 'http://localhost:3000' && parsedUrl.origin !== 'http://localhost:5000') {
-        event.preventDefault();
-      }
-      return;
-    }
-
-    // In production, only allow file:// protocol
-    if (parsedUrl.protocol !== 'file:') {
+    // Allow localhost URLs (Express server at 4000, backend at 5000)
+    const allowedOrigins = [
+      'http://localhost:4000',  // Express server serving frontend
+      'http://localhost:5000',  // Backend API
+      'http://localhost:3000',  // Dev server (development only)
+    ];
+    
+    if (!allowedOrigins.includes(parsedUrl.origin)) {
+      console.log('🔒 Blocked navigation to:', navigationUrl);
       event.preventDefault();
     }
   });
 
-  // Deny opening new windows
+  // Deny opening new windows (except localhost)
   contents.setWindowOpenHandler(({ url }) => {
-    // Allow file:// in production
-    if (url.startsWith('file:')) {
-      return { action: 'allow' };
-    }
-    // Allow localhost in development
-    if (isDevelopment && (url.startsWith('http://localhost'))) {
+    // Allow localhost URLs
+    if (url.startsWith('http://localhost')) {
       return { action: 'allow' };
     }
     // Block everything else
+    console.log('🔒 Blocked window open:', url);
     return { action: 'deny' };
   });
 });

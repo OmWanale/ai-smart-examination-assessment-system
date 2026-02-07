@@ -20,6 +20,7 @@ import { StudentClassDetail } from './pages/student/StudentClassDetail';
 import { QuizAttempt } from './pages/student/QuizAttempt';
 import { QuizResult } from './pages/student/QuizResult';
 import { StudentQuizReview } from './pages/student/StudentQuizReview';
+import { StudentResults } from './pages/student/StudentResults';
 import { useAuthStore } from './store/authStore';
 import './App.css';
 
@@ -121,6 +122,7 @@ function App() {
                 <Route path="quiz/:quizId/result" element={<QuizResult />} />
                 <Route path="quiz/:quizId/review" element={<StudentQuizReview />} />
                 <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
+                <Route path="results" element={<StudentResults />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>

@@ -253,11 +253,15 @@ export const useQuizStore = create((set) => ({
     set({ isLoading: true });
     try {
       const response = await submissionAPI.getLeaderboard(quizId);
-      set({ leaderboard: response.data, isLoading: false });
-      return response.data;
+      // Extract leaderboard array from nested response
+      const leaderboardData = response.data?.data?.leaderboard || response.data?.leaderboard || [];
+      console.log('[QuizStore] getLeaderboard data:', leaderboardData);
+      set({ leaderboard: leaderboardData, isLoading: false });
+      return { success: true, data: leaderboardData };
     } catch (error) {
-      set({ error: 'Failed to fetch leaderboard', isLoading: false });
-      return [];
+      console.error('[QuizStore] getLeaderboard error:', error.response?.data || error.message);
+      set({ error: 'Failed to fetch leaderboard', isLoading: false, leaderboard: [] });
+      return { success: false, error: error.response?.data?.message || 'Failed to fetch leaderboard' };
     }
   },
 

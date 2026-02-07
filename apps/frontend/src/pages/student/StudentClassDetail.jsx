@@ -231,17 +231,27 @@ export function StudentClassDetail() {
                     </div>
                     <div className="flex gap-2">
                       {isSubmitted ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            navigate(`/student/quiz/${quizId}/result`, {
-                              state: { submissionId: submissions[quizId]?._id },
-                            })
-                          }
-                        >
-                          View Result
-                        </Button>
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              navigate(`/student/quiz/${quizId}/result`, {
+                                state: { submissionId: submissions[quizId]?._id },
+                              })
+                            }
+                          >
+                            View Result
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => navigate(`/student/quiz/${quizId}/leaderboard`)}
+                            title="View Leaderboard"
+                          >
+                            🏆
+                          </Button>
+                        </>
                       ) : (
                         <Button
                           size="sm"

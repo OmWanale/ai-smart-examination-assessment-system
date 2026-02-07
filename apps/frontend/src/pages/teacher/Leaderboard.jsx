@@ -3,14 +3,20 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
 import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
+import { useAuthStore } from '../../store/authStore';
 import { quizAPI } from '../../api/client';
 
 export function Leaderboard() {
   const { quizId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isTeacher = user?.role === 'teacher';
+  const isStudent = user?.role === 'student';
+  
   const [quizData, setQuizData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUserRank, setCurrentUserRank] = useState(null);
 
   const { leaderboard, getLeaderboard } = useQuizStore();
 
@@ -18,6 +24,18 @@ export function Leaderboard() {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizId]);
+
+  useEffect(() => {
+    // Find current user's rank if student
+    if (isStudent && leaderboard && leaderboard.length > 0 && user) {
+      const userIndex = leaderboard.findIndex(
+        (s) => s.student?._id === user.id || s.student?.email === user.email
+      );
+      if (userIndex !== -1) {
+        setCurrentUserRank(userIndex + 1);
+      }
+    }
+  }, [leaderboard, isStudent, user]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -27,21 +45,26 @@ export function Leaderboard() {
         quizAPI.getQuiz(quizId),
         getLeaderboard(quizId),
       ]);
-      setQuizData(quizResponse.data);
+      // Extract quiz data from nested response
+      const quiz = quizResponse.data?.data?.quiz || quizResponse.data?.quiz || quizResponse.data;
+      setQuizData(quiz);
     } catch (err) {
+      console.error('Leaderboard load error:', err);
       setError(err.response?.data?.message || 'Failed to load leaderboard');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+  const formatTime = (minutes) => {
+    if (!minutes && minutes !== 0) return '--:--';
+    const mins = Math.floor(minutes);
+    const secs = Math.round((minutes - mins) * 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getScoreConfig = (score, maxScore) => {
+    if (!maxScore) return { color: 'text-text-muted', bg: 'from-gray-400 to-gray-600' };
     const percentage = (score / maxScore) * 100;
     if (percentage >= 90) return { color: 'text-success-600 dark:text-success-400', bg: 'from-success-400 to-success-600' };
     if (percentage >= 70) return { color: 'text-primary-600 dark:text-primary-400', bg: 'from-primary-400 to-primary-600' };
@@ -50,10 +73,15 @@ export function Leaderboard() {
   };
 
   const getMedalConfig = (rank) => {
-    if (rank === 0) return { icon: '🥇', bg: 'bg-gradient-to-br from-amber-300 to-amber-500', shadow: 'shadow-amber-300/50' };
-    if (rank === 1) return { icon: '🥈', bg: 'bg-gradient-to-br from-gray-300 to-gray-500', shadow: 'shadow-gray-300/50' };
-    if (rank === 2) return { icon: '🥉', bg: 'bg-gradient-to-br from-orange-300 to-orange-600', shadow: 'shadow-orange-300/50' };
-    return { icon: `${rank + 1}`, bg: 'bg-stone-100 dark:bg-dark-hover', shadow: '' };
+    if (rank === 1) return { icon: '🥇', bg: 'bg-gradient-to-br from-amber-300 to-amber-500', shadow: 'shadow-amber-300/50', textColor: 'text-white' };
+    if (rank === 2) return { icon: '🥈', bg: 'bg-gradient-to-br from-gray-300 to-gray-500', shadow: 'shadow-gray-300/50', textColor: 'text-white' };
+    if (rank === 3) return { icon: '🥉', bg: 'bg-gradient-to-br from-orange-300 to-orange-600', shadow: 'shadow-orange-300/50', textColor: 'text-white' };
+    return { icon: `${rank}`, bg: 'bg-stone-100 dark:bg-dark-hover', shadow: '', textColor: 'text-text-muted dark:text-stone-400' };
+  };
+
+  const isCurrentUser = (submission) => {
+    if (!user || !submission.student) return false;
+    return submission.student._id === user.id || submission.student.email === user.email;
   };
 
   if (isLoading) {
@@ -69,38 +97,50 @@ export function Leaderboard() {
     );
   }
 
-  if (error || !quizData) {
+  if (error) {
     return (
       <MainLayout>
         <div className="max-w-4xl mx-auto">
           <Alert type="error" className="mb-4">
-            {error || 'Quiz not found'}
+            {error}
           </Alert>
-          <Button onClick={() => navigate('/teacher/dashboard')}>Back to Dashboard</Button>
+          <Button onClick={() => navigate(isTeacher ? '/teacher/dashboard' : '/student/dashboard')}>
+            Back to Dashboard
+          </Button>
         </div>
       </MainLayout>
     );
   }
 
-  const maxScore = quizData.questions?.length || 0;
-  const avgScore = leaderboard && leaderboard.length > 0
-    ? ((leaderboard.reduce((sum, s) => sum + s.score, 0) / (leaderboard.length * maxScore)) * 100).toFixed(1)
+  const maxScore = quizData?.questions?.length || quizData?.totalMarks || 0;
+  const avgScore = leaderboard && leaderboard.length > 0 && maxScore > 0
+    ? ((leaderboard.reduce((sum, s) => sum + (s.score || 0), 0) / (leaderboard.length * maxScore)) * 100).toFixed(1)
     : 0;
+
+  // Determine back navigation based on role
+  const dashboardPath = isTeacher ? '/teacher/dashboard' : '/student/dashboard';
+  const classPath = quizData?.class 
+    ? (isTeacher ? `/teacher/class/${quizData.class}` : `/student/class/${quizData.class}`)
+    : null;
 
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400 mb-4">
-          <Link to="/teacher/dashboard" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+          <Link to={dashboardPath} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             Dashboard
           </Link>
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-          <Link to={`/teacher/class/${quizData.class}`} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-            Class
-          </Link>
+          {classPath && (
+            <>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <Link to={classPath} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                Class
+              </Link>
+            </>
+          )}
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
@@ -108,8 +148,8 @@ export function Leaderboard() {
         </div>
 
         <PageHeader
-          title={quizData.title}
-          subtitle="View student submissions and rankings"
+          title={quizData?.title || 'Quiz Leaderboard'}
+          subtitle={isStudent ? "See how you rank against other students" : "View student submissions and rankings"}
           icon={
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-500 flex items-center justify-center shadow-lg">
               <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,6 +158,33 @@ export function Leaderboard() {
             </div>
           }
         />
+
+        {/* Current User Rank Card (for students) */}
+        {isStudent && currentUserRank && (
+          <Card className="mb-6 bg-gradient-to-r from-primary-50 to-secondary-50 dark:from-primary-900/20 dark:to-secondary-900/20 border-2 border-primary-200 dark:border-primary-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className={`w-16 h-16 rounded-xl ${getMedalConfig(currentUserRank).bg} flex items-center justify-center text-3xl shadow-lg`}>
+                  {getMedalConfig(currentUserRank).icon}
+                </div>
+                <div>
+                  <p className="text-sm text-text-muted dark:text-stone-400">Your Rank</p>
+                  <p className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400">
+                    #{currentUserRank} <span className="text-lg font-normal text-text-muted dark:text-stone-400">of {leaderboard.length}</span>
+                  </p>
+                </div>
+              </div>
+              {leaderboard[currentUserRank - 1] && (
+                <div className="text-right">
+                  <p className="text-sm text-text-muted dark:text-stone-400">Your Score</p>
+                  <p className={`text-3xl font-display font-bold ${getScoreConfig(leaderboard[currentUserRank - 1].score, maxScore).color}`}>
+                    {leaderboard[currentUserRank - 1].score}/{maxScore}
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Quiz Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -130,7 +197,7 @@ export function Leaderboard() {
             <div className="text-2xl font-display font-bold text-primary-600 dark:text-primary-400">
               {leaderboard?.length || 0}
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Submissions</p>
+            <p className="text-text-muted dark:text-stone-400 text-xs">Participants</p>
           </Card>
           <Card className="text-center">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center mx-auto mb-2 shadow-md">
@@ -139,7 +206,7 @@ export function Leaderboard() {
               </svg>
             </div>
             <div className="text-2xl font-display font-bold text-secondary-600 dark:text-secondary-400">{maxScore}</div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Questions</p>
+            <p className="text-text-muted dark:text-stone-400 text-xs">Max Score</p>
           </Card>
           <Card className="text-center">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-400 to-success-600 flex items-center justify-center mx-auto mb-2 shadow-md">
@@ -159,13 +226,13 @@ export function Leaderboard() {
               </svg>
             </div>
             <div className="text-2xl font-display font-bold text-warning-600 dark:text-warning-400 capitalize">
-              {quizData.difficulty || 'Medium'}
+              {quizData?.difficulty || 'Medium'}
             </div>
             <p className="text-text-muted dark:text-stone-400 text-xs">Difficulty</p>
           </Card>
         </div>
 
-        {/* Leaderboard */}
+        {/* Leaderboard Table */}
         <Card>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
@@ -189,38 +256,43 @@ export function Leaderboard() {
                 </svg>
               }
               title="No submissions yet"
-              description="Students haven't started taking this quiz."
+              description={isTeacher ? "Students haven't started taking this quiz." : "Be the first to complete this quiz!"}
             />
           ) : (
             <div className="space-y-3">
               {leaderboard.map((submission, index) => {
-                const medal = getMedalConfig(index);
+                const rank = submission.rank || index + 1;
+                const medal = getMedalConfig(rank);
                 const scoreConfig = getScoreConfig(submission.score, maxScore);
-                const percentage = ((submission.score / maxScore) * 100).toFixed(1);
+                const percentage = maxScore > 0 ? ((submission.score / maxScore) * 100).toFixed(1) : 0;
+                const isMe = isCurrentUser(submission);
 
                 return (
                   <div
-                    key={submission._id}
+                    key={submission._id || index}
                     className={`flex items-center gap-4 p-4 rounded-xl transition-all duration-200 ${
-                      index < 3 
-                        ? 'bg-gradient-to-r from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent border border-primary-100 dark:border-primary-900/30' 
-                        : 'bg-bg-light dark:bg-dark-hover hover:shadow-warm'
+                      isMe
+                        ? 'bg-gradient-to-r from-primary-100 to-secondary-100 dark:from-primary-900/30 dark:to-secondary-900/30 border-2 border-primary-300 dark:border-primary-700 shadow-lg'
+                        : rank <= 3 
+                          ? 'bg-gradient-to-r from-primary-50/50 to-transparent dark:from-primary-900/20 dark:to-transparent border border-primary-100 dark:border-primary-900/30' 
+                          : 'bg-bg-light dark:bg-dark-hover hover:shadow-warm'
                     }`}
                   >
                     {/* Rank */}
-                    <div className={`w-12 h-12 rounded-xl ${medal.bg} ${medal.shadow} flex items-center justify-center text-xl font-display font-bold shadow-md ${index < 3 ? 'text-white' : 'text-text-muted dark:text-stone-400'}`}>
+                    <div className={`w-12 h-12 rounded-xl ${medal.bg} ${medal.shadow} flex items-center justify-center text-xl font-display font-bold shadow-md ${medal.textColor}`}>
                       {medal.icon}
                     </div>
 
                     {/* Student Info */}
                     <div className="flex items-center gap-3 flex-1">
-                      <Avatar name={submission.student?.email || 'Student'} size="md" />
+                      <Avatar name={submission.student?.name || submission.student?.email || 'Student'} size="md" />
                       <div>
-                        <p className="font-semibold text-text-dark dark:text-stone-100">
-                          {submission.student?.email || 'Anonymous'}
+                        <p className={`font-semibold ${isMe ? 'text-primary-700 dark:text-primary-300' : 'text-text-dark dark:text-stone-100'}`}>
+                          {submission.student?.name || submission.student?.email || 'Anonymous'}
+                          {isMe && <span className="ml-2 text-xs bg-primary-500 text-white px-2 py-0.5 rounded-full">You</span>}
                         </p>
                         <p className="text-xs text-text-muted dark:text-stone-400">
-                          {new Date(submission.submittedAt).toLocaleString()}
+                          {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString() : 'Time not recorded'}
                         </p>
                       </div>
                     </div>
@@ -236,11 +308,13 @@ export function Leaderboard() {
                     </div>
 
                     {/* Time */}
-                    <div className="text-center min-w-[80px]">
-                      <Badge variant="neutral">
-                        ⏱️ {formatTime(submission.timeSpent || 0)}
-                      </Badge>
-                    </div>
+                    {submission.timeTakenMinutes !== undefined && submission.timeTakenMinutes !== null && (
+                      <div className="text-center min-w-[80px]">
+                        <Badge variant="neutral">
+                          ⏱️ {formatTime(submission.timeTakenMinutes)}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -248,6 +322,7 @@ export function Leaderboard() {
           )}
         </Card>
 
+        {/* Navigation buttons */}
         <div className="mt-6 flex justify-between">
           <Button variant="ghost" onClick={() => navigate(-1)}>
             <span className="flex items-center gap-2">
@@ -257,14 +332,16 @@ export function Leaderboard() {
               Back
             </span>
           </Button>
-          <Button variant="outline" onClick={() => navigate(`/teacher/class/${quizData.class}`)}>
-            <span className="flex items-center gap-2">
-              View Class
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
-          </Button>
+          {classPath && (
+            <Button variant="outline" onClick={() => navigate(classPath)}>
+              <span className="flex items-center gap-2">
+                View Class
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </Button>
+          )}
         </div>
       </div>
     </MainLayout>

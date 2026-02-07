@@ -89,6 +89,8 @@ export const submissionAPI = {
     apiClient.get(`/submissions/quiz/${quizId}`),
   getSubmission: (submissionId) =>
     apiClient.get(`/submissions/${submissionId}`),
+  getStudentSubmissions: () =>
+    apiClient.get('/submissions/student'),
 };
 
 export default apiClient;

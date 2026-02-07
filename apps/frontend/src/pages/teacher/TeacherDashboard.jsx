@@ -42,8 +42,8 @@ export function TeacherDashboard() {
   // Safety guard: Ensure classes is always an array
   const safeClasses = Array.isArray(classes) ? classes : [];
 
-  const totalStudents = safeClasses.reduce((sum, c) => sum + (c.students?.length || 0), 0);
-  const totalQuizzes = safeClasses.reduce((sum, c) => sum + (c.quizzes?.length || 0), 0);
+  const totalStudents = safeClasses.reduce((sum, c) => sum + (c.studentCount || c.students?.length || 0), 0);
+  const totalQuizzes = safeClasses.reduce((sum, c) => sum + (c.quizCount || c.quizzes?.length || 0), 0);
 
   return (
     <MainLayout>
@@ -143,7 +143,7 @@ export function TeacherDashboard() {
                     </div>
                     <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-stone-400">
                       <span>📝</span>
-                      <span>{cls.quizzes?.length || 0} quizzes</span>
+                      <span>{cls.quizCount || cls.quizzes?.length || 0} quizzes</span>
                     </div>
                   </div>
                 </Card>
