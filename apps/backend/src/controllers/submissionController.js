@@ -322,9 +322,48 @@ const getSubmissionById = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @route   GET /api/submissions/student
+ * @desc    Get all submissions for the current student
+ * @access  Private/Student
+ */
+const getStudentSubmissions = asyncHandler(async (req, res) => {
+  const studentId = req.user._id;
+
+  const submissions = await Submission.find({ student: studentId })
+    .populate("quiz", "title class totalQuestions")
+    .populate({
+      path: "quiz",
+      populate: { path: "class", select: "name" },
+    })
+    .sort({ submittedAt: -1 })
+    .lean();
+
+  res.json({
+    success: true,
+    count: submissions.length,
+    data: {
+      submissions: submissions.map((s) => ({
+        id: s._id,
+        quiz: {
+          id: s.quiz?._id,
+          title: s.quiz?.title || "Unknown Quiz",
+          className: s.quiz?.class?.name || "Unknown Class",
+        },
+        score: s.score,
+        totalQuestions: s.totalQuestions,
+        percentage: s.percentage ? s.percentage.toFixed(2) : "0.00",
+        timeTakenMinutes: s.timeTakenMinutes,
+        submittedAt: s.submittedAt,
+      })),
+    },
+  });
+});
+
 module.exports = {
   submitQuiz,
   getLeaderboard,
   getSubmissionsForQuiz,
   getSubmissionById,
+  getStudentSubmissions,
 };

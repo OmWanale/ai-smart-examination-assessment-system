@@ -155,12 +155,13 @@ const getMyClasses = asyncHandler(async (req, res) => {
     classes = await Class.find({ teacher: userId })
       .populate("teacher", "name email")
       .populate("students", "name email")
+      .populate("quizzes", "_id")
       .sort({ createdAt: -1 });
   } else {
     // Students see classes they're enrolled in
-    // We need to keep students to compute count, but not return it
     classes = await Class.find({ students: userId })
       .populate("teacher", "name email")
+      .populate("quizzes", "_id")
       .sort({ createdAt: -1 });
   }
 
@@ -175,6 +176,7 @@ const getMyClasses = asyncHandler(async (req, res) => {
         joinCode: userRole === "teacher" ? cls.joinCode : undefined,
         teacher: cls.teacher,
         studentCount: cls.studentCount,
+        quizCount: cls.quizzes ? cls.quizzes.length : 0,
         students: userRole === "teacher" ? cls.students : undefined,
         createdAt: cls.createdAt,
       })),

@@ -4,6 +4,7 @@ const {
   getLeaderboard,
   getSubmissionsForQuiz,
   getSubmissionById,
+  getStudentSubmissions,
 } = require("../controllers/submissionController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -24,6 +25,8 @@ router.post("/", authorize("student"), submitQuiz);
  * @desc    Get leaderboard for a quiz
  * @access  Private (teacher or enrolled student)
  */
+router.get("/student", authorize("student"), getStudentSubmissions);
+
 router.get("/quiz/:quizId/leaderboard", getLeaderboard);
 
 /**
