@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar } from '../../components/UI.jsx';
+import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar, Input, Textarea } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
-import { classAPI } from '../../api/client';
+import { classAPI, assignmentAPI } from '../../api/client';
 
 export function ClassDetail() {
   const { classId } = useParams();
@@ -11,12 +11,24 @@ export function ClassDetail() {
   const [classData, setClassData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [assignmentError, setAssignmentError] = useState(null);
+  const [isAssignmentLoading, setIsAssignmentLoading] = useState(false);
+  const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+  const [assignmentForm, setAssignmentForm] = useState({
+    title: '',
+    description: '',
+    dueDate: '',
+    file: null,
+  });
+  const [assignmentSubmissions, setAssignmentSubmissions] = useState({});
 
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
   useEffect(() => {
     loadClassData();
     loadQuizzes();
+    loadAssignments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
@@ -47,6 +59,101 @@ export function ClassDetail() {
 
   const loadQuizzes = async () => {
     await getQuizzesForClass(classId);
+  };
+
+  const loadAssignments = async () => {
+    setIsAssignmentLoading(true);
+    setAssignmentError(null);
+    try {
+      const response = await assignmentAPI.getClassAssignments(classId);
+      const assignmentList = response.data?.data || [];
+      setAssignments(Array.isArray(assignmentList) ? assignmentList : []);
+    } catch (err) {
+      console.error('[ClassDetail] Failed to load assignments:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to load assignments');
+    } finally {
+      setIsAssignmentLoading(false);
+    }
+  };
+
+  const handleAssignmentFormChange = (field, value) => {
+    setAssignmentForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCreateAssignment = async (e) => {
+    e.preventDefault();
+    setAssignmentError(null);
+
+    if (!assignmentForm.title.trim() || !assignmentForm.description.trim() || !assignmentForm.dueDate) {
+      setAssignmentError('Title, description, and due date are required.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('title', assignmentForm.title.trim());
+      formData.append('description', assignmentForm.description.trim());
+      formData.append('dueDate', assignmentForm.dueDate);
+      if (assignmentForm.file) {
+        formData.append('file', assignmentForm.file);
+      }
+
+      await assignmentAPI.createClassAssignment(classId, formData);
+      setAssignmentForm({ title: '', description: '', dueDate: '', file: null });
+      setShowAssignmentForm(false);
+      await loadAssignments();
+    } catch (err) {
+      console.error('[ClassDetail] Failed to create assignment:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to create assignment');
+    }
+  };
+
+  const handleDownloadAssignment = async (assignment) => {
+    try {
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', assignment.originalFileName || 'assignment');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[ClassDetail] Failed to download assignment file:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to download assignment file');
+    }
+  };
+
+  const handleLoadSubmissions = async (assignmentId) => {
+    try {
+      const response = await assignmentAPI.getClassAssignmentSubmissions(classId, assignmentId);
+      const submissionList = response.data?.data || [];
+      setAssignmentSubmissions((prev) => ({
+        ...prev,
+        [assignmentId]: Array.isArray(submissionList) ? submissionList : [],
+      }));
+    } catch (err) {
+      console.error('[ClassDetail] Failed to load assignment submissions:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to load assignment submissions');
+    }
+  };
+
+  const handleDownloadSubmission = async (submission) => {
+    try {
+      const response = await assignmentAPI.downloadClassSubmissionFile(classId, submission._id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', submission.originalFileName || 'submission');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[ClassDetail] Failed to download submission file:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to download submission file');
+    }
   };
 
   if (isLoading) {
@@ -301,6 +408,116 @@ export function ClassDetail() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Assignments Section */}
+        <Card className="mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
+              <span>📎</span> Assignments
+            </h2>
+            <Button variant="outline" size="sm" onClick={() => setShowAssignmentForm((v) => !v)}>
+              {showAssignmentForm ? 'Close Form' : 'Create Assignment'}
+            </Button>
+          </div>
+
+          {assignmentError && (
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => setAssignmentError(null)}>
+              {assignmentError}
+            </Alert>
+          )}
+
+          {showAssignmentForm && (
+            <form onSubmit={handleCreateAssignment} className="mb-6 p-4 rounded-xl border border-primary-100 dark:border-dark-border space-y-4">
+              <Input
+                label="Title"
+                value={assignmentForm.title}
+                onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
+                placeholder="Assignment title"
+              />
+              <Textarea
+                label="Description"
+                value={assignmentForm.description}
+                onChange={(e) => handleAssignmentFormChange('description', e.target.value)}
+                placeholder="Instructions for students"
+                rows={4}
+              />
+              <Input
+                label="Due Date"
+                type="datetime-local"
+                value={assignmentForm.dueDate}
+                onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
+              />
+              <Input
+                label="Attachment (Optional: PDF, DOC, DOCX)"
+                type="file"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => handleAssignmentFormChange('file', e.target.files?.[0] || null)}
+              />
+              <Button type="submit">Post Assignment</Button>
+            </form>
+          )}
+
+          {isAssignmentLoading ? (
+            <div className="flex items-center justify-center py-10">
+              <Spinner size="lg" />
+            </div>
+          ) : assignments.length === 0 ? (
+            <EmptyState
+              icon="📭"
+              title="No assignments yet"
+              description="Create your first class assignment for enrolled students."
+            />
+          ) : (
+            <div className="space-y-4">
+              {assignments.map((assignment) => {
+                const subList = assignmentSubmissions[assignment._id] || [];
+                return (
+                  <div key={assignment._id} className="p-4 rounded-xl border border-primary-100 dark:border-dark-border">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                      <div>
+                        <h3 className="font-semibold text-text-dark dark:text-stone-100">{assignment.title}</h3>
+                        <p className="text-sm text-text-muted dark:text-stone-400">{assignment.description}</p>
+                        <p className="text-xs text-text-muted dark:text-stone-500 mt-1">
+                          Due: {new Date(assignment.dueDate).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {assignment.file && (
+                          <Button size="sm" variant="outline" onClick={() => handleDownloadAssignment(assignment)}>
+                            Download Attachment
+                          </Button>
+                        )}
+                        <Button size="sm" variant="outline" onClick={() => handleLoadSubmissions(assignment._id)}>
+                          View Submissions
+                        </Button>
+                      </div>
+                    </div>
+
+                    {subList.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border space-y-2">
+                        {subList.map((submission) => (
+                          <div key={submission._id} className="flex items-center justify-between bg-bg-light dark:bg-dark-hover rounded-lg px-3 py-2">
+                            <div>
+                              <p className="text-sm font-medium text-text-dark dark:text-stone-100">
+                                {submission.student?.name || submission.student?.email || 'Student'}
+                              </p>
+                              <p className="text-xs text-text-muted dark:text-stone-400">
+                                Submitted: {new Date(submission.submittedAt).toLocaleString()}
+                              </p>
+                            </div>
+                            <Button size="sm" variant="ghost" onClick={() => handleDownloadSubmission(submission)}>
+                              Download
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </Card>

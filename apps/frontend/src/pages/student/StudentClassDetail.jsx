@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar } from '../../components/UI.jsx';
+import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar, Input } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
-import { classAPI, submissionAPI } from '../../api/client';
+import { classAPI, assignmentAPI } from '../../api/client';
 
 export function StudentClassDetail() {
   const { classId } = useParams();
@@ -12,6 +12,10 @@ export function StudentClassDetail() {
   const [submissions, setSubmissions] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [assignments, setAssignments] = useState([]);
+  const [assignmentError, setAssignmentError] = useState(null);
+  const [assignmentFiles, setAssignmentFiles] = useState({});
+  const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false);
 
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
@@ -33,11 +37,68 @@ export function StudentClassDetail() {
       await getQuizzesForClass(classId);
       const allSubmissions = {};
       setSubmissions(allSubmissions);
+      await loadAssignments();
     } catch (err) {
       console.error('[StudentClassDetail] Error loading data:', err);
       setError(err.response?.data?.message || 'Failed to load class details');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadAssignments = async () => {
+    try {
+      const response = await assignmentAPI.getClassAssignments(classId);
+      const assignmentList = response.data?.data || [];
+      setAssignments(Array.isArray(assignmentList) ? assignmentList : []);
+    } catch (err) {
+      console.error('[StudentClassDetail] Failed to load assignments:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to load assignments');
+    }
+  };
+
+  const handleDownloadAssignment = async (assignment) => {
+    try {
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', assignment.originalFileName || 'assignment');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[StudentClassDetail] Failed to download assignment:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to download assignment file');
+    }
+  };
+
+  const handleSelectSubmissionFile = (assignmentId, file) => {
+    setAssignmentFiles((prev) => ({ ...prev, [assignmentId]: file || null }));
+  };
+
+  const handleSubmitAssignment = async (assignment) => {
+    const file = assignmentFiles[assignment._id];
+    if (!file) {
+      setAssignmentError('Please select a file before submitting.');
+      return;
+    }
+
+    setIsSubmittingAssignment(true);
+    setAssignmentError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      await assignmentAPI.submitClassAssignment(classId, assignment._id, formData);
+      setAssignmentFiles((prev) => ({ ...prev, [assignment._id]: null }));
+      await loadAssignments();
+    } catch (err) {
+      console.error('[StudentClassDetail] Failed to submit assignment:', err);
+      setAssignmentError(err.response?.data?.message || 'Failed to submit assignment');
+    } finally {
+      setIsSubmittingAssignment(false);
     }
   };
 
@@ -270,6 +331,68 @@ export function StudentClassDetail() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </Card>
+
+        {/* Assignments List */}
+        <Card className="mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
+              <span>📎</span> Class Assignments
+            </h2>
+            <Button variant="ghost" size="sm" onClick={loadAssignments}>Refresh</Button>
+          </div>
+
+          {assignmentError && (
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => setAssignmentError(null)}>
+              {assignmentError}
+            </Alert>
+          )}
+
+          {assignments.length === 0 ? (
+            <EmptyState
+              icon="📭"
+              title="No assignments posted yet"
+              description="Your teacher has not posted assignments for this class yet."
+            />
+          ) : (
+            <div className="space-y-4">
+              {assignments.map((assignment) => (
+                <div key={assignment._id} className="p-4 rounded-xl border border-primary-100 dark:border-dark-border">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-text-dark dark:text-stone-100">{assignment.title}</h3>
+                      <p className="text-sm text-text-muted dark:text-stone-400">{assignment.description}</p>
+                      <p className="text-xs text-text-muted dark:text-stone-500 mt-1">
+                        Due: {new Date(assignment.dueDate).toLocaleString()}
+                      </p>
+                    </div>
+                    {assignment.file && (
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadAssignment(assignment)}>
+                        Download Attachment
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border flex flex-col md:flex-row gap-3 md:items-end">
+                    <div className="flex-1">
+                      <Input
+                        label="Upload Submission (PDF, DOC, DOCX)"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) => handleSelectSubmissionFile(assignment._id, e.target.files?.[0] || null)}
+                      />
+                    </div>
+                    <Button
+                      onClick={() => handleSubmitAssignment(assignment)}
+                      disabled={isSubmittingAssignment}
+                    >
+                      {isSubmittingAssignment ? 'Submitting...' : 'Submit Assignment'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </Card>

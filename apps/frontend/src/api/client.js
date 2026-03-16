@@ -94,22 +94,48 @@ export const submissionAPI = {
 };
 
 export const assignmentAPI = {
-  createAssignment: (formData) =>
-    apiClient.post('/assignments/create', formData, {
+  createClassAssignment: (classId, formData) =>
+    apiClient.post(`/classes/${classId}/assignments/create`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-  getAssignments: () =>
-    apiClient.get('/assignments'),
-  downloadAssignmentFile: (assignmentId) =>
-    apiClient.get(`/assignments/${assignmentId}/download`, {
+  getClassAssignments: (classId) =>
+    apiClient.get(`/classes/${classId}/assignments`),
+  downloadClassAssignmentFile: (classId, assignmentId) =>
+    apiClient.get(`/classes/${classId}/assignments/${assignmentId}/download`, {
       responseType: 'blob',
     }),
-  submitAssignment: (formData) =>
-    apiClient.post('/assignments/submit', formData, {
+  submitClassAssignment: (classId, assignmentId, formData) =>
+    apiClient.post(`/classes/${classId}/assignments/${assignmentId}/submit`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-  getSubmissions: (assignmentId) =>
-    apiClient.get(`/assignments/${assignmentId}/submissions`),
+  getClassAssignmentSubmissions: (classId, assignmentId) =>
+    apiClient.get(`/classes/${classId}/assignments/${assignmentId}/submissions`),
+  downloadClassSubmissionFile: (classId, submissionId) =>
+    apiClient.get(`/classes/${classId}/assignments/submissions/${submissionId}/download`, {
+      responseType: 'blob',
+    }),
+
+  // Backward-compatibility aliases for existing pages/components.
+  createAssignment: (classId, formData) =>
+    apiClient.post(`/classes/${classId}/assignments/create`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getAssignments: (classId) =>
+    apiClient.get(`/classes/${classId}/assignments`),
+  downloadAssignmentFile: (classId, assignmentId) =>
+    apiClient.get(`/classes/${classId}/assignments/${assignmentId}/download`, {
+      responseType: 'blob',
+    }),
+  submitAssignment: (classId, assignmentId, formData) =>
+    apiClient.post(`/classes/${classId}/assignments/${assignmentId}/submit`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getSubmissions: (classId, assignmentId) =>
+    apiClient.get(`/classes/${classId}/assignments/${assignmentId}/submissions`),
+  downloadSubmissionFile: (classId, submissionId) =>
+    apiClient.get(`/classes/${classId}/assignments/submissions/${submissionId}/download`, {
+      responseType: 'blob',
+    }),
 };
 
 export default apiClient;

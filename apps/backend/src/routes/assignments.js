@@ -1,5 +1,6 @@
 const express = require("express");
-const router = express.Router();
+// mergeParams allows access to :classId from the parent mount
+const router = express.Router({ mergeParams: true });
 const { authenticate, authorize } = require("../middleware/auth");
 const { uploadAssignment, uploadSubmission } = require("../middleware/upload");
 const {
@@ -8,12 +9,13 @@ const {
   downloadAssignmentFile,
   submitAssignment,
   getSubmissions,
+  downloadSubmissionFile,
 } = require("../controllers/assignmentController");
 
 // All assignment routes require authentication
 router.use(authenticate);
 
-// Teacher creates an assignment (optional file upload via "file" field)
+// POST /api/classes/:classId/assignments/create — teacher creates assignment
 router.post(
   "/create",
   authorize("teacher"),
@@ -21,21 +23,32 @@ router.post(
   createAssignment
 );
 
-// Any authenticated user can view assignments
+// GET /api/classes/:classId/assignments — list assignments for a class
 router.get("/", getAssignments);
 
-// Student submits their work (file upload via "file" field)
+// GET /api/classes/:classId/assignments/:assignmentId/download — download teacher's file
+router.get("/:assignmentId/download", downloadAssignmentFile);
+
+// POST /api/classes/:classId/assignments/:assignmentId/submit — student submits
 router.post(
-  "/submit",
+  "/:assignmentId/submit",
   authorize("student"),
   uploadSubmission.single("file"),
   submitAssignment
 );
 
-// Download the teacher's attachment for an assignment
-router.get("/:id/download", downloadAssignmentFile);
+// GET /api/classes/:classId/assignments/:assignmentId/submissions — teacher views submissions
+router.get(
+  "/:assignmentId/submissions",
+  authorize("teacher"),
+  getSubmissions
+);
 
-// Teacher views all submissions for an assignment
-router.get("/:id/submissions", authorize("teacher"), getSubmissions);
+// GET /api/classes/:classId/assignments/submissions/:submissionId/download — download submission
+router.get(
+  "/submissions/:submissionId/download",
+  authorize("teacher"),
+  downloadSubmissionFile
+);
 
 module.exports = router;

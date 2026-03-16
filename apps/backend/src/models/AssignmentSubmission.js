@@ -10,6 +10,14 @@ const AssignmentSubmissionSchema = new mongoose.Schema(
       index: true,
     },
 
+    // The class this submission belongs to
+    class: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      required: true,
+      index: true,
+    },
+
     // Student who submitted
     student: {
       type: mongoose.Schema.Types.ObjectId,
@@ -46,6 +54,23 @@ AssignmentSubmissionSchema.index(
   { unique: true }
 );
 
+// API-friendly aliases for integration contracts.
+AssignmentSubmissionSchema.virtual("assignmentId").get(function () {
+  return this.assignment;
+});
+
+AssignmentSubmissionSchema.virtual("classId").get(function () {
+  return this.class;
+});
+
+AssignmentSubmissionSchema.virtual("studentId").get(function () {
+  return this.student;
+});
+
+AssignmentSubmissionSchema.virtual("submissionFile").get(function () {
+  return this.file;
+});
+
 /**
  * Check if a student has already submitted for an assignment.
  */
@@ -59,6 +84,9 @@ AssignmentSubmissionSchema.statics.hasSubmitted = async function (
   });
   return count > 0;
 };
+
+AssignmentSubmissionSchema.set("toJSON", { virtuals: true });
+AssignmentSubmissionSchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model(
   "AssignmentSubmission",

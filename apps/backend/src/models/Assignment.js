@@ -2,6 +2,14 @@ const mongoose = require("mongoose");
 
 const AssignmentSchema = new mongoose.Schema(
   {
+    // The class this assignment belongs to
+    class: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+      required: [true, "Class is required"],
+      index: true,
+    },
+
     // Title of the assignment
     title: {
       type: String,
@@ -47,8 +55,21 @@ const AssignmentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Index for sorting assignments by newest first
-AssignmentSchema.index({ createdAt: -1 });
+// Sort assignments within a class by newest first
+AssignmentSchema.index({ class: 1, createdAt: -1 });
+
+// API-friendly aliases for integration contracts.
+AssignmentSchema.virtual("classId").get(function () {
+  return this.class;
+});
+
+AssignmentSchema.virtual("teacherId").get(function () {
+  return this.createdBy;
+});
+
+AssignmentSchema.virtual("attachmentFile").get(function () {
+  return this.file;
+});
 
 /**
  * Check if the given userId is the creator of this assignment.
@@ -56,5 +77,8 @@ AssignmentSchema.index({ createdAt: -1 });
 AssignmentSchema.methods.isCreator = function (userId) {
   return this.createdBy.toString() === userId.toString();
 };
+
+AssignmentSchema.set("toJSON", { virtuals: true });
+AssignmentSchema.set("toObject", { virtuals: true });
 
 module.exports = mongoose.model("Assignment", AssignmentSchema);

@@ -111,12 +111,20 @@ export function TeacherAssignments() {
 
   const handleDownloadSubmission = async (submission) => {
     try {
-      // Create a simple download request
-      // In a real scenario, you'd need an API endpoint to download student submissions
-      // For now, we'll show what needs to be implemented
-      alert('Download feature requires backend implementation of submission download endpoint');
+      const response = await assignmentAPI.downloadSubmissionFile(submission._id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', submission.originalFileName || 'submission');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download failed:', error);
+      setErrors({
+        submit: error.response?.data?.message || 'Failed to download submission file',
+      });
     }
   };
 

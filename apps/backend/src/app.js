@@ -41,9 +41,9 @@ const assignmentRoutes = require("./routes/assignments");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
+app.use("/api/classes/:classId/assignments", assignmentRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/submissions", submissionRoutes);
-app.use("/api/assignments", assignmentRoutes);
 
 // Error handlers (must be last)
 app.use(notFound);
