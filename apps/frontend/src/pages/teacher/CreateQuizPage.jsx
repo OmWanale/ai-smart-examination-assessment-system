@@ -21,10 +21,10 @@ function ModeCard({ selected, onClick, icon, title, description, badge }) {
         </Badge>
       )}
       <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-1">
+      <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-1">
         {title}
       </h3>
-      <p className="text-sm text-text-muted dark:text-stone-400">{description}</p>
+      <p className="text-sm text-text-muted dark:text-slate-400">{description}</p>
       {selected && (
         <div className="absolute bottom-3 right-3 w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,7 +197,7 @@ export function CreateQuizPage() {
                   }
                   className="w-full h-2 bg-stone-200 dark:bg-dark-border rounded-full appearance-none cursor-pointer accent-primary-500"
                 />
-                <div className="flex justify-between text-xs text-text-muted dark:text-stone-500 mt-1">
+                <div className="flex justify-between text-xs text-text-muted dark:text-slate-500 mt-1">
                   <span>3 questions</span>
                   <span>20 questions</span>
                 </div>

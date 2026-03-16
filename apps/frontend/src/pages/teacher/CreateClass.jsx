@@ -79,16 +79,16 @@ export function CreateClass() {
             </div>
 
             <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-900/20 border-2 border-primary-200 dark:border-primary-800 rounded-xl p-8 mb-6 text-center">
-              <p className="text-sm text-text-muted dark:text-stone-400 mb-2">Join Code</p>
+              <p className="text-sm text-text-muted dark:text-slate-400 mb-2">Join Code</p>
               <p className="text-5xl font-display font-bold text-primary-600 dark:text-primary-400 tracking-widest font-mono">
                 {createdClass.joinCode}
               </p>
             </div>
 
             <div className="bg-bg-light dark:bg-dark-hover rounded-xl p-4 mb-6">
-              <h3 className="font-display font-semibold text-text-dark dark:text-stone-100 mb-2">{createdClass.name}</h3>
+              <h3 className="font-display font-semibold text-text-dark dark:text-slate-100 mb-2">{createdClass.name}</h3>
               {createdClass.description && (
-                <p className="text-text-muted dark:text-stone-400 text-sm">{createdClass.description}</p>
+                <p className="text-text-muted dark:text-slate-400 text-sm">{createdClass.description}</p>
               )}
             </div>
 

@@ -60,7 +60,7 @@ export function QuizResult() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-text-muted dark:text-stone-400 mt-4">Loading result...</p>
+            <p className="text-text-muted dark:text-slate-400 mt-4">Loading result...</p>
           </div>
         </div>
       </MainLayout>
@@ -146,8 +146,8 @@ export function QuizResult() {
             <div className={`text-6xl font-display font-bold ${performance.color} mb-2`}>
               {percentage}%
             </div>
-            <p className="text-text-muted dark:text-stone-400">
-              You answered <strong className="text-text-dark dark:text-stone-200">{submission.score}</strong> out of <strong className="text-text-dark dark:text-stone-200">{totalQuestions}</strong> questions correctly
+            <p className="text-text-muted dark:text-slate-400">
+              You answered <strong className="text-text-dark dark:text-slate-200">{submission.score}</strong> out of <strong className="text-text-dark dark:text-slate-200">{totalQuestions}</strong> questions correctly
             </p>
           </div>
         </Card>
@@ -163,7 +163,7 @@ export function QuizResult() {
             <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400 mb-1">
               {submission.score}
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-sm">Correct Answers</p>
+            <p className="text-text-muted dark:text-slate-400 text-sm">Correct Answers</p>
           </Card>
 
           <Card className="text-center">
@@ -175,7 +175,7 @@ export function QuizResult() {
             <div className="text-3xl font-display font-bold text-error-600 dark:text-error-400 mb-1">
               {totalQuestions - submission.score}
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-sm">Incorrect Answers</p>
+            <p className="text-text-muted dark:text-slate-400 text-sm">Incorrect Answers</p>
           </Card>
 
           <Card className="text-center">
@@ -187,13 +187,13 @@ export function QuizResult() {
             <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400 mb-1">
               {Math.floor((submission.timeSpent || 0) / 60)}m
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-sm">Time Spent</p>
+            <p className="text-text-muted dark:text-slate-400 text-sm">Time Spent</p>
           </Card>
         </div>
 
         {/* Performance Breakdown */}
         <Card className="mb-6">
-          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-6 flex items-center gap-2">
+          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-6 flex items-center gap-2">
             <span>📊</span> Performance Breakdown
           </h3>
 
@@ -201,7 +201,7 @@ export function QuizResult() {
             {/* Correct */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-text-muted dark:text-stone-400 flex items-center gap-2">
+                <span className="text-text-muted dark:text-slate-400 flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-success-500"></span>
                   Correct Answers
                 </span>
@@ -217,7 +217,7 @@ export function QuizResult() {
             {/* Incorrect */}
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-text-muted dark:text-stone-400 flex items-center gap-2">
+                <span className="text-text-muted dark:text-slate-400 flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-error-500"></span>
                   Incorrect Answers
                 </span>
@@ -234,20 +234,20 @@ export function QuizResult() {
 
         {/* Details */}
         <Card className="mb-6">
-          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             <span>📋</span> Quiz Details
           </h3>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center py-2 border-b border-primary-100 dark:border-dark-border">
-              <span className="text-text-muted dark:text-stone-400">Submitted at</span>
-              <span className="font-medium text-text-dark dark:text-stone-200">
+              <span className="text-text-muted dark:text-slate-400">Submitted at</span>
+              <span className="font-medium text-text-dark dark:text-slate-200">
                 {new Date(submission.submittedAt).toLocaleString()}
               </span>
             </div>
             {quiz.difficulty && (
               <div className="flex justify-between items-center py-2 border-b border-primary-100 dark:border-dark-border">
-                <span className="text-text-muted dark:text-stone-400">Difficulty</span>
+                <span className="text-text-muted dark:text-slate-400">Difficulty</span>
                 <Badge variant={quiz.difficulty === 'hard' ? 'error' : quiz.difficulty === 'medium' ? 'warning' : 'success'}>
                   {quiz.difficulty}
                 </Badge>
@@ -255,8 +255,8 @@ export function QuizResult() {
             )}
             {quiz.timeLimit && (
               <div className="flex justify-between items-center py-2">
-                <span className="text-text-muted dark:text-stone-400">Time Limit</span>
-                <span className="font-medium text-text-dark dark:text-stone-200">{quiz.timeLimit} minutes</span>
+                <span className="text-text-muted dark:text-slate-400">Time Limit</span>
+                <span className="font-medium text-text-dark dark:text-slate-200">{quiz.timeLimit} minutes</span>
               </div>
             )}
           </div>

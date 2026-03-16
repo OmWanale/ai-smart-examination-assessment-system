@@ -42,7 +42,7 @@ export function StudentClasses() {
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <Spinner size="xl" />
-              <p className="text-text-muted dark:text-stone-400 mt-4">Loading your classes...</p>
+              <p className="text-text-muted dark:text-slate-400 mt-4">Loading your classes...</p>
             </div>
           </div>
         ) : classes.length === 0 ? (
@@ -78,7 +78,7 @@ export function StudentClasses() {
               <Link key={classItem.id || classItem._id} to={`/student/class/${classItem.id || classItem._id}`}>
                 <Card className="hover:shadow-warm hover:-translate-y-1 transition-all duration-300 cursor-pointer h-full group">
                   <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                    <h3 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                       {classItem.name}
                     </h3>
                     <Badge variant="primary">
@@ -86,20 +86,20 @@ export function StudentClasses() {
                     </Badge>
                   </div>
                   {classItem.description && (
-                    <p className="text-text-muted dark:text-stone-400 text-sm mb-4 line-clamp-2">{classItem.description}</p>
+                    <p className="text-text-muted dark:text-slate-400 text-sm mb-4 line-clamp-2">{classItem.description}</p>
                   )}
-                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400">
+                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400">
                     <Avatar name={classItem.teacher?.name || classItem.teacher?.email} size="sm" />
-                    <span>Taught by <strong className="text-text-dark dark:text-stone-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong></span>
+                    <span>Taught by <strong className="text-text-dark dark:text-slate-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong></span>
                   </div>
                   <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border flex justify-between items-center">
-                    <span className="text-xs text-text-muted dark:text-stone-500 flex items-center gap-1">
+                    <span className="text-xs text-text-muted dark:text-slate-500 flex items-center gap-1">
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                       {classItem.studentCount || classItem.students?.length || 0} students
                     </span>
-                    <span className="text-xs text-text-muted dark:text-stone-500">
+                    <span className="text-xs text-text-muted dark:text-slate-500">
                       Joined {new Date(classItem.createdAt).toLocaleDateString()}
                     </span>
                   </div>

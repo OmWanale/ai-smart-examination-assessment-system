@@ -162,7 +162,7 @@ export function ClassDetail() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-text-muted dark:text-stone-400 mt-4">Loading class details...</p>
+            <p className="text-text-muted dark:text-slate-400 mt-4">Loading class details...</p>
           </div>
         </div>
       </MainLayout>
@@ -186,14 +186,14 @@ export function ClassDetail() {
     <MainLayout>
       <div className="max-w-6xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400 mb-4">
+        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400 mb-4">
           <Link to="/teacher/dashboard" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             Dashboard
           </Link>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-text-dark dark:text-stone-200">{classData.name}</span>
+          <span className="text-text-dark dark:text-slate-200">{classData.name}</span>
         </div>
 
         {/* Class Header */}
@@ -223,20 +223,20 @@ export function ClassDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Join Code Card */}
           <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
               <span>🔑</span> Join Code
             </h2>
             <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-6 text-center">
               <p className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400 tracking-widest font-mono">
                 {classData.joinCode}
               </p>
-              <p className="text-xs text-text-muted dark:text-stone-400 mt-3">Share this code with your students</p>
+              <p className="text-xs text-text-muted dark:text-slate-400 mt-3">Share this code with your students</p>
             </div>
           </Card>
 
           {/* Stats Cards */}
           <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
               <span>👥</span> Students
             </h2>
             <div className="flex items-center justify-between">
@@ -252,7 +252,7 @@ export function ClassDetail() {
           </Card>
 
           <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
               <span>📝</span> Quizzes
             </h2>
             <div className="flex items-center justify-between">
@@ -271,7 +271,7 @@ export function ClassDetail() {
 
         {/* Students List */}
         <Card className="mt-6">
-          <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+          <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             <span>🎓</span> Enrolled Students
           </h2>
           {!Array.isArray(classData.students) || classData.students.length === 0 ? (
@@ -293,10 +293,10 @@ export function ClassDetail() {
                 >
                   <Avatar name={student.email || 'Student'} size="md" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-dark dark:text-stone-200 truncate">
+                    <p className="text-sm font-medium text-text-dark dark:text-slate-200 truncate">
                       {student.email || 'Student'}
                     </p>
-                    <p className="text-xs text-text-muted dark:text-stone-400">Student</p>
+                    <p className="text-xs text-text-muted dark:text-slate-400">Student</p>
                   </div>
                 </div>
               ))}
@@ -307,7 +307,7 @@ export function ClassDetail() {
         {/* Quizzes List */}
         <Card className="mt-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
               <span>📋</span> Quizzes
             </h2>
             <Link to={`/teacher/create-quiz?classId=${classId}`}>
@@ -358,7 +358,7 @@ export function ClassDetail() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-text-dark dark:text-stone-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+                      <h3 className="font-semibold text-text-dark dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {quiz.title}
                       </h3>
                       <div className="flex flex-wrap gap-2 mt-1">
@@ -415,7 +415,7 @@ export function ClassDetail() {
         {/* Assignments Section */}
         <Card className="mt-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
               <span>📎</span> Assignments
             </h2>
             <Button variant="outline" size="sm" onClick={() => setShowAssignmentForm((v) => !v)}>
@@ -478,9 +478,9 @@ export function ClassDetail() {
                   <div key={assignment._id} className="p-4 rounded-xl border border-primary-100 dark:border-dark-border">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                       <div>
-                        <h3 className="font-semibold text-text-dark dark:text-stone-100">{assignment.title}</h3>
-                        <p className="text-sm text-text-muted dark:text-stone-400">{assignment.description}</p>
-                        <p className="text-xs text-text-muted dark:text-stone-500 mt-1">
+                        <h3 className="font-semibold text-text-dark dark:text-slate-100">{assignment.title}</h3>
+                        <p className="text-sm text-text-muted dark:text-slate-400">{assignment.description}</p>
+                        <p className="text-xs text-text-muted dark:text-slate-500 mt-1">
                           Due: {new Date(assignment.dueDate).toLocaleString()}
                         </p>
                       </div>
@@ -501,10 +501,10 @@ export function ClassDetail() {
                         {subList.map((submission) => (
                           <div key={submission._id} className="flex items-center justify-between bg-bg-light dark:bg-dark-hover rounded-lg px-3 py-2">
                             <div>
-                              <p className="text-sm font-medium text-text-dark dark:text-stone-100">
+                              <p className="text-sm font-medium text-text-dark dark:text-slate-100">
                                 {submission.student?.name || submission.student?.email || 'Student'}
                               </p>
-                              <p className="text-xs text-text-muted dark:text-stone-400">
+                              <p className="text-xs text-text-muted dark:text-slate-400">
                                 Submitted: {new Date(submission.submittedAt).toLocaleString()}
                               </p>
                             </div>

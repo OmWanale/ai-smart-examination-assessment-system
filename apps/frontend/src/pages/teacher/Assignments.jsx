@@ -153,7 +153,7 @@ export function TeacherAssignments() {
       {/* Create Assignment Form */}
       {showCreateForm && !showSubmissions && (
         <Card className="mb-6 bg-white dark:bg-dark-card">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-stone-100 mb-4">
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4">
             Create New Assignment
           </h3>
 
@@ -195,10 +195,10 @@ export function TeacherAssignments() {
 
             <div className="w-full">
               <label className="label">Attachment (Optional)</label>
-              <div className="border-2 border-dashed border-primary-300 dark:border-stone-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
+              <div className="border-2 border-dashed border-primary-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
                 onClick={() => document.getElementById('file-input').click()}
               >
-                <p className="text-text-muted dark:text-stone-400">
+                <p className="text-text-muted dark:text-slate-400">
                   {formData.file ? formData.file.name : 'Click to upload file (PDF, DOC, DOCX)'}
                 </p>
                 <input
@@ -240,10 +240,10 @@ export function TeacherAssignments() {
         <Card className="mb-6 bg-white dark:bg-dark-card">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-text-dark dark:text-stone-100">
+              <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100">
                 {selectedAssignment.title} - Submissions
               </h3>
-              <p className="text-text-muted dark:text-stone-400 text-sm">
+              <p className="text-text-muted dark:text-slate-400 text-sm">
                 Due: {formatDate(selectedAssignment.dueDate)}
               </p>
             </div>
@@ -264,7 +264,7 @@ export function TeacherAssignments() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-dark-hover text-text-dark dark:text-stone-100">
+                <thead className="bg-gray-100 dark:bg-dark-hover text-text-dark dark:text-slate-100">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Student Name</th>
                     <th className="px-4 py-3 text-left font-semibold">Email</th>
@@ -275,13 +275,13 @@ export function TeacherAssignments() {
                 <tbody className="divide-y divide-gray-200 dark:divide-stone-700">
                   {submissions.map((submission) => (
                     <tr key={submission._id} className="hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors">
-                      <td className="px-4 py-3 text-text-dark dark:text-stone-100">
+                      <td className="px-4 py-3 text-text-dark dark:text-slate-100">
                         {submission.student?.name || 'Unknown'}
                       </td>
-                      <td className="px-4 py-3 text-text-muted dark:text-stone-400">
+                      <td className="px-4 py-3 text-text-muted dark:text-slate-400">
                         {submission.student?.email || '-'}
                       </td>
-                      <td className="px-4 py-3 text-text-muted dark:text-stone-400">
+                      <td className="px-4 py-3 text-text-muted dark:text-slate-400">
                         {formatDate(submission.submittedAt)}
                       </td>
                       <td className="px-4 py-3">
@@ -316,10 +316,10 @@ export function TeacherAssignments() {
               <Card key={assignment._id} className="hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-text-dark dark:text-stone-100">
+                    <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100">
                       {assignment.title}
                     </h3>
-                    <p className="text-text-muted dark:text-stone-400 text-sm mt-1">
+                    <p className="text-text-muted dark:text-slate-400 text-sm mt-1">
                       {assignment.description.substring(0, 100)}
                       {assignment.description.length > 100 ? '...' : ''}
                     </p>
@@ -329,9 +329,9 @@ export function TeacherAssignments() {
                   </Badge>
                 </div>
 
-                <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-stone-700">
+                <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700">
                   {assignment.file && (
-                    <div className="text-sm text-text-muted dark:text-stone-400">
+                    <div className="text-sm text-text-muted dark:text-slate-400">
                       📎 {assignment.originalFileName}
                     </div>
                   )}

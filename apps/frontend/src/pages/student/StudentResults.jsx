@@ -84,19 +84,19 @@ export function StudentResults() {
               <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400">
                 {totalAttempted}
               </div>
-              <p className="text-text-muted dark:text-stone-400 text-sm">Quizzes Attempted</p>
+              <p className="text-text-muted dark:text-slate-400 text-sm">Quizzes Attempted</p>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-display font-bold text-secondary-600 dark:text-secondary-400">
                 {avgPercentage}%
               </div>
-              <p className="text-text-muted dark:text-stone-400 text-sm">Average Score</p>
+              <p className="text-text-muted dark:text-slate-400 text-sm">Average Score</p>
             </Card>
             <Card className="text-center">
               <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400">
                 {bestScore}%
               </div>
-              <p className="text-text-muted dark:text-stone-400 text-sm">Best Score</p>
+              <p className="text-text-muted dark:text-slate-400 text-sm">Best Score</p>
             </Card>
           </div>
         )}
@@ -105,7 +105,7 @@ export function StudentResults() {
           <div className="flex items-center justify-center py-16">
             <div className="text-center">
               <Spinner size="xl" />
-              <p className="text-text-muted dark:text-stone-400 mt-4">Loading results...</p>
+              <p className="text-text-muted dark:text-slate-400 mt-4">Loading results...</p>
             </div>
           </div>
         ) : submissions.length === 0 ? (
@@ -149,17 +149,17 @@ export function StudentResults() {
 
                     {/* Quiz info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-text-dark dark:text-stone-100 truncate">
+                      <h3 className="font-semibold text-text-dark dark:text-slate-100 truncate">
                         {sub.quiz?.title || 'Unknown Quiz'}
                       </h3>
-                      <p className="text-xs text-text-muted dark:text-stone-400">
+                      <p className="text-xs text-text-muted dark:text-slate-400">
                         {sub.quiz?.className || 'Unknown Class'} &middot; {sub.submittedAt ? new Date(sub.submittedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date unknown'}
                       </p>
                     </div>
 
                     {/* Score */}
                     <div className="text-right">
-                      <div className="text-xl font-display font-bold text-text-dark dark:text-stone-100">
+                      <div className="text-xl font-display font-bold text-text-dark dark:text-slate-100">
                         {sub.score}/{sub.totalQuestions}
                       </div>
                       <Badge variant={getScoreBadge(sub.percentage)} size="sm">

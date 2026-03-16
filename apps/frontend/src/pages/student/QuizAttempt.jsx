@@ -147,7 +147,7 @@ export function QuizAttempt() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-text-muted dark:text-stone-400 mt-4">Loading quiz...</p>
+            <p className="text-text-muted dark:text-slate-400 mt-4">Loading quiz...</p>
           </div>
         </div>
       </MainLayout>
@@ -192,7 +192,7 @@ export function QuizAttempt() {
       <div className="bg-white/95 dark:bg-dark-card/95 backdrop-blur-md shadow-md sticky top-0 z-50 border-b border-primary-100 dark:border-dark-border">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-display font-bold text-text-dark dark:text-stone-100">{quiz.title}</h2>
+            <h2 className="text-xl font-display font-bold text-text-dark dark:text-slate-100">{quiz.title}</h2>
             <div className="flex items-center gap-2 mt-1">
               <Badge variant="primary" size="sm">
                 Question {currentQuestion + 1} of {questions.length}
@@ -220,7 +220,7 @@ export function QuizAttempt() {
               }`}>
                 ⏱️ {formatTime(timeLeft)}
               </div>
-              <p className="text-xs text-text-muted dark:text-stone-400">Time remaining</p>
+              <p className="text-xs text-text-muted dark:text-slate-400">Time remaining</p>
             </div>
           )}
         </div>
@@ -247,7 +247,7 @@ export function QuizAttempt() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-display font-bold shadow-md flex-shrink-0">
                 {currentQuestion + 1}
               </div>
-              <h3 className="text-xl font-semibold text-text-dark dark:text-stone-100 flex-1">
+              <h3 className="text-xl font-semibold text-text-dark dark:text-slate-100 flex-1">
                 {currentQ?.questionText || currentQ?.question || 'No question text'}
               </h3>
             </div>
@@ -265,7 +265,7 @@ export function QuizAttempt() {
                   <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                     answers[currentQuestion] === idx
                       ? 'border-primary-500 bg-primary-500'
-                      : 'border-stone-300 dark:border-stone-600 group-hover:border-primary-400'
+                      : 'border-stone-300 dark:border-slate-600 group-hover:border-primary-400'
                   }`}>
                     {answers[currentQuestion] === idx && (
                       <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -280,7 +280,7 @@ export function QuizAttempt() {
                     onChange={() => handleAnswerChange(currentQuestion, idx)}
                     className="sr-only"
                   />
-                  <span className="ml-4 text-text-dark dark:text-stone-200">{option}</span>
+                  <span className="ml-4 text-text-dark dark:text-slate-200">{option}</span>
                 </label>
               ))}
             </div>
@@ -337,7 +337,7 @@ export function QuizAttempt() {
 
         {/* Question Navigator */}
         <Card>
-          <h4 className="font-display font-semibold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+          <h4 className="font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             <span>📋</span> Question Navigator
           </h4>
           <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
@@ -350,7 +350,7 @@ export function QuizAttempt() {
                     ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white scale-110 shadow-warm'
                     : answers[idx] !== null
                     ? 'bg-success-100 dark:bg-success-600/30 text-success-700 dark:text-success-400 hover:scale-105'
-                    : 'bg-stone-100 dark:bg-dark-hover text-text-muted dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-dark-border'
+                    : 'bg-stone-100 dark:bg-dark-hover text-text-muted dark:text-slate-400 hover:bg-stone-200 dark:hover:bg-dark-border'
                 }`}
               >
                 {idx + 1}
@@ -359,7 +359,7 @@ export function QuizAttempt() {
           </div>
           
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-primary-100 dark:border-dark-border text-xs text-text-muted dark:text-stone-400">
+          <div className="flex items-center gap-4 mt-4 pt-4 border-t border-primary-100 dark:border-dark-border text-xs text-text-muted dark:text-slate-400">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded bg-gradient-to-br from-primary-500 to-primary-600" />
               <span>Current</span>

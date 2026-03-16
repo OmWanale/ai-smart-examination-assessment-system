@@ -58,13 +58,13 @@ module.exports = {
           warm: '#FEF3D6',
           card: '#FFFFFF',
         },
-        // Dark mode backgrounds
+        // Dark mode backgrounds - cool black/blue palette
         dark: {
-          bg: '#1C1917',
-          card: '#292524',
-          surface: '#1F1D1B',
-          border: '#44403C',
-          hover: '#3D3835',
+          bg: '#0B1120',
+          card: '#111827',
+          surface: '#1E293B',
+          border: '#334155',
+          hover: '#1F2937',
         },
         // Text colors - Warm charcoal tones
         text: {

@@ -14,7 +14,7 @@ function RoleButton({ role, selectedRole, onClick, icon, label }) {
       className={`flex-1 py-4 px-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center gap-2 ${
         isSelected
           ? 'border-primary-500 bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/40 dark:to-primary-900/20 text-primary-700 dark:text-primary-400 shadow-warm'
-          : 'border-stone-200 dark:border-dark-border bg-white dark:bg-dark-surface text-text-muted dark:text-stone-400 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/50 dark:hover:bg-dark-hover'
+          : 'border-stone-200 dark:border-dark-border bg-white dark:bg-dark-surface text-text-muted dark:text-slate-400 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-primary-50/50 dark:hover:bg-dark-hover'
       }`}
     >
       <span className="text-3xl">{icon}</span>
@@ -78,10 +78,10 @@ export function LoginPage() {
   return (
     <AuthLayout>
       <Card className="shadow-lg dark:shadow-dark">
-        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-stone-100 mb-2">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-slate-100 mb-2">
           Welcome Back
         </h2>
-        <p className="text-text-muted dark:text-stone-400 mb-6">
+        <p className="text-text-muted dark:text-slate-400 mb-6">
           Sign in to continue to your dashboard
         </p>
 
@@ -173,7 +173,7 @@ export function LoginPage() {
             <div className="divider w-full"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-stone-400">
+            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-slate-400">
               Or continue with
             </span>
           </div>
@@ -207,7 +207,7 @@ export function LoginPage() {
           Sign in with Google
         </Button>
 
-        <p className="text-center text-sm text-text-muted dark:text-stone-400 mt-6">
+        <p className="text-center text-sm text-text-muted dark:text-slate-400 mt-6">
           Don't have an account?{' '}
           <Link to="/register" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">
             Sign up
@@ -280,10 +280,10 @@ export function RegisterPage() {
   return (
     <AuthLayout>
       <Card className="shadow-lg dark:shadow-dark">
-        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-stone-100 mb-2">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-slate-100 mb-2">
           Create Account
         </h2>
-        <p className="text-text-muted dark:text-stone-400 mb-6">
+        <p className="text-text-muted dark:text-slate-400 mb-6">
           Join our learning platform today
         </p>
 
@@ -399,7 +399,7 @@ export function RegisterPage() {
             <div className="divider w-full"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-stone-400">
+            <span className="px-3 bg-white dark:bg-dark-card text-text-muted dark:text-slate-400">
               Or continue with
             </span>
           </div>
@@ -433,7 +433,7 @@ export function RegisterPage() {
           Sign up with Google
         </Button>
 
-        <p className="text-center text-sm text-text-muted dark:text-stone-400 mt-6">
+        <p className="text-center text-sm text-text-muted dark:text-slate-400 mt-6">
           Already have an account?{' '}
           <Link to="/login" className="text-primary-600 dark:text-primary-400 font-semibold hover:underline">
             Login

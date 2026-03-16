@@ -48,7 +48,7 @@ export function AuthLayout({ children }) {
           <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent">
             Quiz Desktop
           </h1>
-          <p className="text-text-muted dark:text-stone-400 mt-2 text-sm">
+          <p className="text-text-muted dark:text-slate-400 mt-2 text-sm">
             AI-Powered Quiz Generation Platform
           </p>
         </div>
@@ -63,11 +63,11 @@ export function PageHeader({ title, subtitle, action, backLink }) {
     <div className="mb-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-dark dark:text-stone-100">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-dark dark:text-slate-100">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-text-muted dark:text-stone-400 mt-1">{subtitle}</p>
+            <p className="text-text-muted dark:text-slate-400 mt-1">{subtitle}</p>
           )}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
@@ -80,7 +80,7 @@ export function PageSection({ title, children, className = '' }) {
   return (
     <section className={`mb-8 ${className}`}>
       {title && (
-        <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 mb-4">
+        <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 mb-4">
           {title}
         </h2>
       )}

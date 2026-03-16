@@ -2,11 +2,11 @@ export function Button({ children, variant = 'primary', size = 'md', className =
   const baseClasses = 'font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]';
   
   const variantClasses = {
-    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-warm focus:ring-primary-400 dark:from-primary-600 dark:to-primary-700 dark:hover:from-primary-500 dark:hover:to-primary-600',
-    secondary: 'bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:from-secondary-600 hover:to-secondary-700 shadow-md hover:shadow-warm focus:ring-secondary-400 dark:from-secondary-600 dark:to-secondary-700',
-    outline: 'border-2 border-primary-500 text-primary-600 hover:bg-primary-50 focus:ring-primary-400 dark:border-primary-400 dark:text-primary-400 dark:hover:bg-dark-hover',
+    primary: 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700 shadow-md hover:shadow-warm focus:ring-primary-400 dark:from-blue-700 dark:to-blue-800 dark:hover:from-blue-600 dark:hover:to-blue-700',
+    secondary: 'bg-gradient-to-r from-secondary-500 to-secondary-600 text-white hover:from-secondary-600 hover:to-secondary-700 shadow-md hover:shadow-warm focus:ring-secondary-400 dark:from-slate-700 dark:to-slate-800 dark:hover:from-slate-600 dark:hover:to-slate-700',
+    outline: 'border-2 border-primary-500 text-primary-600 hover:bg-primary-50 focus:ring-primary-400 dark:border-blue-400 dark:text-blue-300 dark:hover:bg-dark-hover',
     danger: 'bg-gradient-to-r from-error-500 to-error-600 text-white hover:from-error-600 hover:to-error-700 shadow-md focus:ring-error-400 dark:from-error-600 dark:to-error-700',
-    ghost: 'text-text-dark hover:bg-primary-100 focus:ring-primary-400 dark:text-stone-200 dark:hover:bg-dark-hover',
+    ghost: 'text-text-dark hover:bg-primary-100 focus:ring-primary-400 dark:text-slate-200 dark:hover:bg-dark-hover',
     success: 'bg-gradient-to-r from-success-500 to-success-600 text-white hover:from-success-600 hover:to-success-500 shadow-md focus:ring-success-400',
   };
 
@@ -35,7 +35,7 @@ export function Input({ label, error, helper, className = '', icon, ...props }) 
       {label && <label className="label">{label}</label>}
       <div className="relative">
         {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 dark:text-stone-500">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400 dark:text-slate-400">
             {icon}
           </div>
         )}
@@ -45,7 +45,7 @@ export function Input({ label, error, helper, className = '', icon, ...props }) 
         />
       </div>
       {error && <p className="text-error-500 text-sm mt-1.5 flex items-center gap-1"><span>⚠</span>{error}</p>}
-      {helper && !error && <p className="text-text-muted text-sm mt-1.5 dark:text-stone-400">{helper}</p>}
+      {helper && !error && <p className="text-text-muted text-sm mt-1.5 dark:text-slate-400">{helper}</p>}
     </div>
   );
 }
@@ -60,7 +60,7 @@ export function Textarea({ label, error, helper, className = '', rows = 4, ...pr
         {...props}
       />
       {error && <p className="text-error-500 text-sm mt-1.5">{error}</p>}
-      {helper && !error && <p className="text-text-muted text-sm mt-1.5 dark:text-stone-400">{helper}</p>}
+      {helper && !error && <p className="text-text-muted text-sm mt-1.5 dark:text-slate-400">{helper}</p>}
     </div>
   );
 }
@@ -105,8 +105,8 @@ export function CardHeader({ title, subtitle, action, className = '' }) {
   return (
     <div className={`flex items-center justify-between mb-4 ${className}`}>
       <div>
-        <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100">{title}</h3>
-        {subtitle && <p className="text-sm text-text-muted mt-0.5 dark:text-stone-400">{subtitle}</p>}
+        <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100">{title}</h3>
+        {subtitle && <p className="text-sm text-text-muted mt-0.5 dark:text-slate-400">{subtitle}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>
@@ -141,13 +141,13 @@ export function Alert({ type = 'info', children, className = '', dismissible = f
 
 export function Badge({ children, variant = 'primary', size = 'md', className = '' }) {
   const variantClasses = {
-    primary: 'bg-primary-100 text-primary-700 dark:bg-primary-800/40 dark:text-primary-300',
-    secondary: 'bg-secondary-100 text-secondary-700 dark:bg-secondary-800/40 dark:text-secondary-300',
+    primary: 'bg-primary-100 text-primary-700 dark:bg-blue-900/50 dark:text-blue-200',
+    secondary: 'bg-secondary-100 text-secondary-700 dark:bg-slate-800 dark:text-slate-200',
     accent: 'bg-accent-100 text-accent-700 dark:bg-accent-800/40 dark:text-accent-300',
     success: 'bg-success-100 text-success-600 dark:bg-success-600/30 dark:text-success-500',
     warning: 'bg-warning-100 text-warning-600 dark:bg-warning-600/30 dark:text-warning-500',
     error: 'bg-error-100 text-error-600 dark:bg-error-600/30 dark:text-error-500',
-    neutral: 'bg-stone-100 text-stone-600 dark:bg-stone-700/40 dark:text-stone-300',
+    neutral: 'bg-stone-100 text-stone-600 dark:bg-slate-700/40 dark:text-slate-300',
   };
 
   const sizeClasses = {
@@ -181,7 +181,7 @@ export function LoadingOverlay({ message = 'Loading...' }) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white dark:bg-dark-card rounded-xl p-6 shadow-xl flex flex-col items-center gap-4">
         <Spinner size="lg" />
-        <p className="text-text-dark dark:text-stone-100 font-medium">{message}</p>
+        <p className="text-text-dark dark:text-slate-100 font-medium">{message}</p>
       </div>
     </div>
   );
@@ -191,8 +191,8 @@ export function EmptyState({ icon = '📭', title, description, action }) {
   return (
     <div className="text-center py-12 px-6">
       <div className="text-5xl mb-4">{icon}</div>
-      <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-2">{title}</h3>
-      {description && <p className="text-text-muted dark:text-stone-400 mb-6 max-w-md mx-auto">{description}</p>}
+      <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-2">{title}</h3>
+      {description && <p className="text-text-muted dark:text-slate-400 mb-6 max-w-md mx-auto">{description}</p>}
       {action && <div>{action}</div>}
     </div>
   );
@@ -248,7 +248,7 @@ export function ProgressBar({ value, max = 100, showLabel = false, variant = 'pr
         />
       </div>
       {showLabel && (
-        <p className="text-sm text-text-muted dark:text-stone-400 mt-1">{Math.round(percentage)}%</p>
+        <p className="text-sm text-text-muted dark:text-slate-400 mt-1">{Math.round(percentage)}%</p>
       )}
     </div>
   );

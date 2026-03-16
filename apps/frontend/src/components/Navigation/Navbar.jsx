@@ -82,7 +82,7 @@ export function Navbar() {
                     {user.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div className="hidden lg:block">
-                    <p className="text-sm font-medium text-text-dark dark:text-stone-100 truncate max-w-[140px]">
+                    <p className="text-sm font-medium text-text-dark dark:text-slate-100 truncate max-w-[140px]">
                       {user.email}
                     </p>
                     <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase">
@@ -118,7 +118,7 @@ export function Navbar() {
               onClick={() => setMenuOpen(!menuOpen)}
               className="p-2 rounded-lg hover:bg-primary-100 dark:hover:bg-dark-hover transition-colors"
             >
-              <svg className="w-6 h-6 text-text-dark dark:text-stone-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-text-dark dark:text-slate-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {menuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -139,7 +139,7 @@ export function Navbar() {
                     {user.email?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-text-dark dark:text-stone-100">{user.email}</p>
+                    <p className="text-sm font-medium text-text-dark dark:text-slate-100">{user.email}</p>
                     <span className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase">{user.role}</span>
                   </div>
                 </div>
@@ -156,7 +156,7 @@ export function Navbar() {
             ) : (
               <div className="space-y-2">
                 <Link to="/login" onClick={() => setMenuOpen(false)}>
-                  <div className="px-4 py-3 text-sm font-medium text-text-dark dark:text-stone-100 hover:bg-primary-50 dark:hover:bg-dark-hover rounded-lg transition-colors">
+                  <div className="px-4 py-3 text-sm font-medium text-text-dark dark:text-slate-100 hover:bg-primary-50 dark:hover:bg-dark-hover rounded-lg transition-colors">
                     Login
                   </div>
                 </Link>

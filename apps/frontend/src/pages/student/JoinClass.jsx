@@ -67,7 +67,7 @@ export function JoinClass() {
                 />
               </svg>
             </div>
-            <p className="text-text-muted dark:text-stone-400">
+            <p className="text-text-muted dark:text-slate-400">
               Enter the join code provided by your teacher to access the class
             </p>
           </div>

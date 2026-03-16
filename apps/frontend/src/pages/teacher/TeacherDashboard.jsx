@@ -19,10 +19,10 @@ function StatCard({ icon, value, label, variant = 'primary' }) {
           {icon}
         </div>
         <div>
-          <div className="text-3xl font-display font-bold text-text-dark dark:text-stone-100">
+          <div className="text-3xl font-display font-bold text-text-dark dark:text-slate-100">
             {value}
           </div>
-          <p className="text-text-muted dark:text-stone-400 text-sm">{label}</p>
+          <p className="text-text-muted dark:text-slate-400 text-sm">{label}</p>
         </div>
       </div>
       {/* Decorative gradient */}
@@ -88,7 +88,7 @@ export function TeacherDashboard() {
 
       {/* Classes Section */}
       <div>
-        <h2 className="text-xl font-display font-bold text-text-dark dark:text-stone-100 mb-4 flex items-center gap-2">
+        <h2 className="text-xl font-display font-bold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
           <span>Your Classes</span>
           {safeClasses.length > 0 && (
             <Badge variant="primary" size="sm">{safeClasses.length}</Badge>
@@ -126,22 +126,22 @@ export function TeacherDashboard() {
                     </Badge>
                   </div>
                   
-                  <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 mb-1">
+                  <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-1">
                     {cls.name}
                   </h3>
                   
                   {cls.description && (
-                    <p className="text-text-muted dark:text-stone-400 text-sm mb-4 line-clamp-2">
+                    <p className="text-text-muted dark:text-slate-400 text-sm mb-4 line-clamp-2">
                       {cls.description}
                     </p>
                   )}
                   
                   <div className="flex items-center gap-3 mt-auto pt-4 border-t border-primary-100 dark:border-dark-border">
-                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-stone-400">
+                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-slate-400">
                       <span>👨‍🎓</span>
                       <span>{cls.studentCount || cls.students?.length || 0} students</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-stone-400">
+                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-slate-400">
                       <span>📝</span>
                       <span>{cls.quizCount || cls.quizzes?.length || 0} quizzes</span>
                     </div>

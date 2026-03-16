@@ -64,11 +64,11 @@ export function StudentDashboard() {
                     📚
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-display font-semibold text-text-dark dark:text-stone-100 truncate">
+                    <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 truncate">
                       {classItem.name}
                     </h3>
                     {classItem.description && (
-                      <p className="text-text-muted dark:text-stone-400 text-sm line-clamp-2 mt-1">
+                      <p className="text-text-muted dark:text-slate-400 text-sm line-clamp-2 mt-1">
                         {classItem.description}
                       </p>
                     )}
@@ -85,15 +85,15 @@ export function StudentDashboard() {
                 </div>
 
                 <div className="pt-4 border-t border-primary-100 dark:border-dark-border">
-                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400">
+                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400">
                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-300 to-secondary-300 flex items-center justify-center text-white text-xs font-semibold">
                       {(classItem.teacher?.name || classItem.teacher?.email || 'T').charAt(0).toUpperCase()}
                     </div>
                     <span>
-                      Taught by <strong className="text-text-dark dark:text-stone-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
+                      Taught by <strong className="text-text-dark dark:text-slate-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
                     </span>
                   </div>
-                  <p className="text-xs text-text-light dark:text-stone-500 mt-2">
+                  <p className="text-xs text-text-light dark:text-slate-500 mt-2">
                     Joined {new Date(classItem.createdAt).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric', 

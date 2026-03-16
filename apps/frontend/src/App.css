@@ -3,6 +3,10 @@
   background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
 }
 
+.dark .App {
+  background: radial-gradient(circle at top, #111827 0%, #0f172a 35%, #020617 100%);
+}
+
 /* Utility classes for common patterns */
 .container-max {
   max-width: 80rem;

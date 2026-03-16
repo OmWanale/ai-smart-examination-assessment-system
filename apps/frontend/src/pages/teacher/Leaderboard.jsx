@@ -76,7 +76,7 @@ export function Leaderboard() {
     if (rank === 1) return { icon: '🥇', bg: 'bg-gradient-to-br from-amber-300 to-amber-500', shadow: 'shadow-amber-300/50', textColor: 'text-white' };
     if (rank === 2) return { icon: '🥈', bg: 'bg-gradient-to-br from-gray-300 to-gray-500', shadow: 'shadow-gray-300/50', textColor: 'text-white' };
     if (rank === 3) return { icon: '🥉', bg: 'bg-gradient-to-br from-orange-300 to-orange-600', shadow: 'shadow-orange-300/50', textColor: 'text-white' };
-    return { icon: `${rank}`, bg: 'bg-stone-100 dark:bg-dark-hover', shadow: '', textColor: 'text-text-muted dark:text-stone-400' };
+    return { icon: `${rank}`, bg: 'bg-stone-100 dark:bg-dark-hover', shadow: '', textColor: 'text-text-muted dark:text-slate-400' };
   };
 
   const isCurrentUser = (submission) => {
@@ -90,7 +90,7 @@ export function Leaderboard() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-text-muted dark:text-stone-400 mt-4">Loading leaderboard...</p>
+            <p className="text-text-muted dark:text-slate-400 mt-4">Loading leaderboard...</p>
           </div>
         </div>
       </MainLayout>
@@ -127,7 +127,7 @@ export function Leaderboard() {
     <MainLayout>
       <div className="max-w-5xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-stone-400 mb-4">
+        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400 mb-4">
           <Link to={dashboardPath} className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             Dashboard
           </Link>
@@ -144,7 +144,7 @@ export function Leaderboard() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-text-dark dark:text-stone-200">Leaderboard</span>
+          <span className="text-text-dark dark:text-slate-200">Leaderboard</span>
         </div>
 
         <PageHeader
@@ -168,15 +168,15 @@ export function Leaderboard() {
                   {getMedalConfig(currentUserRank).icon}
                 </div>
                 <div>
-                  <p className="text-sm text-text-muted dark:text-stone-400">Your Rank</p>
+                  <p className="text-sm text-text-muted dark:text-slate-400">Your Rank</p>
                   <p className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400">
-                    #{currentUserRank} <span className="text-lg font-normal text-text-muted dark:text-stone-400">of {leaderboard.length}</span>
+                    #{currentUserRank} <span className="text-lg font-normal text-text-muted dark:text-slate-400">of {leaderboard.length}</span>
                   </p>
                 </div>
               </div>
               {leaderboard[currentUserRank - 1] && (
                 <div className="text-right">
-                  <p className="text-sm text-text-muted dark:text-stone-400">Your Score</p>
+                  <p className="text-sm text-text-muted dark:text-slate-400">Your Score</p>
                   <p className={`text-3xl font-display font-bold ${getScoreConfig(leaderboard[currentUserRank - 1].score, maxScore).color}`}>
                     {leaderboard[currentUserRank - 1].score}/{maxScore}
                   </p>
@@ -197,7 +197,7 @@ export function Leaderboard() {
             <div className="text-2xl font-display font-bold text-primary-600 dark:text-primary-400">
               {leaderboard?.length || 0}
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Participants</p>
+            <p className="text-text-muted dark:text-slate-400 text-xs">Participants</p>
           </Card>
           <Card className="text-center">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center mx-auto mb-2 shadow-md">
@@ -206,7 +206,7 @@ export function Leaderboard() {
               </svg>
             </div>
             <div className="text-2xl font-display font-bold text-secondary-600 dark:text-secondary-400">{maxScore}</div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Max Score</p>
+            <p className="text-text-muted dark:text-slate-400 text-xs">Max Score</p>
           </Card>
           <Card className="text-center">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-success-400 to-success-600 flex items-center justify-center mx-auto mb-2 shadow-md">
@@ -217,7 +217,7 @@ export function Leaderboard() {
             <div className="text-2xl font-display font-bold text-success-600 dark:text-success-400">
               {avgScore}%
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Avg Score</p>
+            <p className="text-text-muted dark:text-slate-400 text-xs">Avg Score</p>
           </Card>
           <Card className="text-center">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-warning-400 to-warning-600 flex items-center justify-center mx-auto mb-2 shadow-md">
@@ -228,14 +228,14 @@ export function Leaderboard() {
             <div className="text-2xl font-display font-bold text-warning-600 dark:text-warning-400 capitalize">
               {quizData?.difficulty || 'Medium'}
             </div>
-            <p className="text-text-muted dark:text-stone-400 text-xs">Difficulty</p>
+            <p className="text-text-muted dark:text-slate-400 text-xs">Difficulty</p>
           </Card>
         </div>
 
         {/* Leaderboard Table */}
         <Card>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-stone-100 flex items-center gap-2">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
               <span>🏆</span> Rankings
             </h2>
             <Button variant="ghost" size="sm" onClick={loadData}>
@@ -287,11 +287,11 @@ export function Leaderboard() {
                     <div className="flex items-center gap-3 flex-1">
                       <Avatar name={submission.student?.name || submission.student?.email || 'Student'} size="md" />
                       <div>
-                        <p className={`font-semibold ${isMe ? 'text-primary-700 dark:text-primary-300' : 'text-text-dark dark:text-stone-100'}`}>
+                        <p className={`font-semibold ${isMe ? 'text-primary-700 dark:text-primary-300' : 'text-text-dark dark:text-slate-100'}`}>
                           {submission.student?.name || submission.student?.email || 'Anonymous'}
                           {isMe && <span className="ml-2 text-xs bg-primary-500 text-white px-2 py-0.5 rounded-full">You</span>}
                         </p>
-                        <p className="text-xs text-text-muted dark:text-stone-400">
+                        <p className="text-xs text-text-muted dark:text-slate-400">
                           {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString() : 'Time not recorded'}
                         </p>
                       </div>

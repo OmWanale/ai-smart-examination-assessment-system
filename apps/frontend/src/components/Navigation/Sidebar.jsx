@@ -104,8 +104,8 @@ export function Sidebar() {
             to={item.path}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
               isActive(item.path)
-                ? 'bg-gradient-to-r from-primary-100 to-primary-50 dark:from-primary-900/40 dark:to-primary-900/20 text-primary-700 dark:text-primary-400 font-medium shadow-sm'
-                : 'text-text-muted dark:text-stone-400 hover:bg-primary-50 dark:hover:bg-dark-hover hover:text-primary-600 dark:hover:text-primary-400'
+                ? 'bg-gradient-to-r from-primary-100 to-primary-50 dark:from-blue-900/40 dark:to-slate-900/40 text-primary-700 dark:text-blue-300 font-medium shadow-sm'
+                : 'text-text-muted dark:text-slate-400 hover:bg-primary-50 dark:hover:bg-dark-hover hover:text-primary-600 dark:hover:text-blue-300'
             } ${isCollapsed ? 'justify-center px-3' : ''}`}
             title={isCollapsed ? item.label : undefined}
           >
@@ -130,7 +130,7 @@ export function Sidebar() {
               {user.role === 'teacher' ? '👨‍🏫' : '👨‍🎓'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-text-muted dark:text-stone-400 uppercase tracking-wide">Role</p>
+              <p className="text-xs text-text-muted dark:text-slate-400 uppercase tracking-wide">Role</p>
               <p className="text-sm font-semibold text-primary-700 dark:text-primary-400 capitalize truncate">
                 {user.role}
               </p>

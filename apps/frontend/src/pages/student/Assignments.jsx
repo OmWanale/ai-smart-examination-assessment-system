@@ -156,10 +156,10 @@ export function StudentAssignments() {
                   <div className="flex-1">
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-text-dark dark:text-stone-100">
+                        <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100">
                           {assignment.title}
                         </h3>
-                        <p className="text-text-muted dark:text-stone-400 text-sm mt-1">
+                        <p className="text-text-muted dark:text-slate-400 text-sm mt-1">
                           By {assignment.createdBy?.name || 'Teacher'}
                         </p>
                       </div>
@@ -174,14 +174,14 @@ export function StudentAssignments() {
                       )}
                     </div>
 
-                    <p className="text-text-muted dark:text-stone-400 text-sm mt-2">
+                    <p className="text-text-muted dark:text-slate-400 text-sm mt-2">
                       Due: {dueDate.display}
                     </p>
                   </div>
                 </div>
 
                 {!isExpanded ? (
-                  <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-stone-700">
+                  <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700">
                     {assignment.file && (
                       <Button
                         size="sm"
@@ -200,7 +200,7 @@ export function StudentAssignments() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="pt-3 border-t border-gray-200 dark:border-stone-700 space-y-4">
+                  <div className="pt-3 border-t border-gray-200 dark:border-slate-700 space-y-4">
                     <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
                       <p className="text-sm text-blue-900 dark:text-blue-400 font-medium mb-2">
                         Instructions
@@ -216,10 +216,10 @@ export function StudentAssignments() {
 
                     <div className="w-full">
                       <label className="label">Submit Your Work</label>
-                      <div className="border-2 border-dashed border-primary-300 dark:border-stone-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
+                      <div className="border-2 border-dashed border-primary-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
                         onClick={() => document.getElementById(`file-input-${assignment._id}`).click()}
                       >
-                        <p className="text-text-muted dark:text-stone-400">
+                        <p className="text-text-muted dark:text-slate-400">
                           {submission[assignment._id]
                             ? submission[assignment._id].name
                             : 'Click to upload file (PDF, DOC, DOCX)'}
