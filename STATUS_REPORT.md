@@ -208,13 +208,13 @@ npm install
 # Start development server
 npm start
 
-# Opens http://localhost:3000 automatically
+# Opens https://classyn-ai.onrender.com automatically
 ```
 
 ### Test Connection
 ```bash
 # In browser or Postman
-curl http://localhost:5000/api/auth/me
+curl https://classyn-ai.onrender.com/api/auth/me
 # Should return 401 (unauthorized without token) - this is expected
 ```
 
@@ -315,7 +315,7 @@ Status: ✅ Compiled successfully
 ### Backend Status
 - ✅ All routes defined and tested
 - ✅ Error handling in place
-- ✅ CORS enabled for localhost:3000
+- ✅ CORS enabled for https://classyn-ai.onrender.com
 - ✅ MongoDB connection verified
 - ✅ JWT middleware active
 
@@ -397,8 +397,8 @@ Status: ✅ Compiled successfully
 
 ## 🔗 Quick Links
 
-- **Backend API**: http://localhost:5000/api
-- **Frontend App**: http://localhost:3000
+- **Backend API**: https://classyn-ai.onrender.com/api
+- **Frontend App**: https://classyn-ai.onrender.com
 - **API Documentation**: [API_REFERENCE.md](./API_REFERENCE.md)
 - **Frontend Guide**: [FRONTEND_SETUP.md](./FRONTEND_SETUP.md)
 - **Quick Start**: [QUICKSTART.md](./QUICKSTART.md)
@@ -472,3 +472,4 @@ Status: ✅ Compiled successfully
 **Last Updated**: Today  
 **Version**: 1.0.0  
 **Status**: ✅ Ready for Feature Development
+

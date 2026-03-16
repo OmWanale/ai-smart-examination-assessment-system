@@ -104,18 +104,18 @@ Step 6: Create project-level docs
               │
               ├─→ TERMINAL 1: React Dev Server
               │   ├─ Command: cross-env BROWSER=none npm start
-              │   ├─ Starts on http://localhost:3000
+              │   ├─ Starts on https://classyn-ai.onrender.com
               │   ├─ Hot reload enabled
               │   ├─ File changes trigger browser refresh
               │   └─ Stays running...
               │
               └─→ TERMINAL 2: Electron App
-                  ├─ Waits for http://localhost:3000 (wait-on)
+                  ├─ Waits for https://classyn-ai.onrender.com (wait-on)
                   ├─ Command: electron .
                   ├─ Reads package.json "main": "public/main.js"
                   ├─ Launches main.js
                   ├─ main.js creates window
-                  ├─ Loads http://localhost:3000
+                  ├─ Loads https://classyn-ai.onrender.com
                   ├─ Opens DevTools (F12)
                   └─ App visible to user
 
@@ -212,7 +212,7 @@ Files ready for distribution: dist/
         │                                           │
         │  ┌───────────────────────────────────────┐│
         │  │   HTTP/HTTPS (Backend API)            ││
-        │  │   - Connects to localhost:5000        ││
+        │  │   - Connects to classyn-ai.onrender.com        ││
         │  │   - Using axios                       ││
         │  │   - Over network (not local IPC)      ││
         │  └───────────────────────────────────────┘│
@@ -422,7 +422,7 @@ Compiled successfully!
 
 You can now view quiz-desktop-frontend in the browser.
 
-  Local:            http://localhost:3000
+  Local:            https://classyn-ai.onrender.com
   On Your Network:  http://192.168.x.x:3000
 
 Note that the development build is not optimized.
@@ -491,4 +491,5 @@ npm run electron:dev
 ```
 
 That's it! Electron is now fully configured and ready to wrap your React quiz application. 🎉
+
 

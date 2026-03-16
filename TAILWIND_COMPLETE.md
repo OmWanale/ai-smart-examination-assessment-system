@@ -75,7 +75,7 @@ The project was built for deployment.
 cd apps/frontend
 npm start
 ```
-Opens http://localhost:3000 with live reload.
+Opens https://classyn-ai.onrender.com with live reload.
 
 ### Production Build
 ```bash
@@ -154,7 +154,7 @@ apps/frontend/
 
 ### `.env.local`
 ```
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=https://classyn-ai.onrender.com/api
 ```
 
 ### `tailwind.config.js`
@@ -410,4 +410,5 @@ For issues:
 **Status**: ✅ **Tailwind CSS Frontend Setup Complete**
 
 The React frontend is now fully configured with Tailwind CSS and ready for page development. All foundation components and API integration are in place. You can now build the dashboard pages and features.
+
 

@@ -203,7 +203,7 @@ const googleCallback = asyncHandler(async (req, res) => {
 
   // Redirect to frontend with token
   // In production, redirect to your Electron app or frontend
-  const redirectUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+  const redirectUrl = process.env.FRONTEND_URL || "https://classyn-ai.onrender.com";
   res.redirect(`${redirectUrl}/auth/callback?token=${token}`);
 });
 
@@ -339,3 +339,4 @@ module.exports = {
   getMe,
   googleCallback,
 };
+

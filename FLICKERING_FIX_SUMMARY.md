@@ -55,7 +55,7 @@ if (isElectron()) {
 
 Added `FAST_REFRESH=false` to electron:dev script:
 ```json
-"electron:dev": "concurrently \"cross-env BROWSER=none FAST_REFRESH=false npm --prefix ../frontend start\" \"wait-on http://localhost:3000 && electron .\""
+"electron:dev": "concurrently \"cross-env BROWSER=none FAST_REFRESH=false npm --prefix ../frontend start\" \"wait-on https://classyn-ai.onrender.com && electron .\""
 ```
 
 **Why**: Prevents HMR from triggering constant reloads in Electron window
@@ -144,7 +144,7 @@ GENERATE_SOURCEMAP=false
 
 ✅ **All changes are development-only:**
 - Production builds unaffected
-- Web development (localhost:3000 in browser) unaffected
+- Web development (classyn-ai.onrender.com in browser) unaffected
 - Real authentication still available
 - No backend code modified
 
@@ -224,3 +224,4 @@ npm run electron:dev
 ## Questions?
 
 The fixes are all development-only and clearly marked with `// DEVELOPMENT FIX:` comments for easy identification and removal if needed.
+

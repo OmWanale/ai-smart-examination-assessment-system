@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 const passport = require("passport");
 const configurePassport = require("./config/passport");
@@ -28,16 +29,21 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// Serve uploaded files statically
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // API Routes
 const authRoutes = require("./routes/auth");
 const classRoutes = require("./routes/classes");
 const quizRoutes = require("./routes/quizzes");
 const submissionRoutes = require("./routes/submissions");
+const assignmentRoutes = require("./routes/assignments");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use("/api/assignments", assignmentRoutes);
 
 // Error handlers (must be last)
 app.use(notFound);

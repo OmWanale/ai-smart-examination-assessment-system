@@ -34,7 +34,7 @@
 - public/preload.js (1.4 KB)
 
 ### Task 3: Configure Electron to load React ✅
-- [x] Development mode: Loads http://localhost:3000
+- [x] Development mode: Loads https://classyn-ai.onrender.com
   - Waits for React dev server
   - Hot reload enabled
   - DevTools auto-open
@@ -365,4 +365,5 @@ cd apps/desktop && npm install && npm run electron:dev
 ```
 
 🎉 **You're all set!** Enjoy your desktop app!
+
 

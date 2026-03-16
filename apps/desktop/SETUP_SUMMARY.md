@@ -28,7 +28,7 @@
 {
   "main": "public/main.js",                    // Entry point
   "scripts": {
-    "electron:dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on https://classyn-ai.onrender.com && electron .\"",
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build": "npm run build && electron-builder",
     "electron:build:all": "npm run build && electron-builder -mwl"
@@ -69,7 +69,7 @@ webPreferences: {
 
 **Functionality:**
 - ✅ Window creation and lifecycle management
-- ✅ Development server detection (localhost:3000)
+- ✅ Development server detection (classyn-ai.onrender.com)
 - ✅ Production build loading (from /build)
 - ✅ DevTools auto-open in development
 - ✅ Application menu (File, Edit, View, Help)
@@ -113,14 +113,14 @@ window.electron = {
 
 ```
 1. Start React dev server
-   └─ Runs on http://localhost:3000
+   └─ Runs on https://classyn-ai.onrender.com
    └─ Hot reload enabled
 
 2. Wait for server ready
-   └─ Uses wait-on to check http://localhost:3000
+   └─ Uses wait-on to check https://classyn-ai.onrender.com
 
 3. Launch Electron
-   └─ Loads http://localhost:3000 in window
+   └─ Loads https://classyn-ai.onrender.com in window
    └─ Opens DevTools for debugging
    └─ File changes hot-reload automatically
 ```
@@ -358,7 +358,7 @@ npm start
 ### Blank window in Electron
 - Check DevTools console (F12)
 - Look for preload.js errors
-- Verify http://localhost:3000 loads in browser
+- Verify https://classyn-ai.onrender.com loads in browser
 
 ### Build creates no .exe
 ```bash
@@ -433,4 +433,5 @@ cd apps/desktop
 npm install
 npm run electron:dev
 ```
+
 

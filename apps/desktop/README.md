@@ -33,7 +33,7 @@ npm run electron:dev
 ```
 
 This command:
-1. Starts React dev server on `http://localhost:3000`
+1. Starts React dev server on `https://classyn-ai.onrender.com`
 2. Waits for dev server to be ready
 3. Launches Electron pointing to dev server
 4. Opens DevTools automatically
@@ -103,7 +103,7 @@ Electron-builder settings:
 Set in `.env` or when running npm commands:
 
 ```bash
-# Backend API URL (default: http://localhost:5000)
+# Backend API URL (default: https://classyn-ai.onrender.com)
 API_URL=http://api.example.com
 
 # Development mode (auto-detected)
@@ -206,3 +206,4 @@ const api = axios.create({
 - [Electron Security](https://www.electronjs.org/docs/tutorial/security)
 - [electron-builder](https://www.electron.build/)
 - [IPC (Inter-Process Communication)](https://www.electronjs.org/docs/api/ipc-main)
+

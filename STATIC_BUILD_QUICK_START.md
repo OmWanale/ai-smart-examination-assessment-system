@@ -7,7 +7,7 @@
 npm run electron:dev
   → Starts CRA dev server on localhost:3000
   → Enables HMR (Hot Module Reload)
-  → Electron loads http://localhost:3000
+  → Electron loads https://classyn-ai.onrender.com
   → WebSocket issues → Memory leaks → State corruption
   → UI breaks after interactions
 ```
@@ -60,3 +60,4 @@ That's it! Build happens automatically, then Electron launches with stable stati
 Window opens → Teacher Dashboard loads → Click buttons → Navigation works → State persists
 
 ✅ Success! No flickering, no broken UI, production-stable app.
+

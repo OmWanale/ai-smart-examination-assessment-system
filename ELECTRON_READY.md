@@ -29,7 +29,7 @@ npm run electron:build:all        # Build: All platforms (macOS, Windows, Linux)
 #### 2. **apps/desktop/public/main.js** (6.8 KB)
 - ✅ Electron main process (Node.js environment)
 - ✅ Window creation with secure webPreferences
-- ✅ Development mode: loads http://localhost:3000
+- ✅ Development mode: loads https://classyn-ai.onrender.com
 - ✅ Production mode: loads from React build files
 - ✅ Application menu (File, Edit, View, Help)
 - ✅ DevTools auto-open in development
@@ -109,7 +109,7 @@ window.electron = {
 ```bash
 npm run electron:dev
 ```
-- ✅ Starts React dev server on http://localhost:3000
+- ✅ Starts React dev server on https://classyn-ai.onrender.com
 - ✅ Waits for server to be ready
 - ✅ Launches Electron window
 - ✅ Opens DevTools for debugging
@@ -438,4 +438,5 @@ Start with:
 ```bash
 cd apps/desktop && npm install && npm run electron:dev
 ```
+
 

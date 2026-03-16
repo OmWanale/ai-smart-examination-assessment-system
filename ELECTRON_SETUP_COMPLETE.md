@@ -54,7 +54,7 @@ apps/desktop/
 ```bash
 npm run electron:dev
 └─ Starts React dev server + Electron together
-└─ http://localhost:3000 in Electron window
+└─ https://classyn-ai.onrender.com in Electron window
 └─ DevTools open for debugging
 └─ Hot reload enabled
 
@@ -78,7 +78,7 @@ npm run electron:build:all
 
 ✅ **Features:**
 - Window creation with secure webPreferences
-- Development mode detection (loads localhost:3000)
+- Development mode detection (loads classyn-ai.onrender.com)
 - Production mode loading (loads from /build)
 - Application menu (File, Edit, View, Help)
 - DevTools auto-open in development
@@ -171,7 +171,7 @@ npm run electron:dev
 ```
 
 This will:
-1. Start React dev server on http://localhost:3000
+1. Start React dev server on https://classyn-ai.onrender.com
 2. Wait for it to be ready
 3. Launch Electron window
 4. Automatically open DevTools
@@ -241,12 +241,12 @@ Developer runs: npm run electron:dev
          │   ├─→ Compile JSX → JavaScript
          │   └─→ Watch for file changes
          │
-         ├─→ Wait for server ready (http://localhost:3000)
+         ├─→ Wait for server ready (https://classyn-ai.onrender.com)
          │   └─→ Ping until 200 OK
          │
          ├─→ Launch Electron main.js
          │   ├─→ Create main window
-         │   ├─→ Load http://localhost:3000
+         │   ├─→ Load https://classyn-ai.onrender.com
          │   └─→ Open DevTools
          │
          └─→ Developer edits file
@@ -392,7 +392,7 @@ Manual checks:
 - [ ] `npm install` completes without errors
 - [ ] `npm run electron:dev` starts successfully
 - [ ] Electron window opens with React app
-- [ ] React dev server running on http://localhost:3000
+- [ ] React dev server running on https://classyn-ai.onrender.com
 - [ ] DevTools can be opened (F12)
 - [ ] Hot reload works (edit frontend code)
 - [ ] Navigation works (pages load)
@@ -465,4 +465,5 @@ Manual checks:
 | **Frontend Changes** | ✅ None | No modifications needed |
 | **Backend Changes** | ✅ None | No modifications needed |
 | **Ready to Use** | ✅ Yes | Run `npm run electron:dev` |
+
 

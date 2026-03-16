@@ -1,7 +1,7 @@
 // API Client with axios
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -33,7 +33,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      window.location.hash = '#/login';
     }
     
     return Promise.reject(error);
@@ -91,6 +91,25 @@ export const submissionAPI = {
     apiClient.get(`/submissions/${submissionId}`),
   getStudentSubmissions: () =>
     apiClient.get('/submissions/student'),
+};
+
+export const assignmentAPI = {
+  createAssignment: (formData) =>
+    apiClient.post('/assignments/create', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getAssignments: () =>
+    apiClient.get('/assignments'),
+  downloadAssignmentFile: (assignmentId) =>
+    apiClient.get(`/assignments/${assignmentId}/download`, {
+      responseType: 'blob',
+    }),
+  submitAssignment: (formData) =>
+    apiClient.post('/assignments/submit', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  getSubmissions: (assignmentId) =>
+    apiClient.get(`/assignments/${assignmentId}/submissions`),
 };
 
 export default apiClient;

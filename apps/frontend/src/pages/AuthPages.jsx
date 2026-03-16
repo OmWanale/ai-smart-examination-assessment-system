@@ -70,7 +70,7 @@ export function LoginPage() {
 
   const handleGoogleSignIn = () => {
     // Redirect to backend Google OAuth endpoint
-    const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const backendUrl = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
     const googleAuthUrl = backendUrl.replace('/api', '') + '/auth/google';
     window.location.href = googleAuthUrl;
   };
@@ -272,7 +272,7 @@ export function RegisterPage() {
   };
 
   const handleGoogleSignIn = () => {
-    const backendUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+    const backendUrl = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
     const googleAuthUrl = backendUrl.replace('/api', '') + '/auth/google';
     window.location.href = googleAuthUrl;
   };

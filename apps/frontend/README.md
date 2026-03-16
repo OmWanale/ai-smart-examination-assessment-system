@@ -6,7 +6,7 @@ A modern, responsive React frontend for the Quiz Desktop application, built with
 
 ### Prerequisites
 - Node.js 14+ and npm
-- Backend running on `http://localhost:5000`
+- Backend running on `https://classyn-ai.onrender.com`
 
 ### Installation
 
@@ -19,7 +19,7 @@ npm install
 ```bash
 npm start
 ```
-Opens [http://localhost:3000](http://localhost:3000) in your browser.
+Opens [https://classyn-ai.onrender.com](https://classyn-ai.onrender.com) in your browser.
 
 ### Production Build
 ```bash
@@ -88,12 +88,12 @@ src/
 
 ## 🔗 API Integration
 
-The frontend is configured to connect to the backend API at `http://localhost:5000/api`.
+The frontend is configured to connect to the backend API at `https://classyn-ai.onrender.com/api`.
 
 ### Configuration
 Set the API URL via environment variable:
 ```
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=https://classyn-ai.onrender.com/api
 ```
 
 See `.env.example` for all available configuration options.
@@ -223,3 +223,4 @@ MIT
 ## 🤝 Contributing
 
 Contributions are welcome! Please follow the existing code style and component patterns.
+

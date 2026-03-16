@@ -6,7 +6,7 @@
 
 **Removed:**
 - Conditional loading based on `isDevelopment`
-- Dev server URL: `http://localhost:3000`
+- Dev server URL: `https://classyn-ai.onrender.com`
 - HMR and WebSocket related code
 - Input event interception for reload blocking
 
@@ -29,7 +29,7 @@ mainWindow.loadURL(startURL);
 
 **Old script:**
 ```json
-"electron:dev": "concurrently \"cross-env BROWSER=none FAST_REFRESH=false npm --prefix ../frontend start\" \"wait-on http://localhost:3000 && electron .\""
+"electron:dev": "concurrently \"cross-env BROWSER=none FAST_REFRESH=false npm --prefix ../frontend start\" \"wait-on https://classyn-ai.onrender.com && electron .\""
 ```
 
 **New script:**
@@ -188,7 +188,7 @@ npx electron .
 ```javascript
 // Old (Unstable):
 const startURL = isDevelopment 
-  ? 'http://localhost:3000'           // Dev server with HMR
+  ? 'https://classyn-ai.onrender.com'           // Dev server with HMR
   : `file://${...}/build/index.html`;  // Static build
 
 // New (Stable):
@@ -221,3 +221,4 @@ const startURL = `file://${...}/build/index.html`;  // Always static
 ✅ **Buttons Work Immediately**
 ✅ **No UI Breaking After Interactions**
 ✅ **Production-Ready Architecture**
+

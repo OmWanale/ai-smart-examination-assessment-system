@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ProtectedRoute, PublicRoute } from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -12,6 +12,7 @@ import { CreateQuiz } from './pages/teacher/CreateQuiz';
 import { Leaderboard } from './pages/teacher/Leaderboard';
 import { TeacherQuizReview } from './pages/teacher/TeacherQuizReview';
 import { TeacherSubmissionView } from './pages/teacher/TeacherSubmissionView';
+import { TeacherAssignments } from './pages/teacher/Assignments';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import { StudentClasses } from './pages/student/StudentClasses';
 import { StudentQuizzes } from './pages/student/StudentQuizzes';
@@ -21,6 +22,7 @@ import { QuizAttempt } from './pages/student/QuizAttempt';
 import { QuizResult } from './pages/student/QuizResult';
 import { StudentQuizReview } from './pages/student/StudentQuizReview';
 import { StudentResults } from './pages/student/StudentResults';
+import { StudentAssignments } from './pages/student/Assignments';
 import { useAuthStore } from './store/authStore';
 import './App.css';
 
@@ -51,7 +53,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
         {/* Public Routes */}
         <Route
@@ -101,6 +103,7 @@ function App() {
                 <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
                 <Route path="quiz/:quizId/review" element={<TeacherQuizReview />} />
                 <Route path="quiz/:quizId/submissions" element={<TeacherSubmissionView />} />
+                <Route path="assignments" element={<TeacherAssignments />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>
@@ -123,6 +126,7 @@ function App() {
                 <Route path="quiz/:quizId/review" element={<StudentQuizReview />} />
                 <Route path="quiz/:quizId/leaderboard" element={<Leaderboard />} />
                 <Route path="results" element={<StudentResults />} />
+                <Route path="assignments" element={<StudentAssignments />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </ProtectedRoute>
@@ -133,7 +137,7 @@ function App() {
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   );
 }

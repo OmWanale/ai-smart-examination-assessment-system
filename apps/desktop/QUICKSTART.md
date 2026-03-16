@@ -26,7 +26,7 @@ npm run electron:dev
 ```
 
 **What happens:**
-- Starts React dev server on http://localhost:3000
+- Starts React dev server on https://classyn-ai.onrender.com
 - Waits for server to start
 - Launches Electron app
 - Opens DevTools for debugging
@@ -118,7 +118,7 @@ npm run electron:build:all
    ├─ Start: React dev server (port 3000)
    ├─ Wait: Server ready
    ├─ Start: Electron main.js
-   ├─ Load: http://localhost:3000 in Electron
+   ├─ Load: https://classyn-ai.onrender.com in Electron
    └─ Open: DevTools
 ```
 
@@ -151,7 +151,7 @@ function createWindow() {
   
   // Development: Load dev server
   if (isDevelopment) {
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL('https://classyn-ai.onrender.com');
   } else {
     // Production: Load built React app
     mainWindow.loadURL(`file://${path.join(__dirname, '../build/index.html')}`);
@@ -308,7 +308,7 @@ npm install
 
 ### "Blank Electron window"
 - Check DevTools console for errors
-- Verify React app loads on http://localhost:3000
+- Verify React app loads on https://classyn-ai.onrender.com
 - Check preload.js path is correct
 
 ### Windows build fails
@@ -349,4 +349,5 @@ npm install                       # Reinstall
 - [electron-builder Docs](https://www.electron.build/)
 - [Electron Security](https://www.electronjs.org/docs/tutorial/security)
 - [IPC Communication](https://www.electronjs.org/docs/api/ipc-main)
+
 

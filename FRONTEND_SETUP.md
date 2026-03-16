@@ -138,8 +138,8 @@ npm run eject           # Eject CRA (NOT RECOMMENDED)
 ```
 
 ### API Connection
-- Backend must be running on `http://localhost:5000`
-- Set `REACT_APP_API_URL=http://localhost:5000/api` in `.env.local`
+- Backend must be running on `https://classyn-ai.onrender.com`
+- Set `REACT_APP_API_URL=https://classyn-ai.onrender.com/api` in `.env.local`
 
 ## 🔧 Customization
 
@@ -234,3 +234,4 @@ taskkill /PID <PID> /F
 - [Zustand Docs](https://github.com/pmndrs/zustand)
 - [Axios Docs](https://axios-http.com/docs/intro)
 - [React Router Docs](https://reactrouter.com)
+

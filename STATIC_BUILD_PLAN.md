@@ -40,7 +40,7 @@ Instead of running dev server inside Electron:
 ### 1. Update [apps/desktop/public/main.js](apps/desktop/public/main.js)
 
 **Remove:**
-- `isDevelopment` conditional loading from `http://localhost:3000`
+- `isDevelopment` conditional loading from `https://classyn-ai.onrender.com`
 - Any HMR or dev-server related code
 - WebSocket security rules for localhost
 
@@ -52,7 +52,7 @@ Instead of running dev server inside Electron:
 **Before:**
 ```javascript
 const startURL = isDevelopment
-  ? 'http://localhost:3000'
+  ? 'https://classyn-ai.onrender.com'
   : `file://${path.join(__dirname, '../build/index.html')}`;
 ```
 
@@ -70,7 +70,7 @@ const startURL = `file://${path.join(__dirname, '../build/index.html')}`;
 
 **Old approach:**
 ```json
-"electron:dev": "concurrently \"npm --prefix ../frontend start\" \"wait-on http://localhost:3000 && electron .\""
+"electron:dev": "concurrently \"npm --prefix ../frontend start\" \"wait-on https://classyn-ai.onrender.com && electron .\""
 ```
 
 **New approach:**
@@ -207,3 +207,4 @@ Ready to make these changes? Say "approve" and I'll:
 2. Run frontend build
 3. Start Electron
 4. Verify everything works
+

@@ -1,4 +1,4 @@
-const http = require("http");
+const https = require("https");
 
 function testRegister() {
   const email = `user${Math.floor(Math.random() * 100000)}@test.com`;
@@ -9,8 +9,7 @@ function testRegister() {
   });
 
   const options = {
-    hostname: "localhost",
-    port: 5000,
+    hostname: "classyn-ai.onrender.com",
     path: "/api/auth/register",
     method: "POST",
     headers: {
@@ -19,7 +18,7 @@ function testRegister() {
     }
   };
 
-  const req = http.request(options, (res) => {
+  const req = https.request(options, (res) => {
     let data = "";
     res.on("data", (chunk) => {
       data += chunk;
@@ -48,8 +47,7 @@ function testLogin(email) {
   });
 
   const options = {
-    hostname: "localhost",
-    port: 5000,
+    hostname: "classyn-ai.onrender.com",
     path: "/api/auth/login",
     method: "POST",
     headers: {
@@ -58,7 +56,7 @@ function testLogin(email) {
     }
   };
 
-  const req = http.request(options, (res) => {
+  const req = https.request(options, (res) => {
     let data = "";
     res.on("data", (chunk) => {
       data += chunk;
@@ -88,8 +86,7 @@ function testInvalidLogin() {
   });
 
   const options = {
-    hostname: "localhost",
-    port: 5000,
+    hostname: "classyn-ai.onrender.com",
     path: "/api/auth/login",
     method: "POST",
     headers: {
@@ -98,7 +95,7 @@ function testInvalidLogin() {
     }
   };
 
-  const req = http.request(options, (res) => {
+  const req = https.request(options, (res) => {
     let data = "";
     res.on("data", (chunk) => {
       data += chunk;

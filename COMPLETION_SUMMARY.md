@@ -38,7 +38,7 @@
 ### 1. Electron Main Process (main.js)
 ```
 ✅ Window creation with secure settings
-✅ Development mode: loads http://localhost:3000
+✅ Development mode: loads https://classyn-ai.onrender.com
 ✅ Production mode: loads React build files
 ✅ Application menu (File, Edit, View, Help)
 ✅ DevTools auto-open in development
@@ -135,7 +135,7 @@ npm run electron:build:win
 ## 📦 Output
 
 ### Development Mode
-- React dev server on http://localhost:3000
+- React dev server on https://classyn-ai.onrender.com
 - Electron window showing React app
 - DevTools open for debugging
 - Hot reload on file changes
@@ -431,4 +431,5 @@ That's it! Your app will open in an Electron window in seconds. 🚀
 **Next Step:** `cd apps/desktop && npm install && npm run electron:dev`
 
 Enjoy your desktop app! 🎉
+
 

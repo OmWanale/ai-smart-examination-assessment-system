@@ -26,7 +26,7 @@
   
   // ← NEW: npm scripts for dev and build
   "scripts": {
-    "electron:dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on https://classyn-ai.onrender.com && electron .\"",
     "electron:build": "npm run build && electron-builder",
     "electron:build:win": "npm run build && electron-builder --win",
     "electron:build:all": "npm run build && electron-builder -mwl"
@@ -126,7 +126,7 @@ function createWindow() {
 
   // Load dev server in development
   const startURL = isDevelopment
-    ? 'http://localhost:3000'
+    ? 'https://classyn-ai.onrender.com'
     : `file://${path.join(__dirname, '../build/index.html')}`;
 
   mainWindow.loadURL(startURL);
@@ -138,7 +138,7 @@ function createWindow() {
 ipcMain.handle('get-app-version', () => app.getVersion());
 ipcMain.handle('get-app-path', () => app.getAppPath());
 ipcMain.handle('get-user-data-path', () => app.getPath('userData'));
-ipcMain.handle('get-api-url', () => process.env.API_URL || 'http://localhost:5000');
+ipcMain.handle('get-api-url', () => process.env.API_URL || 'https://classyn-ai.onrender.com');
 ```
 
 #### 4. Security: Block External Navigation
@@ -148,8 +148,8 @@ contents.on('will-navigate', (event, navigationUrl) => {
   
   if (isDevelopment) {
     // Allow localhost in development
-    if (parsedUrl.origin !== 'http://localhost:3000' && 
-        parsedUrl.origin !== 'http://localhost:5000') {
+    if (parsedUrl.origin !== 'https://classyn-ai.onrender.com' && 
+        parsedUrl.origin !== 'https://classyn-ai.onrender.com') {
       event.preventDefault();
     }
   } else {
@@ -387,12 +387,12 @@ No changes made to:
 ```bash
 concurrently \
   "cross-env BROWSER=none npm start" \
-  "wait-on http://localhost:3000 && electron ."
+  "wait-on https://classyn-ai.onrender.com && electron ."
 ```
 
 **Does:**
 1. Start React dev server with BROWSER=none (prevents browser opening)
-2. Wait for server to be ready on http://localhost:3000
+2. Wait for server to be ready on https://classyn-ai.onrender.com
 3. Launch Electron pointing to dev server
 4. Enable hot reload
 
@@ -551,4 +551,5 @@ webPreferences: {
 ✅ **Documentation complete** (README + QUICKSTART + guides)
 
 **Ready to:** `cd apps/desktop && npm install && npm run electron:dev`
+
 

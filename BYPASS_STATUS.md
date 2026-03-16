@@ -20,7 +20,7 @@
 ### Current Status:
 - ✅ Backend running on port 5000
 - ✅ MongoDB Atlas connected
-- ✅ React dev server running on localhost:3000
+- ✅ React dev server running on classyn-ai.onrender.com
 - ✅ Electron launching (window opens)
 - ✅ Auth bypass ACTIVE
 
@@ -52,3 +52,4 @@ The application should now:
 - Automatically show Teacher Dashboard (no login page)
 - Allow full navigation of teacher features
 - Have "Demo Teacher" as the logged-in user
+

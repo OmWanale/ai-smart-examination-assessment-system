@@ -88,7 +88,7 @@ npm run electron:dev
 
 ### `npm run electron:dev`
 ```
-1. ✅ Starts React dev server (http://localhost:3000)
+1. ✅ Starts React dev server (https://classyn-ai.onrender.com)
 2. ✅ Waits for it to be ready
 3. ✅ Launches Electron window
 4. ✅ Opens DevTools (F12)
@@ -288,4 +288,5 @@ Your React quiz app will open in a native Electron window in seconds! 🎉
 4. **Share the .exe:** Distribute to users
 
 **That's it!** Electron is now fully configured and ready to use. 🚀
+
 

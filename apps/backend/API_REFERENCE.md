@@ -1,6 +1,6 @@
 # API Reference
 
-Base URL: `http://localhost:5000/api`
+Base URL: `https://classyn-ai.onrender.com/api`
 
 ---
 
@@ -110,7 +110,7 @@ Redirects to Google OAuth consent screen.
 
 Handled by Google OAuth. Redirects to frontend with token:
 ```
-http://localhost:3000/auth/callback?token=<jwt_token>
+https://classyn-ai.onrender.com/auth/callback?token=<jwt_token>
 ```
 
 ---
@@ -119,21 +119,21 @@ http://localhost:3000/auth/callback?token=<jwt_token>
 
 ### Register:
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST https://classyn-ai.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123","name":"Jane Teacher","role":"teacher"}'
 ```
 
 ### Login:
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST https://classyn-ai.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123"}'
 ```
 
 ### Get Me:
 ```bash
-curl -X GET http://localhost:5000/api/auth/me \
+curl -X GET https://classyn-ai.onrender.com/api/auth/me \
   -H "Authorization: Bearer <your_token_here>"
 ```
 
@@ -364,21 +364,21 @@ Authorization: Bearer <token>
 
 #### Register:
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST https://classyn-ai.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123","name":"Jane Teacher","role":"teacher"}'
 ```
 
 #### Login:
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST https://classyn-ai.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123"}'
 ```
 
 #### Get Me:
 ```bash
-curl -X GET http://localhost:5000/api/auth/me \
+curl -X GET https://classyn-ai.onrender.com/api/auth/me \
   -H "Authorization: Bearer <your_token_here>"
 ```
 
@@ -386,7 +386,7 @@ curl -X GET http://localhost:5000/api/auth/me \
 
 #### Create Class (Teacher):
 ```bash
-curl -X POST http://localhost:5000/api/classes \
+curl -X POST https://classyn-ai.onrender.com/api/classes \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <teacher_token>" \
   -d '{"name":"Mathematics 101","description":"Intro to Math"}'
@@ -394,7 +394,7 @@ curl -X POST http://localhost:5000/api/classes \
 
 #### Join Class (Student):
 ```bash
-curl -X POST http://localhost:5000/api/classes/join \
+curl -X POST https://classyn-ai.onrender.com/api/classes/join \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <student_token>" \
   -d '{"joinCode":"A3B7K9"}'
@@ -402,13 +402,13 @@ curl -X POST http://localhost:5000/api/classes/join \
 
 #### Get My Classes:
 ```bash
-curl -X GET http://localhost:5000/api/classes \
+curl -X GET https://classyn-ai.onrender.com/api/classes \
   -H "Authorization: Bearer <token>"
 ```
 
 #### Get Class Details:
 ```bash
-curl -X GET http://localhost:5000/api/classes/507f1f77bcf86cd799439012 \
+curl -X GET https://classyn-ai.onrender.com/api/classes/507f1f77bcf86cd799439012 \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -812,21 +812,21 @@ Authorization: Bearer <token>
 
 #### Register:
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST https://classyn-ai.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123","name":"Jane Teacher","role":"teacher"}'
 ```
 
 #### Login:
 ```bash
-curl -X POST http://localhost:5000/api/auth/login \
+curl -X POST https://classyn-ai.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"teacher@example.com","password":"teacher123"}'
 ```
 
 #### Get Me:
 ```bash
-curl -X GET http://localhost:5000/api/auth/me \
+curl -X GET https://classyn-ai.onrender.com/api/auth/me \
   -H "Authorization: Bearer <your_token_here>"
 ```
 
@@ -834,7 +834,7 @@ curl -X GET http://localhost:5000/api/auth/me \
 
 #### Create Class (Teacher):
 ```bash
-curl -X POST http://localhost:5000/api/classes \
+curl -X POST https://classyn-ai.onrender.com/api/classes \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <teacher_token>" \
   -d '{"name":"Mathematics 101","description":"Intro to Math"}'
@@ -842,7 +842,7 @@ curl -X POST http://localhost:5000/api/classes \
 
 #### Join Class (Student):
 ```bash
-curl -X POST http://localhost:5000/api/classes/join \
+curl -X POST https://classyn-ai.onrender.com/api/classes/join \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <student_token>" \
   -d '{"joinCode":"A3B7K9"}'
@@ -850,13 +850,13 @@ curl -X POST http://localhost:5000/api/classes/join \
 
 #### Get My Classes:
 ```bash
-curl -X GET http://localhost:5000/api/classes \
+curl -X GET https://classyn-ai.onrender.com/api/classes \
   -H "Authorization: Bearer <token>"
 ```
 
 #### Get Class Details:
 ```bash
-curl -X GET http://localhost:5000/api/classes/507f1f77bcf86cd799439012 \
+curl -X GET https://classyn-ai.onrender.com/api/classes/507f1f77bcf86cd799439012 \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -864,7 +864,7 @@ curl -X GET http://localhost:5000/api/classes/507f1f77bcf86cd799439012 \
 
 #### Create Quiz (Teacher):
 ```bash
-curl -X POST http://localhost:5000/api/quizzes \
+curl -X POST https://classyn-ai.onrender.com/api/quizzes \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <teacher_token>" \
   -d '{
@@ -884,7 +884,7 @@ curl -X POST http://localhost:5000/api/quizzes \
 
 #### Generate Quiz with AI (Teacher):
 ```bash
-curl -X POST http://localhost:5000/api/quizzes/ai-generate \
+curl -X POST https://classyn-ai.onrender.com/api/quizzes/ai-generate \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <teacher_token>" \
   -d '{
@@ -898,13 +898,13 @@ curl -X POST http://localhost:5000/api/quizzes/ai-generate \
 
 #### Get Quizzes for Class:
 ```bash
-curl -X GET http://localhost:5000/api/quizzes/class/507f1f77bcf86cd799439012 \
+curl -X GET https://classyn-ai.onrender.com/api/quizzes/class/507f1f77bcf86cd799439012 \
   -H "Authorization: Bearer <token>"
 ```
 
 #### Get Quiz Details:
 ```bash
-curl -X GET http://localhost:5000/api/quizzes/507f1f77bcf86cd799439020 \
+curl -X GET https://classyn-ai.onrender.com/api/quizzes/507f1f77bcf86cd799439020 \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -912,7 +912,7 @@ curl -X GET http://localhost:5000/api/quizzes/507f1f77bcf86cd799439020 \
 
 #### Submit Quiz (Student):
 ```bash
-curl -X POST http://localhost:5000/api/submissions \
+curl -X POST https://classyn-ai.onrender.com/api/submissions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <student_token>" \
   -d '{
@@ -926,19 +926,19 @@ curl -X POST http://localhost:5000/api/submissions \
 
 #### Get Leaderboard:
 ```bash
-curl -X GET http://localhost:5000/api/submissions/quiz/507f1f77bcf86cd799439020/leaderboard \
+curl -X GET https://classyn-ai.onrender.com/api/submissions/quiz/507f1f77bcf86cd799439020/leaderboard \
   -H "Authorization: Bearer <token>"
 ```
 
 #### Get All Submissions (Teacher):
 ```bash
-curl -X GET http://localhost:5000/api/submissions/quiz/507f1f77bcf86cd799439020 \
+curl -X GET https://classyn-ai.onrender.com/api/submissions/quiz/507f1f77bcf86cd799439020 \
   -H "Authorization: Bearer <teacher_token>"
 ```
 
 #### Get Submission Details:
 ```bash
-curl -X GET http://localhost:5000/api/submissions/507f1f77bcf86cd799439030 \
+curl -X GET https://classyn-ai.onrender.com/api/submissions/507f1f77bcf86cd799439030 \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -978,3 +978,4 @@ curl -X GET http://localhost:5000/api/submissions/507f1f77bcf86cd799439030 \
 }
 ```
 ```
+

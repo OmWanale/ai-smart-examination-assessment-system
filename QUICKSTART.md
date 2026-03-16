@@ -25,7 +25,7 @@ JWT_SECRET=your_secret_key_here
 JWT_EXPIRY=7d
 GOOGLE_OAUTH_CLIENT_ID=your_google_client_id
 GOOGLE_OAUTH_CLIENT_SECRET=your_google_client_secret
-GOOGLE_OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
+GOOGLE_OAUTH_CALLBACK_URL=https://classyn-ai.onrender.com/api/auth/google/callback
 AI_API_URL=https://api.openai.com/v1/chat/completions
 AI_API_KEY=your_openai_api_key
 AI_MODEL=gpt-4o-mini
@@ -52,12 +52,12 @@ npm install
 
 # Configure environment
 # Create .env.local file with:
-REACT_APP_API_URL=http://localhost:5000/api
+REACT_APP_API_URL=https://classyn-ai.onrender.com/api
 
 # Start development server
 npm start
 
-# Browser will open to http://localhost:3000
+# Browser will open to https://classyn-ai.onrender.com
 ```
 
 ---
@@ -67,14 +67,14 @@ npm start
 ### Backend API Health Check
 ```bash
 # In any terminal or Postman/Curl
-curl http://localhost:5000/api/auth/me
+curl https://classyn-ai.onrender.com/api/auth/me
 
 # Should return 401 (unauthorized) - expected without token
 # If connection refused, backend is not running
 ```
 
 ### Frontend to Backend
-1. Open http://localhost:3000 in browser
+1. Open https://classyn-ai.onrender.com in browser
 2. Check browser console (F12) for any network errors
 3. See the demo page with feature cards and form
 
@@ -84,7 +84,7 @@ curl http://localhost:5000/api/auth/me
 
 ### Register New User
 ```bash
-curl -X POST http://localhost:5000/api/auth/register \
+curl -X POST https://classyn-ai.onrender.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 
@@ -101,7 +101,7 @@ curl -X POST http://localhost:5000/api/auth/register \
 
 ### Create a Class (Teacher)
 ```bash
-curl -X POST http://localhost:5000/api/classes \
+curl -X POST https://classyn-ai.onrender.com/api/classes \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"name":"Mathematics 101","description":"Basic Math"}'
@@ -109,7 +109,7 @@ curl -X POST http://localhost:5000/api/classes \
 
 ### Create Quiz Manually
 ```bash
-curl -X POST http://localhost:5000/api/quizzes \
+curl -X POST https://classyn-ai.onrender.com/api/quizzes \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -129,7 +129,7 @@ curl -X POST http://localhost:5000/api/quizzes \
 
 ### Generate Quiz with AI
 ```bash
-curl -X POST http://localhost:5000/api/quizzes/ai-generate \
+curl -X POST https://classyn-ai.onrender.com/api/quizzes/ai-generate \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -146,9 +146,9 @@ curl -X POST http://localhost:5000/api/quizzes/ai-generate \
 
 ### Frontend can't connect to backend
 - ✅ Check backend is running on port 5000
-- ✅ Check `.env.local` has `REACT_APP_API_URL=http://localhost:5000/api`
+- ✅ Check `.env.local` has `REACT_APP_API_URL=https://classyn-ai.onrender.com/api`
 - ✅ Check browser console for CORS errors
-- ✅ Backend CORS is enabled for `http://localhost:3000`
+- ✅ Backend CORS is enabled for `https://classyn-ai.onrender.com`
 
 ### MongoDB connection failed
 - ✅ Verify MongoDB is running
@@ -275,3 +275,4 @@ Run both servers with logs redirected to files for debugging:
 npm start > backend.log 2>&1  # Backend
 npm start > frontend.log 2>&1  # Frontend
 ```
+

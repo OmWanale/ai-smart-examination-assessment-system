@@ -6,7 +6,7 @@
 
 const axios = require('axios');
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://classyn-ai.onrender.com/api';
 const MOCK_TOKEN = 'DEV_FAKE_JWT_TOKEN';
 
 const apiClient = axios.create({
@@ -77,3 +77,4 @@ async function testAPIs() {
 }
 
 testAPIs();
+
