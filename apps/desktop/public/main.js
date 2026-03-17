@@ -64,7 +64,7 @@ function createWindow() {
       nodeIntegration: false,
       enableRemoteModule: false,
       contextIsolation: true,
-      sandbox: true,
+      sandbox: false,
       spellcheck: true,
     },
     ...(hasIcon && { icon: iconPath }),
@@ -122,24 +122,32 @@ app.on('ready', () => {
     callback(allowedPermissions.includes(permission));
   });
 
-  // Set CSP to allow cloud backend API calls and Jitsi Meet
+  // Set CSP only for the app's own pages (file://), not for external origins like Jitsi
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          [
-            "default-src 'self' file: data:",
-            `connect-src 'self' ${CLOUD_BACKEND} ${CLOUD_API} https://meet.jit.si https://*.jitsi.net wss://*.jitsi.net wss://meet.jit.si`,
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-            "font-src 'self' data: https://fonts.gstatic.com",
-            "img-src 'self' data: blob: https:",
-            "frame-src https://meet.jit.si https://*.jitsi.net",
-          ].join('; '),
-        ],
-      },
-    });
+    const url = details.url || '';
+    // Only apply our CSP to our own file:// and backend URLs
+    if (url.startsWith('file://') || url.startsWith(CLOUD_BACKEND)) {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            [
+              "default-src 'self' file: data: https://meet.jit.si https://*.jitsi.net",
+              `connect-src 'self' ${CLOUD_BACKEND} ${CLOUD_API} https://meet.jit.si https://*.jitsi.net wss://*.jitsi.net wss://meet.jit.si`,
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://meet.jit.si https://*.jitsi.net",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://meet.jit.si https://*.jitsi.net",
+              "font-src 'self' data: https://fonts.gstatic.com https://meet.jit.si https://*.jitsi.net",
+              "img-src 'self' data: blob: https:",
+              "media-src 'self' blob: mediastream: https://meet.jit.si https://*.jitsi.net",
+              "frame-src https://meet.jit.si https://*.jitsi.net",
+            ].join('; '),
+          ],
+        },
+      });
+    } else {
+      // Let external sites (Jitsi) use their own CSP
+      callback({ responseHeaders: details.responseHeaders });
+    }
   });
 
   createWindow();
