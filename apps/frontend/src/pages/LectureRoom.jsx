@@ -7,6 +7,7 @@ export function LectureRoom() {
   const jitsiApiRef = useRef(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [useIframe, setUseIframe] = useState(false);
 
   console.log('[LectureRoom] roomId:', roomId);
 
@@ -22,29 +23,39 @@ export function LectureRoom() {
     const loadJitsi = () => {
       // Check if script is already loaded
       if (window.JitsiMeetExternalAPI) {
+        console.log('[LectureRoom] Jitsi API already available');
         initJitsi();
         return;
       }
 
+      console.log('[LectureRoom] Loading Jitsi External API script...');
       const script = document.createElement('script');
       script.src = 'https://meet.jit.si/external_api.js';
       script.async = true;
       script.onload = () => {
-        console.log('[LectureRoom] Jitsi External API loaded');
+        console.log('[LectureRoom] Jitsi External API loaded successfully');
+        console.log('[LectureRoom] JitsiMeetExternalAPI available:', !!window.JitsiMeetExternalAPI);
         initJitsi();
       };
-      script.onerror = () => {
-        console.error('[LectureRoom] Failed to load Jitsi API script');
-        setError('Failed to load video call service. Check your internet connection.');
+      script.onerror = (e) => {
+        console.error('[LectureRoom] Failed to load Jitsi API script, falling back to iframe', e);
+        // Fallback to iframe instead of showing error
+        setUseIframe(true);
         setLoading(false);
       };
       document.head.appendChild(script);
     };
 
     const initJitsi = () => {
-      if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) return;
+      if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) {
+        console.warn('[LectureRoom] Container or API not ready, falling back to iframe');
+        setUseIframe(true);
+        setLoading(false);
+        return;
+      }
 
       try {
+        console.log('[LectureRoom] Initializing Jitsi with room:', roomId);
         api = new window.JitsiMeetExternalAPI('meet.jit.si', {
           roomName: roomId,
           parentNode: jitsiContainerRef.current,
@@ -82,8 +93,8 @@ export function LectureRoom() {
         // Fallback: hide loading after 5s even if event doesn't fire
         setTimeout(() => setLoading(false), 5000);
       } catch (err) {
-        console.error('[LectureRoom] Jitsi init error:', err);
-        setError('Failed to initialize video call: ' + err.message);
+        console.error('[LectureRoom] Jitsi init error, falling back to iframe:', err);
+        setUseIframe(true);
         setLoading(false);
       }
     };
@@ -152,7 +163,7 @@ export function LectureRoom() {
 
       {/* Video container */}
       <div style={{ flex: 1, position: 'relative' }}>
-        {loading && (
+        {loading && !useIframe && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
@@ -164,7 +175,7 @@ export function LectureRoom() {
           </div>
         )}
 
-        {error && (
+        {error && !useIframe && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
@@ -182,7 +193,18 @@ export function LectureRoom() {
           </div>
         )}
 
-        <div ref={jitsiContainerRef} style={{ width: '100%', height: '100%' }} />
+        {/* Iframe fallback when External API fails to load */}
+        {useIframe ? (
+          <iframe
+            src={`https://meet.jit.si/${roomId}`}
+            title="Classyn AI Live Lecture"
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            allow="camera; microphone; fullscreen; display-capture; autoplay"
+            allowFullScreen
+          />
+        ) : (
+          <div ref={jitsiContainerRef} style={{ width: '100%', height: '100%' }} />
+        )}
       </div>
     </div>
   );

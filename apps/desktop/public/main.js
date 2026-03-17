@@ -66,6 +66,7 @@ function createWindow() {
       contextIsolation: true,
       sandbox: false,
       spellcheck: true,
+      webSecurity: false,
     },
     ...(hasIcon && { icon: iconPath }),
     show: false,
@@ -117,37 +118,28 @@ app.on('ready', () => {
   console.log('⚙️  App ready');
 
   // Grant camera/microphone permissions for Jitsi Meet
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    const allowedPermissions = ['media', 'mediaKeySystem', 'display-capture', 'notifications'];
-    callback(allowedPermissions.includes(permission));
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowed = ['media', 'mediaKeySystem', 'display-capture', 'notifications', 'geolocation'];
+    console.log('[PERMISSION REQUEST]', permission, '->', allowed.includes(permission) ? 'GRANTED' : 'DENIED');
+    callback(allowed.includes(permission));
   });
 
-  // Set CSP only for the app's own pages (file://), not for external origins like Jitsi
+  // Also handle permission checks (Electron needs both handlers)
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    const allowed = ['media', 'mediaKeySystem', 'display-capture', 'notifications', 'geolocation'];
+    return allowed.includes(permission);
+  });
+
+  // Remove CSP headers from all responses to avoid blocking Jitsi
+  // The app uses file:// protocol where CSP response headers don't apply correctly
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    const url = details.url || '';
-    // Only apply our CSP to our own file:// and backend URLs
-    if (url.startsWith('file://') || url.startsWith(CLOUD_BACKEND)) {
-      callback({
-        responseHeaders: {
-          ...details.responseHeaders,
-          'Content-Security-Policy': [
-            [
-              "default-src 'self' file: data: https://meet.jit.si https://*.jitsi.net",
-              `connect-src 'self' ${CLOUD_BACKEND} ${CLOUD_API} https://meet.jit.si https://*.jitsi.net wss://*.jitsi.net wss://meet.jit.si`,
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://meet.jit.si https://*.jitsi.net",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://meet.jit.si https://*.jitsi.net",
-              "font-src 'self' data: https://fonts.gstatic.com https://meet.jit.si https://*.jitsi.net",
-              "img-src 'self' data: blob: https:",
-              "media-src 'self' blob: mediastream: https://meet.jit.si https://*.jitsi.net",
-              "frame-src https://meet.jit.si https://*.jitsi.net",
-            ].join('; '),
-          ],
-        },
-      });
-    } else {
-      // Let external sites (Jitsi) use their own CSP
-      callback({ responseHeaders: details.responseHeaders });
-    }
+    const headers = { ...details.responseHeaders };
+    // Remove any existing CSP that might block Jitsi resources
+    delete headers['content-security-policy'];
+    delete headers['Content-Security-Policy'];
+    delete headers['x-frame-options'];
+    delete headers['X-Frame-Options'];
+    callback({ responseHeaders: headers });
   });
 
   createWindow();
@@ -228,7 +220,8 @@ app.on('web-contents-created', (_event, contents) => {
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
-        navigationUrl.startsWith('https://meet.jit.si');
+        navigationUrl.startsWith('https://meet.jit.si') ||
+        parsedUrl.hostname.endsWith('.jitsi.net');
 
       if (!isAllowed) {
         console.log('🔒 Blocked navigation to:', navigationUrl);
@@ -241,7 +234,7 @@ app.on('web-contents-created', (_event, contents) => {
 
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(CLOUD_BACKEND) || url.startsWith('https://meet.jit.si')) {
+    if (url.startsWith(CLOUD_BACKEND) || url.startsWith('https://meet.jit.si') || url.includes('.jitsi.net')) {
       return { action: 'allow' };
     }
     console.log('🔒 Blocked window open:', url);
