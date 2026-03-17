@@ -138,4 +138,15 @@ export const assignmentAPI = {
     }),
 };
 
+export const lectureAPI = {
+  createLecture: (data) =>
+    apiClient.post('/lectures/create', data),
+  getClassLectures: (classId) =>
+    apiClient.get(`/classes/${classId}/lectures`),
+  startLecture: (lectureId) =>
+    apiClient.post(`/lectures/${lectureId}/start`),
+  endLecture: (lectureId) =>
+    apiClient.post(`/lectures/${lectureId}/end`),
+};
+
 export default apiClient;

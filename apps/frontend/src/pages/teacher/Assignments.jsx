@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Card, Button, Input, Textarea, Spinner, EmptyState, Badge } from '../../components/UI';
+import { Card, Button, Input, Textarea, Spinner, EmptyState, Badge, Alert } from '../../components/UI';
 import { MainLayout, PageHeader } from '../../components/Layout';
-import { assignmentAPI } from '../../api/client';
+import { classAPI, assignmentAPI } from '../../api/client';
 
 export function TeacherAssignments() {
+  const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [showSubmissions, setShowSubmissions] = useState(false);
@@ -21,27 +23,50 @@ export function TeacherAssignments() {
 
   const [errors, setErrors] = useState({});
 
-  // Fetch assignments on mount
   useEffect(() => {
-    fetchAssignments();
+    fetchClasses();
   }, []);
 
-  const fetchAssignments = async () => {
+  const fetchClasses = async () => {
     try {
       setIsLoading(true);
-      const response = await assignmentAPI.getAssignments();
-      setAssignments(response.data.data || []);
+      const response = await classAPI.getMyClasses();
+      const classList = response.data?.data?.classes || response.data?.classes || response.data?.data || [];
+      setClasses(Array.isArray(classList) ? classList : []);
+      // Fetch assignments for all classes
+      await fetchAllAssignments(Array.isArray(classList) ? classList : []);
     } catch (error) {
-      console.error('Failed to fetch assignments:', error);
+      console.error('Failed to fetch classes:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchAllAssignments = async (classList) => {
+    try {
+      const allAssignments = [];
+      for (const cls of classList) {
+        const classId = cls._id || cls.id;
+        try {
+          const response = await assignmentAPI.getClassAssignments(classId);
+          const items = response.data?.data || [];
+          const withClass = items.map((a) => ({ ...a, className: cls.name, classId }));
+          allAssignments.push(...withClass);
+        } catch {
+          // skip classes where fetching fails
+        }
+      }
+      // Sort newest first
+      allAssignments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAssignments(allAssignments);
+    } catch (error) {
+      console.error('Failed to fetch assignments:', error);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error for this field when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -56,6 +81,7 @@ export function TeacherAssignments() {
 
   const validateForm = () => {
     const newErrors = {};
+    if (!selectedClassId) newErrors.classId = 'Please select a class';
     if (!formData.title.trim()) newErrors.title = 'Title is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (!formData.dueDate) newErrors.dueDate = 'Due date is required';
@@ -78,14 +104,15 @@ export function TeacherAssignments() {
         data.append('file', formData.file);
       }
 
-      await assignmentAPI.createAssignment(data);
+      await assignmentAPI.createClassAssignment(selectedClassId, data);
 
       // Reset form
       setFormData({ title: '', description: '', dueDate: '', file: null });
+      setSelectedClassId('');
       setShowCreateForm(false);
 
       // Refresh assignments
-      await fetchAssignments();
+      await fetchAllAssignments(classes);
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to create assignment';
       setErrors({ submit: errorMsg });
@@ -98,8 +125,9 @@ export function TeacherAssignments() {
     try {
       setIsLoading(true);
       setSelectedAssignment(assignment);
-      const response = await assignmentAPI.getSubmissions(assignment._id);
-      setSubmissions(response.data.data || []);
+      const classId = assignment.classId || assignment.class?._id || assignment.class;
+      const response = await assignmentAPI.getClassAssignmentSubmissions(classId, assignment._id);
+      setSubmissions(response.data?.data || []);
       setShowSubmissions(true);
     } catch (error) {
       console.error('Failed to fetch submissions:', error);
@@ -111,7 +139,8 @@ export function TeacherAssignments() {
 
   const handleDownloadSubmission = async (submission) => {
     try {
-      const response = await assignmentAPI.downloadSubmissionFile(submission._id);
+      const classId = selectedAssignment?.classId || selectedAssignment?.class?._id || selectedAssignment?.class;
+      const response = await assignmentAPI.downloadClassSubmissionFile(classId, submission._id);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -128,6 +157,24 @@ export function TeacherAssignments() {
     }
   };
 
+  const handleDownloadAssignment = async (assignment) => {
+    try {
+      const classId = assignment.classId || assignment.class?._id || assignment.class;
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', assignment.originalFileName || 'assignment');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setErrors({ submit: error.response?.data?.message || 'Failed to download file' });
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -140,7 +187,7 @@ export function TeacherAssignments() {
     <MainLayout>
       <PageHeader
         title="Assignments"
-        description="Create and manage assignments"
+        description="Create and manage assignments across your classes"
         action={
           !showCreateForm && !showSubmissions && (
             <Button onClick={() => setShowCreateForm(true)}>+ New Assignment</Button>
@@ -148,7 +195,9 @@ export function TeacherAssignments() {
         }
       />
 
-      {isLoading && <Spinner />}
+      {isLoading && !assignments.length && (
+        <div className="flex justify-center py-10"><Spinner size="lg" /></div>
+      )}
 
       {/* Create Assignment Form */}
       {showCreateForm && !showSubmissions && (
@@ -158,12 +207,34 @@ export function TeacherAssignments() {
           </h3>
 
           {errors.submit && (
-            <div className="bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-900 text-error-700 dark:text-error-400 px-4 py-3 rounded-lg mb-4">
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => setErrors((prev) => ({ ...prev, submit: '' }))}>
               {errors.submit}
-            </div>
+            </Alert>
           )}
 
           <form onSubmit={handleCreateAssignment} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-dark dark:text-slate-200 mb-1">
+                Select Class
+              </label>
+              <select
+                value={selectedClassId}
+                onChange={(e) => {
+                  setSelectedClassId(e.target.value);
+                  if (errors.classId) setErrors((prev) => ({ ...prev, classId: '' }));
+                }}
+                className="w-full px-4 py-2.5 rounded-xl border border-primary-200 dark:border-dark-border bg-white dark:bg-dark-card text-text-dark dark:text-slate-100 focus:ring-2 focus:ring-primary-400 focus:border-transparent transition-all"
+              >
+                <option value="">-- Choose a class --</option>
+                {classes.map((cls) => (
+                  <option key={cls._id || cls.id} value={cls._id || cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+              {errors.classId && <p className="text-error-500 text-sm mt-1.5">{errors.classId}</p>}
+            </div>
+
             <Input
               label="Assignment Title"
               name="title"
@@ -194,7 +265,7 @@ export function TeacherAssignments() {
             />
 
             <div className="w-full">
-              <label className="label">Attachment (Optional)</label>
+              <label className="block text-sm font-medium text-text-dark dark:text-slate-200 mb-1">Attachment (Optional)</label>
               <div className="border-2 border-dashed border-primary-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
                 onClick={() => document.getElementById('file-input').click()}
               >
@@ -213,10 +284,7 @@ export function TeacherAssignments() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button
-                type="submit"
-                disabled={isLoading}
-              >
+              <Button type="submit" disabled={isLoading}>
                 {isLoading ? 'Creating...' : 'Create Assignment'}
               </Button>
               <Button
@@ -225,6 +293,7 @@ export function TeacherAssignments() {
                 onClick={() => {
                   setShowCreateForm(false);
                   setFormData({ title: '', description: '', dueDate: '', file: null });
+                  setSelectedClassId('');
                   setErrors({});
                 }}
               >
@@ -245,6 +314,9 @@ export function TeacherAssignments() {
               </h3>
               <p className="text-text-muted dark:text-slate-400 text-sm">
                 Due: {formatDate(selectedAssignment.dueDate)}
+                {selectedAssignment.className && (
+                  <span className="ml-2">| Class: {selectedAssignment.className}</span>
+                )}
               </p>
             </div>
             <Button
@@ -260,7 +332,11 @@ export function TeacherAssignments() {
           </div>
 
           {submissions.length === 0 ? (
-            <EmptyState message="No submissions yet" description="Students haven't submitted their work yet." />
+            <EmptyState
+              icon="📭"
+              title="No submissions yet"
+              description="Students haven't submitted their work yet."
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -303,11 +379,12 @@ export function TeacherAssignments() {
       )}
 
       {/* Assignments List */}
-      {!showCreateForm && !showSubmissions && (
+      {!showCreateForm && !showSubmissions && !isLoading && (
         <div className="space-y-4">
           {assignments.length === 0 ? (
             <EmptyState
-              message="No assignments yet"
+              icon="📭"
+              title="No assignments yet"
               description="Create your first assignment to get started."
               action={<Button onClick={() => setShowCreateForm(true)}>+ Create Assignment</Button>}
             />
@@ -320,26 +397,32 @@ export function TeacherAssignments() {
                       {assignment.title}
                     </h3>
                     <p className="text-text-muted dark:text-slate-400 text-sm mt-1">
-                      {assignment.description.substring(0, 100)}
-                      {assignment.description.length > 100 ? '...' : ''}
+                      {assignment.description.length > 100
+                        ? assignment.description.substring(0, 100) + '...'
+                        : assignment.description}
                     </p>
                   </div>
-                  <Badge variant="primary">
-                    Due: {formatDate(assignment.dueDate)}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge variant="primary">Due: {formatDate(assignment.dueDate)}</Badge>
+                    {assignment.className && (
+                      <Badge variant="neutral">{assignment.className}</Badge>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700 items-center">
                   {assignment.file && (
-                    <div className="text-sm text-text-muted dark:text-slate-400">
-                      📎 {assignment.originalFileName}
-                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => handleDownloadAssignment(assignment)}>
+                      Download Attachment
+                    </Button>
+                  )}
+                  {assignment.file && (
+                    <span className="text-sm text-text-muted dark:text-slate-400">
+                      {assignment.originalFileName}
+                    </span>
                   )}
                   <div className="flex-1" />
-                  <Button
-                    size="sm"
-                    onClick={() => handleViewSubmissions(assignment)}
-                  >
+                  <Button size="sm" onClick={() => handleViewSubmissions(assignment)}>
                     View Submissions
                   </Button>
                 </div>

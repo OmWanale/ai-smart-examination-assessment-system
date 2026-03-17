@@ -3,8 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
 import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar, Input } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
-import { classAPI, assignmentAPI } from '../../api/client';
-
+import { classAPI, assignmentAPI, lectureAPI } from '../../api/client';
 export function StudentClassDetail() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -16,11 +15,13 @@ export function StudentClassDetail() {
   const [assignmentError, setAssignmentError] = useState(null);
   const [assignmentFiles, setAssignmentFiles] = useState({});
   const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false);
+  const [lectures, setLectures] = useState({ live: [], upcoming: [], past: [] });
 
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
   useEffect(() => {
     loadData();
+    loadLectures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
@@ -55,6 +56,26 @@ export function StudentClassDetail() {
       console.error('[StudentClassDetail] Failed to load assignments:', err);
       setAssignmentError(err.response?.data?.message || 'Failed to load assignments');
     }
+  };
+
+  const loadLectures = async () => {
+    try {
+      const response = await lectureAPI.getClassLectures(classId);
+      const data = response.data?.data || {};
+      setLectures({
+        live: data.live || [],
+        upcoming: data.upcoming || [],
+        past: data.past || [],
+      });
+    } catch (err) {
+      console.error('[StudentClassDetail] Failed to load lectures:', err);
+    }
+  };
+
+  const copyLectureLink = (roomId) => {
+    const url = `${window.location.origin}${window.location.pathname}#/lecture/${roomId}`;
+    navigator.clipboard.writeText(url);
+    alert('Lecture link copied!');
   };
 
   const handleDownloadAssignment = async (assignment) => {
@@ -394,6 +415,80 @@ export function StudentClassDetail() {
                 </div>
               ))}
             </div>
+          )}
+        </Card>
+
+        {/* Lectures Section */}
+        <Card className="mt-6">
+          <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2 mb-4">
+            <span>🎥</span> Live Lectures
+          </h2>
+
+          {/* Live Now */}
+          {lectures.live.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Live Now
+              </h3>
+              <div className="space-y-3">
+                {lectures.live.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">By {lec.teacherId?.name || 'Teacher'}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
+                      <Button size="sm" onClick={() => navigate(`/lecture/${lec.roomId}`)}>🔴 Join Now</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming */}
+          {lectures.upcoming.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-2">📅 Upcoming</h3>
+              <div className="space-y-3">
+                {lectures.upcoming.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-primary-100 dark:border-dark-border">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">Scheduled: {new Date(lec.scheduledAt).toLocaleString()}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Past */}
+          {lectures.past.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-text-muted dark:text-slate-400 mb-2">📁 Past Lectures</h3>
+              <div className="space-y-2">
+                {lectures.past.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-dark-border opacity-75">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">{new Date(lec.createdAt).toLocaleString()}</p>
+                    </div>
+                    <Badge variant="secondary">Ended</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {lectures.live.length === 0 && lectures.upcoming.length === 0 && lectures.past.length === 0 && (
+            <EmptyState
+              icon="🎥"
+              title="No lectures yet"
+              description="Your teacher hasn't started or scheduled any lectures for this class."
+            />
           )}
         </Card>
 

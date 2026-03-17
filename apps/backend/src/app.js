@@ -38,10 +38,13 @@ const classRoutes = require("./routes/classes");
 const quizRoutes = require("./routes/quizzes");
 const submissionRoutes = require("./routes/submissions");
 const assignmentRoutes = require("./routes/assignments");
+const lectureRoutes = require("./routes/lectures");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/classes/:classId/assignments", assignmentRoutes);
+app.use("/api/classes/:classId/lectures", lectureRoutes);
+app.use("/api/lectures", lectureRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/submissions", submissionRoutes);
 

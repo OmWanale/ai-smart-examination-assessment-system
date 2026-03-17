@@ -1,30 +1,54 @@
 import { useEffect, useState } from 'react';
 import { Card, Button, Spinner, EmptyState, Badge, Alert } from '../../components/UI';
 import { MainLayout, PageHeader } from '../../components/Layout';
-import { assignmentAPI } from '../../api/client';
+import { classAPI, assignmentAPI } from '../../api/client';
 
 export function StudentAssignments() {
+  const [classes, setClasses] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [submittedAssignments, setSubmittedAssignments] = useState(new Set());
   const [submission, setSubmission] = useState({});
   const [errors, setErrors] = useState({});
 
-  // Fetch assignments on mount
   useEffect(() => {
-    fetchAssignments();
+    fetchClasses();
   }, []);
 
-  const fetchAssignments = async () => {
+  const fetchClasses = async () => {
     try {
       setIsLoading(true);
-      const response = await assignmentAPI.getAssignments();
-      setAssignments(response.data.data || []);
+      const response = await classAPI.getMyClasses();
+      const classList = response.data?.data?.classes || response.data?.classes || response.data?.data || [];
+      const normalizedClasses = Array.isArray(classList) ? classList : [];
+      setClasses(normalizedClasses);
+      await fetchAllAssignments(normalizedClasses);
     } catch (error) {
-      console.error('Failed to fetch assignments:', error);
+      console.error('Failed to fetch classes:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchAllAssignments = async (classList) => {
+    try {
+      const allAssignments = [];
+      for (const cls of classList) {
+        const classId = cls._id || cls.id;
+        try {
+          const response = await assignmentAPI.getClassAssignments(classId);
+          const items = response.data?.data || [];
+          const withClass = items.map((a) => ({ ...a, className: cls.name, classId }));
+          allAssignments.push(...withClass);
+        } catch {
+          // skip classes where fetching fails
+        }
+      }
+      allAssignments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setAssignments(allAssignments);
+    } catch (error) {
+      console.error('Failed to fetch assignments:', error);
     }
   };
 
@@ -40,7 +64,8 @@ export function StudentAssignments() {
 
   const handleDownloadAssignment = async (assignment) => {
     try {
-      const response = await assignmentAPI.downloadAssignmentFile(assignment._id);
+      const classId = assignment.classId || assignment.class?._id || assignment.class;
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -48,6 +73,7 @@ export function StudentAssignments() {
       document.body.appendChild(link);
       link.click();
       link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Download failed:', error);
       setErrors((prev) => ({
@@ -71,18 +97,15 @@ export function StudentAssignments() {
     try {
       setIsLoading(true);
       const formData = new FormData();
-      formData.append('assignmentId', assignment._id);
       formData.append('file', file);
 
-      await assignmentAPI.submitAssignment(formData);
+      const classId = assignment.classId || assignment.class?._id || assignment.class;
+      await assignmentAPI.submitClassAssignment(classId, assignment._id, formData);
 
       // Mark as submitted
       setSubmittedAssignments((prev) => new Set([...prev, assignment._id]));
       setSubmission((prev) => ({ ...prev, [assignment._id]: null }));
       setExpandedId(null);
-
-      // Show success message
-      alert('Assignment submitted successfully!');
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to submit assignment';
       setErrors((prev) => ({
@@ -123,15 +146,18 @@ export function StudentAssignments() {
     <MainLayout>
       <PageHeader
         title="Assignments"
-        description="View and submit assignments"
+        description="View and submit assignments from your classes"
       />
 
-      {isLoading && !assignments.length && <Spinner />}
+      {isLoading && !assignments.length && (
+        <div className="flex justify-center py-10"><Spinner size="lg" /></div>
+      )}
 
       <div className="space-y-4">
         {assignments.length === 0 && !isLoading ? (
           <EmptyState
-            message="No assignments yet"
+            icon="📭"
+            title="No assignments yet"
             description="Check back later for new assignments from your teachers."
           />
         ) : (
@@ -161,10 +187,13 @@ export function StudentAssignments() {
                         </h3>
                         <p className="text-text-muted dark:text-slate-400 text-sm mt-1">
                           By {assignment.createdBy?.name || 'Teacher'}
+                          {assignment.className && (
+                            <span className="ml-2">| {assignment.className}</span>
+                          )}
                         </p>
                       </div>
                       {isSubmitted && (
-                        <Badge variant="success">✓ Submitted</Badge>
+                        <Badge variant="success">Submitted</Badge>
                       )}
                       {!isSubmitted && dueDate.isOverdue && (
                         <Badge variant="danger">Overdue</Badge>
@@ -188,7 +217,7 @@ export function StudentAssignments() {
                         variant="outline"
                         onClick={() => handleDownloadAssignment(assignment)}
                       >
-                        📥 Download
+                        Download Attachment
                       </Button>
                     )}
                     <Button
@@ -211,11 +240,13 @@ export function StudentAssignments() {
                     </div>
 
                     {errors[assignment._id] && (
-                      <Alert type="error">{errors[assignment._id]}</Alert>
+                      <Alert type="error" dismissible onDismiss={() => setErrors((prev) => ({ ...prev, [assignment._id]: '' }))}>
+                        {errors[assignment._id]}
+                      </Alert>
                     )}
 
                     <div className="w-full">
-                      <label className="label">Submit Your Work</label>
+                      <label className="block text-sm font-medium text-text-dark dark:text-slate-200 mb-1">Submit Your Work</label>
                       <div className="border-2 border-dashed border-primary-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
                         onClick={() => document.getElementById(`file-input-${assignment._id}`).click()}
                       >

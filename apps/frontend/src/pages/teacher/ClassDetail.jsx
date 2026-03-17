@@ -3,8 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
 import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar, Input, Textarea } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
-import { classAPI, assignmentAPI } from '../../api/client';
-
+import { classAPI, assignmentAPI, lectureAPI } from '../../api/client';
 export function ClassDetail() {
   const { classId } = useParams();
   const navigate = useNavigate();
@@ -22,6 +21,10 @@ export function ClassDetail() {
     file: null,
   });
   const [assignmentSubmissions, setAssignmentSubmissions] = useState({});
+  const [lectures, setLectures] = useState({ live: [], upcoming: [], past: [] });
+  const [showLectureForm, setShowLectureForm] = useState(false);
+  const [lectureForm, setLectureForm] = useState({ title: '', scheduledAt: '' });
+  const [lectureLoading, setLectureLoading] = useState(false);
 
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
@@ -29,6 +32,7 @@ export function ClassDetail() {
     loadClassData();
     loadQuizzes();
     loadAssignments();
+    loadLectures();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [classId]);
 
@@ -154,6 +158,80 @@ export function ClassDetail() {
       console.error('[ClassDetail] Failed to download submission file:', err);
       setAssignmentError(err.response?.data?.message || 'Failed to download submission file');
     }
+  };
+
+  const loadLectures = async () => {
+    try {
+      const response = await lectureAPI.getClassLectures(classId);
+      const data = response.data?.data || {};
+      setLectures({
+        live: data.live || [],
+        upcoming: data.upcoming || [],
+        past: data.past || [],
+      });
+    } catch (err) {
+      console.error('[ClassDetail] Failed to load lectures:', err);
+    }
+  };
+
+  const handleStartInstantLecture = async () => {
+    const title = prompt('Enter lecture title:');
+    if (!title) return;
+    setLectureLoading(true);
+    try {
+      const response = await lectureAPI.createLecture({ classId, title });
+      const joinLink = response.data?.data?.joinLink;
+      await loadLectures();
+      if (joinLink) navigate(joinLink);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to start lecture');
+    } finally {
+      setLectureLoading(false);
+    }
+  };
+
+  const handleScheduleLecture = async (e) => {
+    e.preventDefault();
+    if (!lectureForm.title || !lectureForm.scheduledAt) return;
+    setLectureLoading(true);
+    try {
+      await lectureAPI.createLecture({
+        classId,
+        title: lectureForm.title,
+        scheduledAt: lectureForm.scheduledAt,
+      });
+      setLectureForm({ title: '', scheduledAt: '' });
+      setShowLectureForm(false);
+      await loadLectures();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to schedule lecture');
+    } finally {
+      setLectureLoading(false);
+    }
+  };
+
+  const handleStartScheduledLecture = async (lectureId) => {
+    try {
+      await lectureAPI.startLecture(lectureId);
+      await loadLectures();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to start lecture');
+    }
+  };
+
+  const handleEndLecture = async (lectureId) => {
+    try {
+      await lectureAPI.endLecture(lectureId);
+      await loadLectures();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to end lecture');
+    }
+  };
+
+  const copyLectureLink = (roomId) => {
+    const url = `${window.location.origin}${window.location.pathname}#/lecture/${roomId}`;
+    navigator.clipboard.writeText(url);
+    alert('Lecture link copied!');
   };
 
   if (isLoading) {
@@ -519,6 +597,114 @@ export function ClassDetail() {
                 );
               })}
             </div>
+          )}
+        </Card>
+
+        {/* Lectures Section */}
+        <Card className="mt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
+              <span>🎥</span> Live Lectures
+            </h2>
+            <div className="flex gap-2">
+              <Button variant="primary" size="sm" onClick={handleStartInstantLecture} disabled={lectureLoading}>
+                🔴 Start Live Lecture
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setShowLectureForm((v) => !v)}>
+                {showLectureForm ? 'Close' : '📅 Schedule Lecture'}
+              </Button>
+            </div>
+          </div>
+
+          {showLectureForm && (
+            <form onSubmit={handleScheduleLecture} className="mb-6 p-4 rounded-xl border border-primary-100 dark:border-dark-border space-y-4">
+              <Input
+                label="Lecture Title"
+                value={lectureForm.title}
+                onChange={(e) => setLectureForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="e.g. Chapter 5 Review"
+                required
+              />
+              <Input
+                label="Scheduled Date & Time"
+                type="datetime-local"
+                value={lectureForm.scheduledAt}
+                onChange={(e) => setLectureForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+                required
+              />
+              <Button type="submit" disabled={lectureLoading}>Schedule Lecture</Button>
+            </form>
+          )}
+
+          {/* Live Now */}
+          {lectures.live.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1">
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Live Now
+              </h3>
+              <div className="space-y-3">
+                {lectures.live.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">Started {new Date(lec.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
+                      <Button size="sm" onClick={() => navigate(`/lecture/${lec.roomId}`)}>Join</Button>
+                      <Button size="sm" variant="outline" onClick={() => handleEndLecture(lec._id)}>End</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Upcoming */}
+          {lectures.upcoming.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-2">📅 Upcoming</h3>
+              <div className="space-y-3">
+                {lectures.upcoming.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-primary-100 dark:border-dark-border">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">Scheduled: {new Date(lec.scheduledAt).toLocaleString()}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
+                      <Button size="sm" onClick={() => handleStartScheduledLecture(lec._id)}>Start Now</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Past */}
+          {lectures.past.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-text-muted dark:text-slate-400 mb-2">📁 Past Lectures</h3>
+              <div className="space-y-2">
+                {lectures.past.map((lec) => (
+                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-dark-border opacity-75">
+                    <div>
+                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                      <p className="text-xs text-text-muted dark:text-slate-400">{new Date(lec.createdAt).toLocaleString()}</p>
+                    </div>
+                    <Badge variant="secondary">Ended</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {lectures.live.length === 0 && lectures.upcoming.length === 0 && lectures.past.length === 0 && (
+            <EmptyState
+              icon="🎥"
+              title="No lectures yet"
+              description="Start a live lecture or schedule one for later."
+            />
           )}
         </Card>
       </div>

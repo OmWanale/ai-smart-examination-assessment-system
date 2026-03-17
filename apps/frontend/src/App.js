@@ -5,6 +5,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { OAuthCallback } from './pages/OAuthCallback';
 import { NotFoundPage, UnauthorizedPage } from './pages/ErrorPages';
+import { LectureRoom } from './pages/LectureRoom';
 import { TeacherDashboard } from './pages/teacher/TeacherDashboard';
 import { CreateClass } from './pages/teacher/CreateClass';
 import { ClassDetail } from './pages/teacher/ClassDetail';
@@ -75,6 +76,9 @@ function App() {
 
         {/* OAuth callback - must be public to receive token */}
         <Route path="/auth/callback" element={<OAuthCallback />} />
+
+        {/* Lecture Room - accessible without auth for public lectures */}
+        <Route path="/lecture/:roomId" element={<LectureRoom />} />
 
         {/* Root - Redirect based on auth status */}
         <Route
