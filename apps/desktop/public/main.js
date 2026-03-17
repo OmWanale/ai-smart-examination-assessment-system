@@ -116,7 +116,13 @@ function createWindow() {
 app.on('ready', () => {
   console.log('⚙️  App ready');
 
-  // Set CSP to allow cloud backend API calls
+  // Grant camera/microphone permissions for Jitsi Meet
+  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
+    const allowedPermissions = ['media', 'mediaKeySystem', 'display-capture', 'notifications'];
+    callback(allowedPermissions.includes(permission));
+  });
+
+  // Set CSP to allow cloud backend API calls and Jitsi Meet
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
@@ -124,11 +130,12 @@ app.on('ready', () => {
         'Content-Security-Policy': [
           [
             "default-src 'self' file: data:",
-            `connect-src 'self' ${CLOUD_BACKEND} ${CLOUD_API}`,
+            `connect-src 'self' ${CLOUD_BACKEND} ${CLOUD_API} https://meet.jit.si https://*.jitsi.net wss://*.jitsi.net wss://meet.jit.si`,
             "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
             "font-src 'self' data: https://fonts.gstatic.com",
             "img-src 'self' data: blob: https:",
+            "frame-src https://meet.jit.si https://*.jitsi.net",
           ].join('; '),
         ],
       },
@@ -212,7 +219,8 @@ app.on('web-contents-created', (_event, contents) => {
 
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
-        navigationUrl.startsWith(CLOUD_BACKEND);
+        navigationUrl.startsWith(CLOUD_BACKEND) ||
+        navigationUrl.startsWith('https://meet.jit.si');
 
       if (!isAllowed) {
         console.log('🔒 Blocked navigation to:', navigationUrl);
@@ -225,7 +233,7 @@ app.on('web-contents-created', (_event, contents) => {
 
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(CLOUD_BACKEND)) {
+    if (url.startsWith(CLOUD_BACKEND) || url.startsWith('https://meet.jit.si')) {
       return { action: 'allow' };
     }
     console.log('🔒 Blocked window open:', url);
