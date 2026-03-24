@@ -10,6 +10,19 @@ const apiClient = axios.create({
   },
 });
 
+const buildLocalLectureClient = () => {
+  const token = localStorage.getItem('authToken');
+  const localClient = axios.create({
+    baseURL: 'http://localhost:5000/api',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    timeout: 8000,
+  });
+  return localClient;
+};
+
 // Add token to request headers
 apiClient.interceptors.request.use(
   (config) => {
@@ -143,6 +156,78 @@ export const lectureAPI = {
     apiClient.post('/lectures/create', data),
   getClassLectures: (classId) =>
     apiClient.get(`/classes/${classId}/lectures`),
+  getLectureToken: async (roomId) => {
+    const base = apiClient.defaults.baseURL || '';
+    const classId = roomId?.startsWith('ClassynAI-') ? roomId.split('-')[1] : null;
+    const isElectronRuntime = typeof window !== 'undefined' && !!window.electron;
+
+    const tryLectureTokenEndpoints = async (client, baseURLLabel) => {
+      try {
+        console.log('[lectureAPI] trying GET', `${baseURLLabel}/lectures/token?roomId=${encodeURIComponent(roomId)}`);
+        return await client.get('/lectures/token', { params: { roomId } });
+      } catch (error) {
+        if (error?.response?.status === 404) {
+          try {
+            console.log('[lectureAPI] fallback GET', `${baseURLLabel}/lectures/${encodeURIComponent(roomId)}/token`);
+            return await client.get(`/lectures/${roomId}/token`);
+          } catch (error2) {
+            if (error2?.response?.status === 404) {
+              try {
+                console.log('[lectureAPI] fallback POST', `${baseURLLabel}/lectures/token`);
+                return await client.post('/lectures/token', { roomId });
+              } catch (error3) {
+                if (error3?.response?.status === 404 && classId) {
+                  try {
+                    console.log('[lectureAPI] class fallback GET', `${baseURLLabel}/classes/${classId}/lectures/token?roomId=${encodeURIComponent(roomId)}`);
+                    return await client.get(`/classes/${classId}/lectures/token`, { params: { roomId } });
+                  } catch (error4) {
+                    if (error4?.response?.status === 404) {
+                      try {
+                        console.log('[lectureAPI] class fallback GET by param', `${baseURLLabel}/classes/${classId}/lectures/${encodeURIComponent(roomId)}/token`);
+                        return await client.get(`/classes/${classId}/lectures/${roomId}/token`);
+                      } catch (error5) {
+                        if (error5?.response?.status === 404) {
+                          console.log('[lectureAPI] class fallback POST', `${baseURLLabel}/classes/${classId}/lectures/token`);
+                          return client.post(`/classes/${classId}/lectures/token`, { roomId });
+                        }
+                        throw error5;
+                      }
+                    }
+                    throw error4;
+                  }
+                }
+                throw error3;
+              }
+            }
+            throw error2;
+          }
+        }
+        throw error;
+      }
+    };
+
+    console.log('[lectureAPI] token request start', { baseURL: base, roomId });
+    try {
+      return await tryLectureTokenEndpoints(apiClient, base);
+    } catch (error) {
+      const shouldTryLocalFallback =
+        isElectronRuntime &&
+        (error?.response?.status === 404 || error?.response?.status >= 500 || !error?.response);
+
+      if (shouldTryLocalFallback) {
+        try {
+          const localClient = buildLocalLectureClient();
+          console.log('[lectureAPI] trying local backend token fallback at http://localhost:5000/api');
+          return await tryLectureTokenEndpoints(localClient, 'http://localhost:5000/api');
+        } catch (localError) {
+          console.error('[lectureAPI] local backend token fallback failed:', localError?.message || localError);
+          throw localError;
+        }
+      }
+
+      throw error;
+    }
+  },
   startLecture: (lectureId) =>
     apiClient.post(`/lectures/${lectureId}/start`),
   endLecture: (lectureId) =>

@@ -4,6 +4,7 @@ const {
   getClassLectures,
   startLecture,
   endLecture,
+  getLectureToken,
 } = require("../controllers/lectureController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -32,6 +33,22 @@ router.post("/:id/start", authorize("teacher"), startLecture);
  * @access  Private/Teacher
  */
 router.post("/:id/end", authorize("teacher"), endLecture);
+
+/**
+ * @route   GET /api/lectures/:roomId/token
+ * @desc    Get JaaS JWT for lecture join
+ * @access  Private (teacher or enrolled student)
+ */
+router.get("/:roomId/token", getLectureToken);
+
+/**
+ * @route   GET /api/lectures/token?roomId=...
+ * @desc    Backward-compatible JaaS token path
+ * @access  Private (teacher or enrolled student)
+ */
+router.get("/token", getLectureToken);
+router.post("/token", getLectureToken);
+router.post("/:roomId/token", getLectureToken);
 
 /**
  * @route   GET /api/classes/:classId/lectures

@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import { lectureAPI } from '../api/client';
 
 export function LectureRoom() {
   const { roomId } = useParams();
@@ -8,8 +9,12 @@ export function LectureRoom() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [useIframe, setUseIframe] = useState(false);
+  const [jaasAppId, setJaasAppId] = useState('');
+  const [usePublicFallback, setUsePublicFallback] = useState(false);
 
   console.log('[LectureRoom] roomId:', roomId);
+
+  const publicFallbackUrl = `https://meet.jit.si/${roomId}#config.prejoinPageEnabled=false&config.enableUserRolesBasedOnToken=false&config.membersOnly=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`;
 
   useEffect(() => {
     if (!roomId) {
@@ -20,22 +25,22 @@ export function LectureRoom() {
 
     let api = null;
 
-    const loadJitsi = () => {
+    const loadJitsi = (jaasAppId, jaasToken) => {
       // Check if script is already loaded
       if (window.JitsiMeetExternalAPI) {
         console.log('[LectureRoom] Jitsi API already available');
-        initJitsi();
+        initJitsi(jaasAppId, jaasToken);
         return;
       }
 
       console.log('[LectureRoom] Loading Jitsi External API script...');
       const script = document.createElement('script');
-      script.src = 'https://meet.jit.si/external_api.js';
+      script.src = `https://8x8.vc/${jaasAppId}/external_api.js`;
       script.async = true;
       script.onload = () => {
         console.log('[LectureRoom] Jitsi External API loaded successfully');
         console.log('[LectureRoom] JitsiMeetExternalAPI available:', !!window.JitsiMeetExternalAPI);
-        initJitsi();
+        initJitsi(jaasAppId, jaasToken);
       };
       script.onerror = (e) => {
         console.error('[LectureRoom] Failed to load Jitsi API script, falling back to iframe', e);
@@ -46,7 +51,7 @@ export function LectureRoom() {
       document.head.appendChild(script);
     };
 
-    const initJitsi = () => {
+    const initJitsi = (jaasAppId, jaasToken) => {
       if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) {
         console.warn('[LectureRoom] Container or API not ready, falling back to iframe');
         setUseIframe(true);
@@ -55,9 +60,11 @@ export function LectureRoom() {
       }
 
       try {
-        console.log('[LectureRoom] Initializing Jitsi with room:', roomId);
-        api = new window.JitsiMeetExternalAPI('meet.jit.si', {
-          roomName: roomId,
+        const roomName = `${jaasAppId}/${roomId}`;
+        console.log('[LectureRoom] Initializing Jitsi with room:', roomName);
+        api = new window.JitsiMeetExternalAPI('8x8.vc', {
+          roomName,
+          jwt: jaasToken,
           parentNode: jitsiContainerRef.current,
           width: '100%',
           height: '100%',
@@ -82,6 +89,7 @@ export function LectureRoom() {
 
         api.addListener('videoConferenceJoined', () => {
           console.log('[LectureRoom] Joined conference');
+          setError(null);
           setLoading(false);
         });
 
@@ -99,7 +107,28 @@ export function LectureRoom() {
       }
     };
 
-    loadJitsi();
+    const init = async () => {
+      try {
+        const tokenResponse = await lectureAPI.getLectureToken(roomId);
+        const jaasToken = tokenResponse.data?.data?.token;
+        const jaasAppIdValue = tokenResponse.data?.data?.appId;
+        if (!jaasToken || !jaasAppIdValue) {
+          throw new Error('Missing JaaS token or appId');
+        }
+        setJaasAppId(jaasAppIdValue);
+        loadJitsi(jaasAppIdValue, jaasToken);
+      } catch (tokenErr) {
+        console.error('[LectureRoom] Failed to get JaaS token:', tokenErr);
+        // Keep lecture usable even if JaaS token endpoint is unavailable.
+        // Public Jitsi fallback still gives camera/mic/video room access.
+        setUsePublicFallback(true);
+        setUseIframe(true);
+        setError('JaaS token unavailable. Connected using public lecture fallback.');
+        setLoading(false);
+      }
+    };
+
+    init();
 
     return () => {
       if (api) {
@@ -175,28 +204,47 @@ export function LectureRoom() {
           </div>
         )}
 
-        {error && !useIframe && (
+        {error && !usePublicFallback && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
-            backgroundColor: '#1a1a2e', color: '#e94560', zIndex: 10,
+            backgroundColor: useIframe ? 'transparent' : '#1a1a2e', color: '#e94560', zIndex: useIframe ? 5 : 10,
             flexDirection: 'column', gap: '12px',
+            pointerEvents: 'none',
           }}>
             <div style={{ fontSize: '32px' }}>❌</div>
             <p>{error}</p>
             <button
               onClick={() => window.location.reload()}
-              style={{ padding: '8px 20px', backgroundColor: '#0f3460', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+              style={{ padding: '8px 20px', backgroundColor: '#0f3460', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', pointerEvents: 'auto' }}
             >
               Retry
             </button>
           </div>
         )}
 
+        {error && usePublicFallback && (
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '12px',
+            right: '12px',
+            zIndex: 20,
+            backgroundColor: 'rgba(15, 52, 96, 0.92)',
+            color: '#dbeafe',
+            border: '1px solid #1f4f82',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            fontSize: '13px',
+          }}>
+            {error}
+          </div>
+        )}
+
         {/* Iframe fallback when External API fails to load */}
         {useIframe ? (
           <iframe
-            src={`https://meet.jit.si/${roomId}`}
+            src={usePublicFallback ? publicFallbackUrl : (jaasAppId ? `https://8x8.vc/${jaasAppId}/${roomId}` : `https://8x8.vc/${roomId}`)}
             title="Classyn AI Live Lecture"
             style={{ width: '100%', height: '100%', border: 'none' }}
             allow="camera; microphone; fullscreen; display-capture; autoplay"

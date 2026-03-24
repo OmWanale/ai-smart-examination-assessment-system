@@ -212,8 +212,10 @@ export function ClassDetail() {
 
   const handleStartScheduledLecture = async (lectureId) => {
     try {
-      await lectureAPI.startLecture(lectureId);
+      const response = await lectureAPI.startLecture(lectureId);
+      const roomId = response.data?.data?.lecture?.roomId;
       await loadLectures();
+      if (roomId) navigate(`/lecture/${roomId}`);
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to start lecture');
     }

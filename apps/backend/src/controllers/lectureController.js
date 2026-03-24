@@ -1,6 +1,16 @@
 const Lecture = require("../models/Lecture");
 const Class = require("../models/Class");
 const asyncHandler = require("../utils/asyncHandler");
+const jwt = require("jsonwebtoken");
+
+const JAAS_APP_ID = process.env.JAAS_APP_ID;
+const JAAS_KID = process.env.JAAS_KID;
+
+const getJaasPrivateKey = () => {
+  const key = process.env.JAAS_PRIVATE_KEY;
+  if (!key) return null;
+  return key.includes("\\n") ? key.replace(/\\n/g, "\n") : key;
+};
 
 /**
  * @route   POST /api/lectures/create
@@ -181,9 +191,115 @@ const endLecture = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @route   GET /api/lectures/:roomId/token
+ * @desc    Generate JaaS JWT for lecture join (teacher=moderator)
+ * @access  Private (teacher or enrolled student)
+ */
+const getLectureToken = asyncHandler(async (req, res) => {
+  if (!JAAS_APP_ID || !JAAS_KID || !process.env.JAAS_PRIVATE_KEY) {
+    return res.status(500).json({
+      success: false,
+      message: "JaaS token generation is not configured on server",
+    });
+  }
+
+  const roomId = req.params.roomId || req.query.roomId || req.body?.roomId;
+  console.log("[LECTURE TOKEN] hit", req.method, req.originalUrl, "roomId:", roomId);
+  if (!roomId) {
+    return res.status(400).json({
+      success: false,
+      message: "roomId is required",
+    });
+  }
+  let lecture = await Lecture.findOne({ roomId });
+  if (!lecture) {
+    // If the roomId encodes a classId (ClassynAI-{classId}-timestamp) and the caller is the class teacher,
+    // auto-create a live lecture so a missing record doesn't break token issuance in production.
+    const maybeClassId = roomId.startsWith("ClassynAI-") ? roomId.split("-")[1] : null;
+    if (maybeClassId) {
+      const classDoc = await Class.findById(maybeClassId);
+      if (classDoc && classDoc.teacher.toString() === req.user._id.toString()) {
+        lecture = await Lecture.create({
+          classId: classDoc._id,
+          teacherId: classDoc.teacher,
+          title: "Live Lecture",
+          roomId,
+          isLive: true,
+          status: "LIVE",
+        });
+      }
+    }
+
+    if (!lecture) {
+      return res.status(404).json({
+        success: false,
+        message: "Lecture not found",
+      });
+    }
+  }
+
+  const classDoc = await Class.findById(lecture.classId);
+  if (!classDoc) {
+    return res.status(404).json({
+      success: false,
+      message: "Class not found",
+    });
+  }
+
+  const isTeacher = lecture.teacherId.toString() === req.user._id.toString();
+  const isStudent = classDoc.students.some(
+    (s) => s.toString() === req.user._id.toString()
+  );
+
+  if (!isTeacher && !isStudent) {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. You are not a member of this class.",
+    });
+  }
+
+  // JAAS expects the key id to be prefixed with the app id (appId/keyId) and
+  // moderator to be provided as a string flag for role resolution.
+  const jaasKeyId = JAAS_KID.includes("/") ? JAAS_KID : `${JAAS_APP_ID}/${JAAS_KID}`;
+
+  const token = jwt.sign(
+    {
+      aud: "jitsi",
+      iss: "chat",
+      sub: JAAS_APP_ID,
+      room: roomId,
+      context: {
+        user: {
+          id: String(req.user._id),
+          name: req.user.name || req.user.email || "User",
+          email: req.user.email || "",
+          moderator: isTeacher ? "true" : "false",
+        },
+      },
+    },
+    getJaasPrivateKey(),
+    {
+      algorithm: "RS256",
+      keyid: jaasKeyId,
+      expiresIn: "1h",
+    }
+  );
+
+  res.json({
+    success: true,
+    data: {
+      token,
+      moderator: isTeacher,
+      appId: JAAS_APP_ID,
+    },
+  });
+});
+
 module.exports = {
   createLecture,
   getClassLectures,
   startLecture,
   endLecture,
+  getLectureToken,
 };

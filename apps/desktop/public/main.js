@@ -67,6 +67,8 @@ function createWindow() {
       sandbox: false,
       spellcheck: true,
       webSecurity: false,
+      nativeWindowOpen: true,
+      partition: 'persist:classynai',
     },
     ...(hasIcon && { icon: iconPath }),
     show: false,
@@ -130,11 +132,22 @@ app.on('ready', () => {
     return allowed.includes(permission);
   });
 
-  // Remove CSP headers from all responses to avoid blocking Jitsi
+  // Relax response headers only for Jitsi resources used in lecture view
   // The app uses file:// protocol where CSP response headers don't apply correctly
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const url = details.url || '';
+    const isJitsi =
+      url.startsWith('https://meet.jit.si') ||
+      url.includes('.jitsi.net') ||
+      url.startsWith('https://8x8.vc') ||
+      url.includes('.8x8.vc');
+
+    if (!isJitsi) {
+      callback({ responseHeaders: details.responseHeaders });
+      return;
+    }
+
     const headers = { ...details.responseHeaders };
-    // Remove any existing CSP that might block Jitsi resources
     delete headers['content-security-policy'];
     delete headers['Content-Security-Policy'];
     delete headers['x-frame-options'];
@@ -221,7 +234,16 @@ app.on('web-contents-created', (_event, contents) => {
         parsedUrl.protocol === 'file:' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
-        parsedUrl.hostname.endsWith('.jitsi.net');
+        parsedUrl.hostname.endsWith('.jitsi.net') ||
+        navigationUrl.startsWith('https://8x8.vc') ||
+        parsedUrl.hostname.endsWith('.8x8.vc') ||
+        // Allow OAuth provider redirects inside the popup
+        parsedUrl.hostname.endsWith('google.com') ||
+        parsedUrl.hostname.endsWith('github.com') ||
+        parsedUrl.hostname.endsWith('firebaseapp.com') ||
+        parsedUrl.hostname.endsWith('firebaseapp.net') ||
+        parsedUrl.hostname.endsWith('firebaseio.com') ||
+        parsedUrl.hostname.endsWith('googleusercontent.com');
 
       if (!isAllowed) {
         console.log('🔒 Blocked navigation to:', navigationUrl);
@@ -234,9 +256,37 @@ app.on('web-contents-created', (_event, contents) => {
 
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith(CLOUD_BACKEND) || url.startsWith('https://meet.jit.si') || url.includes('.jitsi.net')) {
-      return { action: 'allow' };
+    const allow = (
+      url === 'about:blank' ||
+      url.startsWith(CLOUD_BACKEND) ||
+      url.startsWith('https://meet.jit.si') ||
+      url.includes('.jitsi.net') ||
+      url.startsWith('https://8x8.vc') ||
+      url.includes('.8x8.vc') ||
+      // Allow OAuth provider popups (Google/GitHub/Firebase) for Jitsi auth
+      url.includes('accounts.google.com') ||
+      url.includes('github.com') ||
+      url.includes('firebaseapp.com') ||
+      url.includes('firebaseapp.net') ||
+      url.includes('firebaseio.com') ||
+      url.includes('googleusercontent.com')
+    );
+
+    if (allow) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            sandbox: false,
+            partition: 'persist:classynai',
+            nativeWindowOpen: true,
+          },
+        },
+      };
     }
+
     console.log('🔒 Blocked window open:', url);
     return { action: 'deny' };
   });
