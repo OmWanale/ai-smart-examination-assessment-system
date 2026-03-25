@@ -4,9 +4,9 @@ const path = require('path');
 const fs = require('fs');
 
 // ─── Configuration ─────────────────────────────────────────────
-const CLOUD_BACKEND = 'https://classyn-ai.onrender.com';
-const CLOUD_API     = `${CLOUD_BACKEND}/api`;
 const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
+const CLOUD_BACKEND = isDevelopment ? 'http://localhost:5000' : 'https://classyn-ai.onrender.com';
+const CLOUD_API     = `${CLOUD_BACKEND}/api`;
 const isPackaged    = app.isPackaged;
 
 console.log('🚀 Electron starting...');
@@ -231,12 +231,13 @@ app.on('web-contents-created', (_event, contents) => {
       const parsedUrl = new URL(navigationUrl);
 
       // INTERCEPT OAUTH CALLBACK!
-      if (navigationUrl.includes('/auth/callback?token=')) {
+      if (navigationUrl.includes('oauth_redirect=true') && navigationUrl.includes('token=')) {
         event.preventDefault();
         try {
           console.log('🔄 Intercepted Client-side OAuth Redirect! Bridging to file://...');
-          const tokenSplit = navigationUrl.split('token=')[1];
-          const token = tokenSplit ? tokenSplit.split('&')[0] : '';
+          const urlParams = new URL(navigationUrl);
+          const token = urlParams.searchParams.get('token') || '';
+          
           const frontendBuildPath = getFrontendBuildPath();
           const indexPath = path.join(frontendBuildPath, 'index.html');
           const localUrl = `file:///${indexPath.replace(/\\/g, '/')}#/auth/callback?token=${token}`;
@@ -273,12 +274,13 @@ app.on('web-contents-created', (_event, contents) => {
 
   // Intercept the Backend's 302 OAuth redirect to bring the browser back to local file://
   contents.on('will-redirect', (event, navigationUrl) => {
-    if (navigationUrl.includes('/auth/callback?token=')) {
+    if (navigationUrl.includes('oauth_redirect=true') && navigationUrl.includes('token=')) {
       event.preventDefault();
       try {
         console.log('🔄 Intercepted Backend OAuth Redirect! Bridging to file://...');
-        const tokenSplit = navigationUrl.split('token=')[1];
-        const token = tokenSplit ? tokenSplit.split('&')[0] : '';
+        const urlParams = new URL(navigationUrl);
+        const token = urlParams.searchParams.get('token') || '';
+        
         const frontendBuildPath = getFrontendBuildPath();
         const indexPath = path.join(frontendBuildPath, 'index.html');
         // Format local file URL manually to include the HashRouter's query params
