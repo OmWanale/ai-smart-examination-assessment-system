@@ -2,6 +2,28 @@ const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
 const asyncHandler = require("../utils/asyncHandler");
 
+const getFrontendBaseUrl = () => {
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+  return (process.env.FRONTEND_URL || "https://classyn-ai.onrender.com").replace(/\/$/, "");
+};
+
+const useHashRouterForFrontend = () =>
+  String(process.env.FRONTEND_USE_HASH_ROUTER || "true").toLowerCase() === "true";
+
+const buildFrontendRedirectUrl = (path, params = {}) => {
+  const base = getFrontendBaseUrl();
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const query = new URLSearchParams(params).toString();
+
+  if (useHashRouterForFrontend()) {
+    return `${base}/#${normalizedPath}${query ? `?${query}` : ""}`;
+  }
+
+  return `${base}${normalizedPath}${query ? `?${query}` : ""}`;
+};
+
 /**
  * @route   POST /api/auth/register
  * @desc    Register new user with email and password
@@ -201,10 +223,9 @@ const googleCallback = asyncHandler(async (req, res) => {
     email: user.email,
   });
 
-  // Redirect to frontend with token
-  // In production, redirect to your Electron app or frontend
-  const redirectUrl = process.env.FRONTEND_URL || "https://classyn-ai.onrender.com";
-  res.redirect(`${redirectUrl}/auth/callback?token=${token}`);
+  const callbackPath = process.env.FRONTEND_OAUTH_CALLBACK_PATH || "/auth/callback";
+  const redirectUrl = buildFrontendRedirectUrl(callbackPath, { token });
+  res.redirect(redirectUrl);
 });
 
 /**
@@ -338,5 +359,6 @@ module.exports = {
   login,
   getMe,
   googleCallback,
+  buildFrontendRedirectUrl,
 };
 

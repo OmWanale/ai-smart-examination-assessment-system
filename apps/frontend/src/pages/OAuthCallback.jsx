@@ -9,8 +9,13 @@ export function OAuthCallback() {
   const { setAuth } = useAuthStore();
 
   useEffect(() => {
-    // Parse URL parameters or hash
-    const params = new URLSearchParams(window.location.search);
+    // Support both standard query params and hash-router query params.
+    // Example hash-router URL: /#/auth/callback?token=...
+    const hashQuery = window.location.hash.includes('?')
+      ? window.location.hash.substring(window.location.hash.indexOf('?'))
+      : '';
+
+    const params = new URLSearchParams(window.location.search || hashQuery);
     const token = params.get('token');
     const error = params.get('error');
 

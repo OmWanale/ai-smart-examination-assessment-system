@@ -160,6 +160,11 @@ export const lectureAPI = {
     const base = apiClient.defaults.baseURL || '';
     const classId = roomId?.startsWith('ClassynAI-') ? roomId.split('-')[1] : null;
     const isElectronRuntime = typeof window !== 'undefined' && !!window.electron;
+    const isLocalRuntimeOrigin =
+      typeof window !== 'undefined' &&
+      (window.location.protocol === 'file:' ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1');
 
     const tryLectureTokenEndpoints = async (client, baseURLLabel) => {
       try {
@@ -212,6 +217,7 @@ export const lectureAPI = {
     } catch (error) {
       const shouldTryLocalFallback =
         isElectronRuntime &&
+        isLocalRuntimeOrigin &&
         (error?.response?.status === 404 || error?.response?.status >= 500 || !error?.response);
 
       if (shouldTryLocalFallback) {

@@ -33,23 +33,23 @@ export function AuthLayout({ children }) {
   }, [initializeTheme]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-light via-primary-50 to-secondary-50 dark:from-dark-bg dark:via-dark-surface dark:to-dark-bg flex items-center justify-center px-4 py-12 transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center px-4 py-12 transition-colors duration-300 font-[Inter]">
       <div className="w-full max-w-md animate-slide-up">
         {/* Logo & Brand */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-warm transform hover:scale-105 transition-transform duration-300">
-              <span className="text-white font-display font-bold text-3xl">Q</span>
+            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-500/30 transform hover:scale-105 transition-transform duration-300">
+              <span className="text-white font-bold text-3xl">C</span>
             </div>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent-400 rounded-full flex items-center justify-center shadow-lg">
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
               <span className="text-[10px]">✨</span>
             </div>
           </div>
-          <h1 className="text-3xl font-display font-bold bg-gradient-to-r from-primary-600 to-secondary-500 bg-clip-text text-transparent">
-            Quiz Desktop
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 transition-colors duration-300 tracking-tight">
+            ClassynAI
           </h1>
-          <p className="text-text-muted dark:text-slate-400 mt-2 text-sm">
-            AI-Powered Quiz Generation Platform
+          <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm transition-colors duration-300">
+            Smart Examination and Assessment System
           </p>
         </div>
         {children}

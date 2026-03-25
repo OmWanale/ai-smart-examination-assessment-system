@@ -212,31 +212,30 @@ const getLectureToken = asyncHandler(async (req, res) => {
       message: "roomId is required",
     });
   }
-  let lecture = await Lecture.findOne({ roomId });
+  const lecture = await Lecture.findOne({ roomId });
   if (!lecture) {
-    // If the roomId encodes a classId (ClassynAI-{classId}-timestamp) and the caller is the class teacher,
-    // auto-create a live lecture so a missing record doesn't break token issuance in production.
-    const maybeClassId = roomId.startsWith("ClassynAI-") ? roomId.split("-")[1] : null;
-    if (maybeClassId) {
-      const classDoc = await Class.findById(maybeClassId);
-      if (classDoc && classDoc.teacher.toString() === req.user._id.toString()) {
-        lecture = await Lecture.create({
-          classId: classDoc._id,
-          teacherId: classDoc.teacher,
-          title: "Live Lecture",
-          roomId,
-          isLive: true,
-          status: "LIVE",
-        });
-      }
-    }
+    console.warn("[LECTURE TOKEN] denied: lecture not found", {
+      userId: String(req.user?._id),
+      roomId,
+    });
+    return res.status(404).json({
+      success: false,
+      message: "Lecture not found",
+    });
+  }
 
-    if (!lecture) {
-      return res.status(404).json({
-        success: false,
-        message: "Lecture not found",
-      });
-    }
+  const routeClassId = req.params.classId;
+  if (routeClassId && lecture.classId.toString() !== routeClassId) {
+    console.warn("[LECTURE TOKEN] denied: class/lecture mismatch", {
+      userId: String(req.user?._id),
+      roomId,
+      routeClassId,
+      lectureClassId: String(lecture.classId),
+    });
+    return res.status(403).json({
+      success: false,
+      message: "Access denied for this class lecture.",
+    });
   }
 
   const classDoc = await Class.findById(lecture.classId);
@@ -247,15 +246,37 @@ const getLectureToken = asyncHandler(async (req, res) => {
     });
   }
 
-  const isTeacher = lecture.teacherId.toString() === req.user._id.toString();
+  const isClassTeacher = classDoc.teacher.toString() === req.user._id.toString();
   const isStudent = classDoc.students.some(
     (s) => s.toString() === req.user._id.toString()
   );
 
-  if (!isTeacher && !isStudent) {
+  if (!isClassTeacher && !isStudent) {
+    console.warn("[LECTURE TOKEN] denied: requester not class member", {
+      userId: String(req.user?._id),
+      roomId,
+      classId: String(classDoc._id),
+    });
     return res.status(403).json({
       success: false,
       message: "Access denied. You are not a member of this class.",
+    });
+  }
+
+  if (
+    lecture.teacherId &&
+    classDoc.teacher &&
+    lecture.teacherId.toString() !== classDoc.teacher.toString()
+  ) {
+    console.warn("[LECTURE TOKEN] denied: lecture teacher mismatch", {
+      roomId,
+      classId: String(classDoc._id),
+      lectureTeacherId: String(lecture.teacherId),
+      classTeacherId: String(classDoc.teacher),
+    });
+    return res.status(403).json({
+      success: false,
+      message: "Lecture ownership validation failed.",
     });
   }
 
@@ -263,34 +284,47 @@ const getLectureToken = asyncHandler(async (req, res) => {
   // moderator to be provided as a string flag for role resolution.
   const jaasKeyId = JAAS_KID.includes("/") ? JAAS_KID : `${JAAS_APP_ID}/${JAAS_KID}`;
 
-  const token = jwt.sign(
-    {
-      aud: "jitsi",
-      iss: "chat",
-      sub: JAAS_APP_ID,
-      room: roomId,
-      context: {
-        user: {
-          id: String(req.user._id),
-          name: req.user.name || req.user.email || "User",
-          email: req.user.email || "",
-          moderator: isTeacher ? "true" : "false",
+  let token;
+  try {
+    token = jwt.sign(
+      {
+        aud: "jitsi",
+        iss: "chat",
+        sub: JAAS_APP_ID,
+        room: roomId,
+        context: {
+          user: {
+            id: String(req.user._id),
+            name: req.user.name || req.user.email || "User",
+            email: req.user.email || "",
+            moderator: isClassTeacher ? "true" : "false",
+          },
         },
       },
-    },
-    getJaasPrivateKey(),
-    {
-      algorithm: "RS256",
-      keyid: jaasKeyId,
-      expiresIn: "1h",
-    }
-  );
+      getJaasPrivateKey(),
+      {
+        algorithm: "RS256",
+        keyid: jaasKeyId,
+        expiresIn: "1h",
+      }
+    );
+  } catch (error) {
+    console.error("[LECTURE TOKEN] token generation failed", {
+      roomId,
+      userId: String(req.user?._id),
+      error: error.message,
+    });
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate JaaS token. Check JAAS_APP_ID, JAAS_KID, and JAAS_PRIVATE_KEY configuration.",
+    });
+  }
 
   res.json({
     success: true,
     data: {
       token,
-      moderator: isTeacher,
+      moderator: isClassTeacher,
       appId: JAAS_APP_ID,
     },
   });

@@ -232,6 +232,8 @@ app.on('web-contents-created', (_event, contents) => {
 
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
+        parsedUrl.hostname === 'localhost' ||
+        parsedUrl.hostname === '127.0.0.1' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
         parsedUrl.hostname.endsWith('.jitsi.net') ||
@@ -258,6 +260,8 @@ app.on('web-contents-created', (_event, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     const allow = (
       url === 'about:blank' ||
+      url.startsWith('http://localhost') ||
+      url.startsWith('http://127.0.0.1') ||
       url.startsWith(CLOUD_BACKEND) ||
       url.startsWith('https://meet.jit.si') ||
       url.includes('.jitsi.net') ||

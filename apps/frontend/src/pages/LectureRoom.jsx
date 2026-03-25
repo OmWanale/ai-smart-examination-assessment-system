@@ -10,11 +10,9 @@ export function LectureRoom() {
   const [loading, setLoading] = useState(true);
   const [useIframe, setUseIframe] = useState(false);
   const [jaasAppId, setJaasAppId] = useState('');
-  const [usePublicFallback, setUsePublicFallback] = useState(false);
+  const [jaasToken, setJaasToken] = useState('');
 
   console.log('[LectureRoom] roomId:', roomId);
-
-  const publicFallbackUrl = `https://meet.jit.si/${roomId}#config.prejoinPageEnabled=false&config.enableUserRolesBasedOnToken=false&config.membersOnly=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`;
 
   useEffect(() => {
     if (!roomId) {
@@ -43,8 +41,7 @@ export function LectureRoom() {
         initJitsi(jaasAppId, jaasToken);
       };
       script.onerror = (e) => {
-        console.error('[LectureRoom] Failed to load Jitsi API script, falling back to iframe', e);
-        // Fallback to iframe instead of showing error
+        console.error('[LectureRoom] Failed to load Jitsi API script, using secure iframe fallback', e);
         setUseIframe(true);
         setLoading(false);
       };
@@ -101,7 +98,7 @@ export function LectureRoom() {
         // Fallback: hide loading after 5s even if event doesn't fire
         setTimeout(() => setLoading(false), 5000);
       } catch (err) {
-        console.error('[LectureRoom] Jitsi init error, falling back to iframe:', err);
+        console.error('[LectureRoom] Jitsi init error, using secure iframe fallback:', err);
         setUseIframe(true);
         setLoading(false);
       }
@@ -115,15 +112,25 @@ export function LectureRoom() {
         if (!jaasToken || !jaasAppIdValue) {
           throw new Error('Missing JaaS token or appId');
         }
+        setJaasToken(jaasToken);
         setJaasAppId(jaasAppIdValue);
         loadJitsi(jaasAppIdValue, jaasToken);
       } catch (tokenErr) {
         console.error('[LectureRoom] Failed to get JaaS token:', tokenErr);
-        // Keep lecture usable even if JaaS token endpoint is unavailable.
-        // Public Jitsi fallback still gives camera/mic/video room access.
-        setUsePublicFallback(true);
-        setUseIframe(true);
-        setError('JaaS token unavailable. Connected using public lecture fallback.');
+        const status = tokenErr?.response?.status;
+        const serverMessage = tokenErr?.response?.data?.message;
+
+        if (status === 401) {
+          setError('Session expired or not logged in. Please sign in and try again.');
+        } else if (status === 403) {
+          setError(serverMessage || 'Access denied. You are not allowed to join this lecture.');
+        } else if (status === 404) {
+          setError(serverMessage || 'Lecture not found. Ask your teacher to start or recreate the lecture.');
+        } else if (status >= 500) {
+          setError(serverMessage || 'Lecture service is not configured correctly on server. Please contact admin.');
+        } else {
+          setError(serverMessage || 'Unable to authorize lecture join. Please log in and try again.');
+        }
         setLoading(false);
       }
     };
@@ -204,47 +211,28 @@ export function LectureRoom() {
           </div>
         )}
 
-        {error && !usePublicFallback && (
+        {error && (
           <div style={{
             position: 'absolute', inset: 0, display: 'flex',
             alignItems: 'center', justifyContent: 'center',
-            backgroundColor: useIframe ? 'transparent' : '#1a1a2e', color: '#e94560', zIndex: useIframe ? 5 : 10,
+            backgroundColor: '#1a1a2e', color: '#e94560', zIndex: 10,
             flexDirection: 'column', gap: '12px',
-            pointerEvents: 'none',
           }}>
             <div style={{ fontSize: '32px' }}>❌</div>
             <p>{error}</p>
             <button
               onClick={() => window.location.reload()}
-              style={{ padding: '8px 20px', backgroundColor: '#0f3460', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', pointerEvents: 'auto' }}
+              style={{ padding: '8px 20px', backgroundColor: '#0f3460', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
             >
               Retry
             </button>
           </div>
         )}
 
-        {error && usePublicFallback && (
-          <div style={{
-            position: 'absolute',
-            top: '12px',
-            left: '12px',
-            right: '12px',
-            zIndex: 20,
-            backgroundColor: 'rgba(15, 52, 96, 0.92)',
-            color: '#dbeafe',
-            border: '1px solid #1f4f82',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            fontSize: '13px',
-          }}>
-            {error}
-          </div>
-        )}
-
         {/* Iframe fallback when External API fails to load */}
-        {useIframe ? (
+        {useIframe && jaasToken && jaasAppId ? (
           <iframe
-            src={usePublicFallback ? publicFallbackUrl : (jaasAppId ? `https://8x8.vc/${jaasAppId}/${roomId}` : `https://8x8.vc/${roomId}`)}
+            src={`https://8x8.vc/${jaasAppId}/${roomId}?jwt=${encodeURIComponent(jaasToken)}#config.prejoinPageEnabled=false`}
             title="Classyn AI Live Lecture"
             style={{ width: '100%', height: '100%', border: 'none' }}
             allow="camera; microphone; fullscreen; display-capture; autoplay"
