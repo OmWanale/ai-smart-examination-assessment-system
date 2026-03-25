@@ -2,12 +2,8 @@ const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
 const asyncHandler = require("../utils/asyncHandler");
 
-const getFrontendBaseUrl = () => {
-  if (process.env.NODE_ENV === "development") {
-    return "http://localhost:3000";
-  }
-  return (process.env.FRONTEND_URL || "https://classyn-ai.onrender.com").replace(/\/$/, "");
-};
+const getFrontendBaseUrl = () =>
+  (process.env.FRONTEND_URL || "https://classyn-ai.onrender.com").replace(/\/$/, "");
 
 const useHashRouterForFrontend = () =>
   String(process.env.FRONTEND_USE_HASH_ROUTER || "true").toLowerCase() === "true";
