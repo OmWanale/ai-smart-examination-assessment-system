@@ -250,6 +250,7 @@ app.on('web-contents-created', (_event, contents) => {
         parsedUrl.protocol === 'file:' ||
         parsedUrl.hostname === 'localhost' ||
         parsedUrl.hostname === '127.0.0.1' ||
+        parsedUrl.hostname === 'classyn-ai.onrender.com' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
         parsedUrl.hostname.endsWith('.jitsi.net') ||
@@ -300,6 +301,7 @@ app.on('web-contents-created', (_event, contents) => {
       url === 'about:blank' ||
       url.startsWith('http://localhost') ||
       url.startsWith('http://127.0.0.1') ||
+      url.includes('classyn-ai.onrender.com') ||
       url.startsWith(CLOUD_BACKEND) ||
       url.startsWith('https://meet.jit.si') ||
       url.includes('.jitsi.net') ||

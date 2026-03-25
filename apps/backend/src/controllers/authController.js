@@ -14,7 +14,9 @@ const buildFrontendRedirectUrl = (path, params = {}) => {
   const query = new URLSearchParams(params).toString();
 
   if (useHashRouterForFrontend()) {
-    return `${base}/#${normalizedPath}${query ? `?${query}` : ""}`;
+    // Append the token query string before the hash for Electron interception, 
+    // and after the hash for native React HashRouter parsing.
+    return `${base}/?oauth_redirect=true&${query}#${normalizedPath}${query ? `?${query}` : ""}`;
   }
 
   return `${base}${normalizedPath}${query ? `?${query}` : ""}`;
