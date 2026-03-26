@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { API_BASE_URL } from '../api/client';
 import { AuthLayout } from '../components/Layout.jsx';
 import { Alert } from '../components/UI.jsx';
 
@@ -157,8 +158,7 @@ export function LoginPage() {
   };
 
   const handleGoogleSignIn = () => {
-    const backendUrl = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
-    const googleAuthUrl = `${backendUrl}/auth/google?role=${encodeURIComponent(role)}`;
+    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}`;
     window.location.href = googleAuthUrl;
   };
 
@@ -277,8 +277,7 @@ export function RegisterPage() {
   };
 
   const handleGoogleSignIn = () => {
-    const backendUrl = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
-    const googleAuthUrl = `${backendUrl}/auth/google?role=${encodeURIComponent(role)}`;
+    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}`;
     window.location.href = googleAuthUrl;
   };
 

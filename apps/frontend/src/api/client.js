@@ -1,7 +1,10 @@
 // API Client with axios
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://classyn-ai.onrender.com/api';
+export const API_BASE_URL = 
+  process.env.NODE_ENV === 'production' 
+    ? 'https://classyn-ai.onrender.com/api'
+    : (process.env.REACT_APP_API_URL || 'http://localhost:5000/api');
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -9,19 +12,6 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
-const buildLocalLectureClient = () => {
-  const token = localStorage.getItem('authToken');
-  const localClient = axios.create({
-    baseURL: 'http://localhost:5000/api',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    timeout: 8000,
-  });
-  return localClient;
-};
 
 // Add token to request headers
 apiClient.interceptors.request.use(
@@ -215,22 +205,6 @@ export const lectureAPI = {
     try {
       return await tryLectureTokenEndpoints(apiClient, base);
     } catch (error) {
-      const shouldTryLocalFallback =
-        isElectronRuntime &&
-        isLocalRuntimeOrigin &&
-        (error?.response?.status === 404 || error?.response?.status >= 500 || !error?.response);
-
-      if (shouldTryLocalFallback) {
-        try {
-          const localClient = buildLocalLectureClient();
-          console.log('[lectureAPI] trying local backend token fallback at http://localhost:5000/api');
-          return await tryLectureTokenEndpoints(localClient, 'http://localhost:5000/api');
-        } catch (localError) {
-          console.error('[lectureAPI] local backend token fallback failed:', localError?.message || localError);
-          throw localError;
-        }
-      }
-
       throw error;
     }
   },

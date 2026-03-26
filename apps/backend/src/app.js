@@ -16,10 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
 
-// Health check route
-app.get("/", (req, res) => {
-  res.send("Quiz Backend is running 🚀");
-});
+// Base URL served by React production build
 
 app.get("/api/health", (req, res) => {
   res.json({
@@ -47,6 +44,18 @@ app.use("/api/lectures", lectureRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/submissions", submissionRoutes);
+
+// --- SERVE PRODUCTION REACT APP ON WEB ---
+if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") {
+  const frontendBuildPath = path.join(__dirname, "../../frontend/build");
+  app.use(express.static(frontendBuildPath));
+  
+  // Hand off any non-API request directly back to the React DOM Engine for seamless SPA routing!
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api/")) return next();
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  });
+}
 
 // Error handlers (must be last)
 app.use(notFound);
