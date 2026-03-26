@@ -51,7 +51,8 @@ if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "developme
   app.use(express.static(frontendBuildPath));
   
   // Hand off any non-API request directly back to the React DOM Engine for seamless SPA routing!
-  app.get("*", (req, res, next) => {
+  // Uses generic middleware instead of '*' to strictly comply with Express 5+ path-to-regexp v8 updates!
+  app.use((req, res, next) => {
     if (req.path.startsWith("/api/")) return next();
     res.sendFile(path.join(frontendBuildPath, "index.html"));
   });
