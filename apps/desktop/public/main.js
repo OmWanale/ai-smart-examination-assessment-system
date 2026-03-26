@@ -230,7 +230,6 @@ app.on('web-contents-created', (_event, contents) => {
     try {
       const parsedUrl = new URL(navigationUrl);
 
-<<<<<<< HEAD
       // INTERCEPT OAUTH CALLBACK!
       if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
         event.preventDefault();
@@ -248,10 +247,12 @@ app.on('web-contents-created', (_event, contents) => {
         return;
       }
 
-=======
->>>>>>> feature/live-lecture-changes
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
+        parsedUrl.hostname === 'localhost' ||
+        parsedUrl.hostname === '127.0.0.1' ||
+        parsedUrl.hostname === 'classyn-ai.onrender.com' ||
+        parsedUrl.hostname === 'classynai.vercel.app' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
         parsedUrl.hostname.endsWith('.jitsi.net') ||
@@ -274,7 +275,6 @@ app.on('web-contents-created', (_event, contents) => {
     }
   });
 
-<<<<<<< HEAD
   // Intercept the Backend's 302 OAuth redirect to bring the browser back to local file://
   contents.on('will-redirect', (event, navigationUrl) => {
     if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
@@ -287,7 +287,6 @@ app.on('web-contents-created', (_event, contents) => {
         
         const frontendBuildPath = getFrontendBuildPath();
         const indexPath = path.join(frontendBuildPath, 'index.html');
-        // Format local file URL manually to include the HashRouter's query params
         const localUrl = `file:///${indexPath.replace(/\\/g, '/')}#/auth/callback?token=${token}&error=${error}`;
         
         console.log('🚀 Loading Local Access Token Route:', localUrl);
@@ -297,12 +296,15 @@ app.on('web-contents-created', (_event, contents) => {
       }
     }
   });
-=======
->>>>>>> feature/live-lecture-changes
+
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
     const allow = (
       url === 'about:blank' ||
+      url.startsWith('http://localhost') ||
+      url.startsWith('http://127.0.0.1') ||
+      url.includes('classyn-ai.onrender.com') ||
+      url.includes('classynai.vercel.app') ||
       url.startsWith(CLOUD_BACKEND) ||
       url.startsWith('https://meet.jit.si') ||
       url.includes('.jitsi.net') ||
