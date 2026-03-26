@@ -4,9 +4,9 @@ const path = require('path');
 const fs = require('fs');
 
 // ─── Configuration ─────────────────────────────────────────────
-const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
-const CLOUD_BACKEND = isDevelopment ? 'http://localhost:5000' : 'https://classyn-ai.onrender.com';
+const CLOUD_BACKEND = 'https://classyn-ai.onrender.com';
 const CLOUD_API     = `${CLOUD_BACKEND}/api`;
+const isDevelopment = process.env.NODE_ENV === 'development' || isDev;
 const isPackaged    = app.isPackaged;
 
 console.log('🚀 Electron starting...');
@@ -230,6 +230,7 @@ app.on('web-contents-created', (_event, contents) => {
     try {
       const parsedUrl = new URL(navigationUrl);
 
+<<<<<<< HEAD
       // INTERCEPT OAUTH CALLBACK!
       if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
         event.preventDefault();
@@ -247,11 +248,10 @@ app.on('web-contents-created', (_event, contents) => {
         return;
       }
 
+=======
+>>>>>>> feature/live-lecture-changes
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
-        parsedUrl.hostname === 'localhost' ||
-        parsedUrl.hostname === '127.0.0.1' ||
-        parsedUrl.hostname === 'classyn-ai.onrender.com' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
         parsedUrl.hostname.endsWith('.jitsi.net') ||
@@ -274,6 +274,7 @@ app.on('web-contents-created', (_event, contents) => {
     }
   });
 
+<<<<<<< HEAD
   // Intercept the Backend's 302 OAuth redirect to bring the browser back to local file://
   contents.on('will-redirect', (event, navigationUrl) => {
     if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
@@ -296,13 +297,12 @@ app.on('web-contents-created', (_event, contents) => {
       }
     }
   });
+=======
+>>>>>>> feature/live-lecture-changes
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
     const allow = (
       url === 'about:blank' ||
-      url.startsWith('http://localhost') ||
-      url.startsWith('http://127.0.0.1') ||
-      url.includes('classyn-ai.onrender.com') ||
       url.startsWith(CLOUD_BACKEND) ||
       url.startsWith('https://meet.jit.si') ||
       url.includes('.jitsi.net') ||
