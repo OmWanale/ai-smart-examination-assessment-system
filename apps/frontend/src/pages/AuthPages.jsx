@@ -158,7 +158,8 @@ export function LoginPage() {
   };
 
   const handleGoogleSignIn = () => {
-    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}`;
+    const origin = window.location.origin || '';
+    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}&origin=${encodeURIComponent(origin)}`;
     window.location.href = googleAuthUrl;
   };
 
@@ -277,7 +278,8 @@ export function RegisterPage() {
   };
 
   const handleGoogleSignIn = () => {
-    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}`;
+    const origin = window.location.origin || '';
+    const googleAuthUrl = `${API_BASE_URL}/auth/google?role=${encodeURIComponent(role)}&origin=${encodeURIComponent(origin)}`;
     window.location.href = googleAuthUrl;
   };
 

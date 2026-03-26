@@ -8,8 +8,8 @@ const getFrontendBaseUrl = () =>
 const useHashRouterForFrontend = () =>
   String(process.env.FRONTEND_USE_HASH_ROUTER || "true").toLowerCase() === "true";
 
-const buildFrontendRedirectUrl = (path, params = {}) => {
-  const base = getFrontendBaseUrl();
+const buildFrontendRedirectUrl = (path, params = {}, explicitBase = null) => {
+  const base = explicitBase && explicitBase.startsWith("http") ? explicitBase : getFrontendBaseUrl();
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   const query = new URLSearchParams(params).toString();
 
@@ -221,8 +221,17 @@ const googleCallback = asyncHandler(async (req, res) => {
     email: user.email,
   });
 
+  let origin = null;
+  try {
+    const rawState = req.query.state;
+    if (rawState) {
+      const stateObj = JSON.parse(rawState);
+      origin = stateObj.origin;
+    }
+  } catch(e) {}
+
   const callbackPath = process.env.FRONTEND_OAUTH_CALLBACK_PATH || "/auth/callback";
-  const redirectUrl = buildFrontendRedirectUrl(callbackPath, { token });
+  const redirectUrl = buildFrontendRedirectUrl(callbackPath, { token }, origin);
   res.redirect(redirectUrl);
 });
 

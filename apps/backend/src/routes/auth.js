@@ -70,7 +70,8 @@ router.get("/google", (req, res, next) => {
     return res.redirect(`/api/auth/google/mock-callback?user=${mockUser}`);
   }
 
-  const state = JSON.stringify({ role: requestedRole });
+  const origin = req.query?.origin || '';
+  const state = JSON.stringify({ role: requestedRole, origin });
 
   passport.authenticate("google", {
     scope: ["profile", "email"],
