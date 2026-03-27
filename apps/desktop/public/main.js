@@ -230,8 +230,29 @@ app.on('web-contents-created', (_event, contents) => {
     try {
       const parsedUrl = new URL(navigationUrl);
 
+      // INTERCEPT OAUTH CALLBACK!
+      if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
+        event.preventDefault();
+        try {
+          console.log('🔄 Intercepted Client-side OAuth Redirect! Bridging to file://...');
+          const urlParams = new URL(navigationUrl);
+          const token = urlParams.searchParams.get('token') || '';
+          const error = urlParams.searchParams.get('error') || '';
+          
+          const frontendBuildPath = getFrontendBuildPath();
+          const indexPath = path.join(frontendBuildPath, 'index.html');
+          const localUrl = `file:///${indexPath.replace(/\\/g, '/')}#/auth/callback?token=${token}&error=${error}`;
+          mainWindow.loadURL(localUrl);
+        } catch (err) {}
+        return;
+      }
+
       const isAllowed =
         parsedUrl.protocol === 'file:' ||
+        parsedUrl.hostname === 'localhost' ||
+        parsedUrl.hostname === '127.0.0.1' ||
+        parsedUrl.hostname === 'classyn-ai.onrender.com' ||
+        parsedUrl.hostname === 'classynai.vercel.app' ||
         navigationUrl.startsWith(CLOUD_BACKEND) ||
         navigationUrl.startsWith('https://meet.jit.si') ||
         parsedUrl.hostname.endsWith('.jitsi.net') ||
@@ -254,10 +275,36 @@ app.on('web-contents-created', (_event, contents) => {
     }
   });
 
+  // Intercept the Backend's 302 OAuth redirect to bring the browser back to local file://
+  contents.on('will-redirect', (event, navigationUrl) => {
+    if (navigationUrl.includes('oauth_redirect=true') && (navigationUrl.includes('token=') || navigationUrl.includes('error='))) {
+      event.preventDefault();
+      try {
+        console.log('🔄 Intercepted Backend OAuth Redirect! Bridging to file://...');
+        const urlParams = new URL(navigationUrl);
+        const token = urlParams.searchParams.get('token') || '';
+        const error = urlParams.searchParams.get('error') || '';
+        
+        const frontendBuildPath = getFrontendBuildPath();
+        const indexPath = path.join(frontendBuildPath, 'index.html');
+        const localUrl = `file:///${indexPath.replace(/\\/g, '/')}#/auth/callback?token=${token}&error=${error}`;
+        
+        console.log('🚀 Loading Local Access Token Route:', localUrl);
+        mainWindow.loadURL(localUrl);
+      } catch (err) {
+        console.error('Failed to parse OAuth redirect:', err);
+      }
+    }
+  });
+
   // Block new-window requests except cloud backend
   contents.setWindowOpenHandler(({ url }) => {
     const allow = (
       url === 'about:blank' ||
+      url.startsWith('http://localhost') ||
+      url.startsWith('http://127.0.0.1') ||
+      url.includes('classyn-ai.onrender.com') ||
+      url.includes('classynai.vercel.app') ||
       url.startsWith(CLOUD_BACKEND) ||
       url.startsWith('https://meet.jit.si') ||
       url.includes('.jitsi.net') ||

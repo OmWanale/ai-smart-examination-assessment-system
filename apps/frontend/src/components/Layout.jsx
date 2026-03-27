@@ -3,6 +3,7 @@ import { Navbar } from './Navigation/Navbar';
 import { Sidebar } from './Navigation/Sidebar';
 import { useThemeStore } from '../store/themeStore';
 
+/* ═══════════════ Main (dashboard) Layout ═══════════════ */
 export function MainLayout({ children }) {
   const { initializeTheme } = useThemeStore();
 
@@ -11,20 +12,23 @@ export function MainLayout({ children }) {
   }, [initializeTheme]);
 
   return (
-    <div className="min-h-screen bg-bg-light dark:bg-dark-bg transition-colors duration-300">
-      <Navbar />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 overflow-auto min-h-[calc(100vh-64px)]">
-          <div className="page-container animate-fade-in">
-            {children}
-          </div>
-        </main>
+    <div className="min-h-screen" style={{ background: '#f1f3f4' }}>
+      <div className="dark:bg-[#0f172a] min-h-screen">
+        <Navbar />
+        <div className="flex">
+          <Sidebar />
+          <main className="flex-1 overflow-auto min-h-[calc(100vh-64px)]">
+            <div className="page-container animate-fade-in">
+              {children}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );
 }
 
+/* ═══════════════ Auth (login/register) Layout ═══════════════ */
 export function AuthLayout({ children }) {
   const { initializeTheme } = useThemeStore();
 
@@ -38,11 +42,9 @@ export function AuthLayout({ children }) {
         {/* Logo & Brand */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
-            <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-indigo-500/30 transform hover:scale-105 transition-transform duration-300">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl transform hover:scale-105 transition-transform duration-300"
+                 style={{ background: '#1a73e8' }}>
               <span className="text-white font-bold text-3xl">C</span>
-            </div>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-indigo-400 rounded-full flex items-center justify-center shadow-lg">
-              <span className="text-[10px]">✨</span>
             </div>
           </div>
           <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 transition-colors duration-300 tracking-tight">
@@ -58,16 +60,19 @@ export function AuthLayout({ children }) {
   );
 }
 
-export function PageHeader({ title, subtitle, action, backLink }) {
+/* ═══════════════ Page Header ═══════════════ */
+export function PageHeader({ title, subtitle, action }) {
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold text-text-dark dark:text-slate-100">
-            {title}
+          <h1 className="text-[22px] font-normal" style={{ color: '#202124' }}>
+            <span className="dark:text-slate-100">{title}</span>
           </h1>
           {subtitle && (
-            <p className="text-text-muted dark:text-slate-400 mt-1">{subtitle}</p>
+            <p className="text-sm mt-0.5" style={{ color: '#5f6368' }}>
+              <span className="dark:text-slate-400">{subtitle}</span>
+            </p>
           )}
         </div>
         {action && <div className="flex-shrink-0">{action}</div>}
@@ -76,16 +81,16 @@ export function PageHeader({ title, subtitle, action, backLink }) {
   );
 }
 
+/* ═══════════════ Page Section ═══════════════ */
 export function PageSection({ title, children, className = '' }) {
   return (
     <section className={`mb-8 ${className}`}>
       {title && (
-        <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 mb-4">
-          {title}
+        <h2 className="text-lg font-medium mb-4" style={{ color: '#202124' }}>
+          <span className="dark:text-slate-100">{title}</span>
         </h2>
       )}
       {children}
     </section>
   );
 }
-

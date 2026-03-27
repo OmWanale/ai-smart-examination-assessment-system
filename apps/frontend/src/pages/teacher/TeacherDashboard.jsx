@@ -1,36 +1,73 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, Button, Badge, Spinner, EmptyState } from '../../components/UI';
+import { Spinner, EmptyState, Button } from '../../components/UI';
 import { useQuizStore } from '../../store/quizStore';
 import { MainLayout, PageHeader } from '../../components/Layout';
 
-// Stat Card Component
-function StatCard({ icon, value, label, variant = 'primary' }) {
-  const variants = {
-    primary: 'from-primary-500 to-primary-600',
-    secondary: 'from-secondary-500 to-secondary-600',
-    accent: 'from-accent-500 to-accent-600',
-  };
+/* ── Banner colours (flat, Google Classroom palette) ── */
+const BANNER = [
+  '#1a73e8','#1e8e3e','#e8710a','#a142f4',
+  '#d93025','#137333','#1967d2','#e37400',
+  '#9334e6','#0d652d','#c5221f','#185abc',
+];
+const bg = (i) => BANNER[i % BANNER.length];
 
+/* ═══════════════════════ Google Classroom Class Card ═══════════════════════ */
+function ClassCard({ cls, index }) {
   return (
-    <Card className="relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
-      <div className="flex items-center gap-4">
-        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${variants[variant]} flex items-center justify-center text-white text-2xl shadow-md group-hover:shadow-warm transition-shadow`}>
-          {icon}
-        </div>
-        <div>
-          <div className="text-3xl font-display font-bold text-text-dark dark:text-slate-100">
-            {value}
+    <Link to={`/teacher/class/${cls.id || cls._id}`} className="block">
+      <div className="gc-card group">
+        {/* ── Coloured banner ── */}
+        <div className="gc-card-banner" style={{ backgroundColor: bg(index) }}>
+          <h3 className="text-[18px] font-normal text-white truncate pr-20 leading-snug group-hover:underline">
+            {cls.name}
+          </h3>
+          {cls.description && (
+            <p className="text-[13px] text-white/80 truncate mt-0.5 pr-20">{cls.description}</p>
+          )}
+          <p className="text-[12px] text-white/70 mt-1">
+            {cls.studentCount || cls.students?.length || 0} students
+          </p>
+
+          {/* Circle avatar overlapping banner→body */}
+          <div className="gc-card-avatar">
+            {(cls.name || 'C').charAt(0).toUpperCase()}
           </div>
-          <p className="text-text-muted dark:text-slate-400 text-sm">{label}</p>
+        </div>
+
+        {/* ── White body ── */}
+        <div className="gc-card-body">
+          <span className="inline-block text-[11px] font-mono tracking-wider text-[#5f6368] dark:text-slate-400 bg-[#f1f3f4] dark:bg-slate-700 px-2 py-0.5 rounded select-all">
+            {cls.joinCode}
+          </span>
+        </div>
+
+        {/* ── Footer icons ── */}
+        <div className="gc-card-footer">
+          <button className="gc-card-icon" title="Quizzes">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </button>
+          <button className="gc-card-icon" title="Open">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+          </button>
+          <button className="gc-card-icon" title="More">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="6" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="18" r="1.5" />
+            </svg>
+          </button>
         </div>
       </div>
-      {/* Decorative gradient */}
-      <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${variants[variant]} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2`} />
-    </Card>
+    </Link>
   );
 }
 
+/* ═══════════════════════ Teacher Dashboard Page ═══════════════════════ */
 export function TeacherDashboard() {
   const { classes, getMyClasses, isLoading } = useQuizStore();
 
@@ -39,119 +76,50 @@ export function TeacherDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Safety guard: Ensure classes is always an array
   const safeClasses = Array.isArray(classes) ? classes : [];
-
-  const totalStudents = safeClasses.reduce((sum, c) => sum + (c.studentCount || c.students?.length || 0), 0);
-  const totalQuizzes = safeClasses.reduce((sum, c) => sum + (c.quizCount || c.quizzes?.length || 0), 0);
 
   return (
     <MainLayout>
-      <PageHeader 
-        title="Teacher Dashboard"
-        subtitle="Manage your classes and quizzes"
+      <PageHeader
+        title="Classes"
         action={
           <Link to="/teacher/create-class">
             <Button>
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
-                New Class
+                Create Class
               </span>
             </Button>
           </Link>
         }
       />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <StatCard 
-          icon="📚" 
-          value={safeClasses.length} 
-          label="Total Classes" 
-          variant="primary" 
-        />
-        <StatCard 
-          icon="👨‍🎓" 
-          value={totalStudents} 
-          label="Total Students" 
-          variant="secondary" 
-        />
-        <StatCard 
-          icon="📝" 
-          value={totalQuizzes} 
-          label="Total Quizzes" 
-          variant="accent" 
-        />
-      </div>
-
-      {/* Classes Section */}
-      <div>
-        <h2 className="text-xl font-display font-bold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
-          <span>Your Classes</span>
-          {safeClasses.length > 0 && (
-            <Badge variant="primary" size="sm">{safeClasses.length}</Badge>
-          )}
-        </h2>
-
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Spinner size="lg" />
-          </div>
-        ) : safeClasses.length === 0 ? (
-          <Card>
-            <EmptyState
-              icon="📚"
-              title="No classes yet"
-              description="Create your first class to get started with quizzes"
-              action={
-                <Link to="/teacher/create-class">
-                  <Button>Create Your First Class</Button>
-                </Link>
-              }
-            />
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {safeClasses.map((cls) => (
-              <Link key={cls.id || cls._id} to={`/teacher/class/${cls.id || cls._id}`}>
-                <Card hover className="h-full">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-xl shadow-md">
-                      📚
-                    </div>
-                    <Badge variant="neutral" size="sm">
-                      <span className="font-mono">{cls.joinCode}</span>
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-1">
-                    {cls.name}
-                  </h3>
-                  
-                  {cls.description && (
-                    <p className="text-text-muted dark:text-slate-400 text-sm mb-4 line-clamp-2">
-                      {cls.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center gap-3 mt-auto pt-4 border-t border-primary-100 dark:border-dark-border">
-                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-slate-400">
-                      <span>👨‍🎓</span>
-                      <span>{cls.studentCount || cls.students?.length || 0} students</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-sm text-text-muted dark:text-slate-400">
-                      <span>📝</span>
-                      <span>{cls.quizCount || cls.quizzes?.length || 0} quizzes</span>
-                    </div>
-                  </div>
-                </Card>
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <Spinner size="lg" />
+        </div>
+      ) : safeClasses.length === 0 ? (
+        <div className="gc-empty-card">
+          <EmptyState
+            icon="📚"
+            title="No classes yet"
+            description="Create your first class to get started with quizzes and assignments"
+            action={
+              <Link to="/teacher/create-class">
+                <Button>Create Your First Class</Button>
               </Link>
-            ))}
-          </div>
-        )}
-      </div>
+            }
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {safeClasses.map((cls, i) => (
+            <ClassCard key={cls.id || cls._id} cls={cls} index={i} />
+          ))}
+        </div>
+      )}
     </MainLayout>
   );
 }
