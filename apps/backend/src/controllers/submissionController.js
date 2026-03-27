@@ -175,6 +175,13 @@ const getLeaderboard = asyncHandler(async (req, res) => {
     });
   }
 
+  if (isStudent && !quiz.showResultsToStudents) {
+    return res.status(403).json({
+      success: false,
+      message: "The teacher has disabled leaderboard access for this quiz",
+    });
+  }
+
   // Get leaderboard
   const leaderboard = await Submission.getLeaderboard(quizId, limit);
 

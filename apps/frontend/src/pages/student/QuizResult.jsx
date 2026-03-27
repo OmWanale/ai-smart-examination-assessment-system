@@ -253,10 +253,10 @@ export function QuizResult() {
                 </Badge>
               </div>
             )}
-            {quiz.timeLimit && (
+            {(quiz.durationMinutes || quiz.timeLimit) && (
               <div className="flex justify-between items-center py-2">
                 <span className="text-text-muted dark:text-slate-400">Time Limit</span>
-                <span className="font-medium text-text-dark dark:text-slate-200">{quiz.timeLimit} minutes</span>
+                <span className="font-medium text-text-dark dark:text-slate-200">{quiz.durationMinutes || quiz.timeLimit} minutes</span>
               </div>
             )}
           </div>

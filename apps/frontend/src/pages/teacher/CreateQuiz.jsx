@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout, PageHeader } from '../../components/Layout.jsx';
 import { Card, CardHeader, Button, Input, Textarea, Select, Alert, Badge, Spinner } from '../../components/UI.jsx';
@@ -230,6 +230,11 @@ export function CreateQuiz() {
   const [showResultsToStudents, setShowResultsToStudents] = useState(true);
 
   const { createQuiz, previewQuizWithAI, publishQuizFromPreview, isLoading, error, clearError } = useQuizStore();
+  const harmlessStoreError = error === 'Failed to fetch quizzes' ? null : error;
+
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   if (!classId) {
     return (
@@ -483,9 +488,9 @@ export function CreateQuiz() {
             </div>
           </div>
 
-          {(error || errors.submit || errors.preview) && (
+          {(harmlessStoreError || errors.submit || errors.preview) && (
             <Alert type="error" className="mb-6">
-              {error || errors.submit || errors.preview}
+              {harmlessStoreError || errors.submit || errors.preview}
             </Alert>
           )}
 
@@ -614,9 +619,9 @@ export function CreateQuiz() {
           </div>
 
           <Card className="shadow-soft">
-            {(error || errors.submit) && (
+            {(harmlessStoreError || errors.submit) && (
               <Alert type="error" className="mb-6">
-                {error || errors.submit}
+                {harmlessStoreError || errors.submit}
               </Alert>
             )}
 
@@ -756,9 +761,9 @@ export function CreateQuiz() {
         </div>
 
         <Card className="shadow-soft">
-          {(error || errors.submit) && (
+          {(harmlessStoreError || errors.submit) && (
             <Alert type="error" className="mb-6">
-              {error || errors.submit}
+              {harmlessStoreError || errors.submit}
             </Alert>
           )}
 

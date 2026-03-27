@@ -1,30 +1,254 @@
+/* ═══════════════════════════════════════════════════════════
+   ClassynAI — Google Classroom Design System
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Reset & Base ── */
 .App {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  background: #f1f3f4;
 }
-
 .dark .App {
-  background: radial-gradient(circle at top, #111827 0%, #0f172a 35%, #020617 100%);
+  background: #0f172a;
 }
 
-/* Utility classes for common patterns */
-.container-max {
-  max-width: 80rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+/* ── Thin scrollbar ── */
+.gc-scrollbar::-webkit-scrollbar { width: 4px; }
+.gc-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.gc-scrollbar::-webkit-scrollbar-thumb { background-color: #dadce0; border-radius: 4px; }
+.dark .gc-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; }
+
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR
+   ═══════════════════════════════════════════════════════════ */
+.gc-navbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px 0 16px;
+}
+.dark .gc-navbar {
+  background: #1e293b;
+  border-bottom-color: #334155;
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-in;
+/* ── Circle icon button (Google-style) ── */
+.gc-icon-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5f6368;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+  flex-shrink: 0;
+}
+.gc-icon-btn:hover { background: #f1f3f4; }
+.dark .gc-icon-btn { color: #94a3b8; }
+.dark .gc-icon-btn:hover { background: #334155; }
+
+/* ═══════════════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════════════ */
+.gc-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  display: none;            /* hidden on small screens */
+  flex-direction: column;
+  background: #ffffff;
+  border-right: 1px solid #e0e0e0;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  transition: background-color 0.2s;
+}
+@media (min-width: 1024px) {
+  .gc-sidebar { display: flex; }
+}
+.dark .gc-sidebar {
+  background: #1e293b;
+  border-right-color: #334155;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+/* Sidebar nav item */
+.gc-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 48px;
+  padding: 0 24px;
+  margin: 0 8px;
+  border-radius: 0 25px 25px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #202124;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.gc-nav-item:hover { background: #f1f3f4; }
+.gc-nav-item.active {
+  background: #d3e3fd;
+  color: #185abc;
+  font-weight: 600;
+}
+.dark .gc-nav-item { color: #e2e8f0; }
+.dark .gc-nav-item:hover { background: #334155; }
+.dark .gc-nav-item.active { background: rgba(56,96,190,0.35); color: #93bbfb; }
+
+/* Sidebar section header */
+.gc-section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: #5f6368;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 16px 24px 6px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  cursor: pointer;
+}
+.dark .gc-section-title { color: #94a3b8; }
+
+/* Sidebar class item */
+.gc-class-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 48px;
+  padding: 0 24px;
+  margin: 0 8px;
+  border-radius: 0 25px 25px 0;
+  font-size: 14px;
+  color: #3c4043;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+.gc-class-item:hover { background: #f1f3f4; }
+.gc-class-item.active { background: #d3e3fd; color: #185abc; }
+.dark .gc-class-item { color: #e2e8f0; }
+.dark .gc-class-item:hover { background: #334155; }
+.dark .gc-class-item.active { background: rgba(56,96,190,0.35); color: #93bbfb; }
+
+/* Circle class avatar in sidebar */
+.gc-class-avatar {
+  width: 32px; height: 32px; min-width: 32px;
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 14px; font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CLASS CARDS (Google Classroom style)
+   ═══════════════════════════════════════════════════════════ */
+.gc-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #dadce0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 296px;
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+.gc-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.dark .gc-card { background: #1e293b; border-color: #334155; }
+.dark .gc-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+
+/* Coloured top banner */
+.gc-card-banner {
+  position: relative;
+  padding: 16px 20px 44px;
+  flex-shrink: 0;
+}
+
+/* Large circle avatar overlapping banner/body */
+.gc-card-avatar {
+  position: absolute;
+  right: 16px;
+  bottom: -28px;
+  width: 72px; height: 72px;
+  border-radius: 9999px;
+  background: #5f6368;
+  border: 3px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 28px; font-weight: 400;
+}
+.dark .gc-card-avatar { background: #475569; border-color: #1e293b; }
+
+/* White body */
+.gc-card-body {
+  flex: 1;
+  padding: 32px 20px 8px;
+}
+
+/* Footer icons row */
+.gc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 12px 10px;
+  border-top: 1px solid #e0e0e0;
+  margin: 0 8px;
+  padding-top: 8px;
+}
+.dark .gc-card-footer { border-top-color: #334155; }
+
+/* Card footer icon button */
+.gc-card-icon {
+  width: 36px; height: 36px;
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  color: #5f6368;
+  background: transparent; border: none; cursor: pointer;
+  transition: background-color 0.15s;
+}
+.gc-card-icon:hover { background: #f1f3f4; }
+.dark .gc-card-icon { color: #94a3b8; }
+.dark .gc-card-icon:hover { background: #334155; }
+
+/* Empty state wrapper */
+.gc-empty-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #dadce0;
+  padding: 24px;
+}
+.dark .gc-empty-card { background: #1e293b; border-color: #334155; }
+
+/* ═══════════════════════════════════════════════════════════
+   UTILITY / ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+.fade-in,
+.animate-fade-in {
+  animation: gcFadeIn 0.25s ease-out;
+}
+@keyframes gcFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Page container inside main area */
+.page-container {
+  padding: 24px;
+}
+@media (min-width: 768px) {
+  .page-container { padding: 24px 32px; }
 }

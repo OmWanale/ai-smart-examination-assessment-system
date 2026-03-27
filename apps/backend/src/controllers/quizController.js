@@ -290,6 +290,7 @@ const getQuizzesForClass = asyncHandler(async (req, res) => {
           durationMinutes: quiz.durationMinutes,
           questionCount: quiz.questions.length,
           totalMarks: quiz.totalMarks,
+          showResultsToStudents: quiz.showResultsToStudents,
           createdAt: quiz.createdAt,
           hasSubmitted,
         };

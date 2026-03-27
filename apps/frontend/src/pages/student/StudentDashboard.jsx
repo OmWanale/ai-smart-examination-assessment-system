@@ -1,9 +1,78 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MainLayout, PageHeader } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge, Spinner, EmptyState } from '../../components/UI.jsx';
+import { MainLayout, PageHeader } from '../../components/Layout';
+import { Button, Alert, Spinner, EmptyState } from '../../components/UI';
 import { useQuizStore } from '../../store/quizStore';
 
+/* ── Banner colours (flat, Google Classroom palette) ── */
+const BANNER = [
+  '#1a73e8','#1e8e3e','#e8710a','#a142f4',
+  '#d93025','#137333','#1967d2','#e37400',
+  '#9334e6','#0d652d','#c5221f','#185abc',
+];
+const bg = (i) => BANNER[i % BANNER.length];
+
+/* ═══════════════════════ Google Classroom Class Card ═══════════════════════ */
+function ClassCard({ classItem, index }) {
+  const teacherName = classItem.teacher?.name || classItem.teacher?.email || 'Teacher';
+
+  return (
+    <Link to={`/student/class/${classItem.id || classItem._id}`} className="block">
+      <div className="gc-card group">
+        {/* ── Coloured banner ── */}
+        <div className="gc-card-banner" style={{ backgroundColor: bg(index) }}>
+          <h3 className="text-[18px] font-normal text-white truncate pr-20 leading-snug group-hover:underline">
+            {classItem.name}
+          </h3>
+          {classItem.description && (
+            <p className="text-[13px] text-white/80 truncate mt-0.5 pr-20">{classItem.description}</p>
+          )}
+          <p className="text-[12px] text-white/70 mt-1">{teacherName}</p>
+
+          {/* Teacher avatar */}
+          <div className="gc-card-avatar">
+            {teacherName.charAt(0).toUpperCase()}
+          </div>
+        </div>
+
+        {/* ── White body ── */}
+        <div className="gc-card-body">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[#5f6368] dark:text-slate-400 bg-[#f1f3f4] dark:bg-slate-700 px-2 py-0.5 rounded">
+              📝 {classItem.quizCount || classItem.quizzes?.length || 0} quizzes
+            </span>
+            <span className="text-[11px] text-[#5f6368] dark:text-slate-400 bg-[#f1f3f4] dark:bg-slate-700 px-2 py-0.5 rounded">
+              👥 {classItem.studentCount || classItem.students?.length || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* ── Footer icons ── */}
+        <div className="gc-card-footer">
+          <button className="gc-card-icon" title="Assignments">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </button>
+          <button className="gc-card-icon" title="Open">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.4}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+          </button>
+          <button className="gc-card-icon" title="More">
+            <svg className="w-[22px] h-[22px]" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="6" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="18" r="1.5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* ═══════════════════════ Student Dashboard Page ═══════════════════════ */
 export function StudentDashboard() {
   const { classes, isLoading, error, getMyClasses } = useQuizStore();
 
@@ -15,14 +84,13 @@ export function StudentDashboard() {
   return (
     <MainLayout>
       <PageHeader
-        title="My Classes"
-        subtitle="View your enrolled classes and available quizzes"
+        title="Classes"
         action={
           <Link to="/student/join-class">
             <Button>
               <span className="flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 Join Class
               </span>
@@ -31,18 +99,14 @@ export function StudentDashboard() {
         }
       />
 
-      {error && (
-        <Alert type="error" className="mb-6">
-          {error}
-        </Alert>
-      )}
+      {error && <Alert type="error" className="mb-6">{error}</Alert>}
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16">
+        <div className="flex items-center justify-center py-24">
           <Spinner size="lg" />
         </div>
       ) : classes.length === 0 ? (
-        <Card>
+        <div className="gc-empty-card">
           <EmptyState
             icon="📚"
             title="No classes yet"
@@ -53,56 +117,11 @@ export function StudentDashboard() {
               </Link>
             }
           />
-        </Card>
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {classes.map((classItem) => (
-            <Link key={classItem.id || classItem._id} to={`/student/class/${classItem.id || classItem._id}`}>
-              <Card hover className="h-full">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-400 to-secondary-400 flex items-center justify-center text-white text-2xl shadow-md flex-shrink-0">
-                    📚
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 truncate">
-                      {classItem.name}
-                    </h3>
-                    {classItem.description && (
-                      <p className="text-text-muted dark:text-slate-400 text-sm line-clamp-2 mt-1">
-                        {classItem.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge variant="primary">
-                    📝 {classItem.quizCount || classItem.quizzes?.length || 0} quizzes
-                  </Badge>
-                  <Badge variant="neutral">
-                    👥 {classItem.studentCount || classItem.students?.length || 0} students
-                  </Badge>
-                </div>
-
-                <div className="pt-4 border-t border-primary-100 dark:border-dark-border">
-                  <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary-300 to-secondary-300 flex items-center justify-center text-white text-xs font-semibold">
-                      {(classItem.teacher?.name || classItem.teacher?.email || 'T').charAt(0).toUpperCase()}
-                    </div>
-                    <span>
-                      Taught by <strong className="text-text-dark dark:text-slate-200">{classItem.teacher?.name || classItem.teacher?.email || 'Unknown'}</strong>
-                    </span>
-                  </div>
-                  <p className="text-xs text-text-light dark:text-slate-500 mt-2">
-                    Joined {new Date(classItem.createdAt).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric', 
-                      year: 'numeric' 
-                    })}
-                  </p>
-                </div>
-              </Card>
-            </Link>
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {classes.map((classItem, i) => (
+            <ClassCard key={classItem.id || classItem._id} classItem={classItem} index={i} />
           ))}
         </div>
       )}
