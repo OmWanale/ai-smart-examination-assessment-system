@@ -30,7 +30,7 @@ export function QuizAttempt() {
     if (!quiz || hasSubmitted) return;
 
     // Initialize timer
-    const minutes = quiz.timeLimit || 30;
+    const minutes = quiz.durationMinutes || quiz.timeLimit || 30;
     setTimeLeft(minutes * 60);
 
     timerRef.current = setInterval(() => {

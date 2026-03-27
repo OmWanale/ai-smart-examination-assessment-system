@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { MainLayout, PageHeader } from '../../components/Layout.jsx';
-import { Card, Button, Alert, Badge, Spinner, EmptyState, Avatar, Input, Textarea } from '../../components/UI.jsx';
+import { MainLayout } from '../../components/Layout.jsx';
+import { Button, Alert, Badge, Spinner, EmptyState, Avatar, Input, Textarea } from '../../components/UI.jsx';
 import { useQuizStore } from '../../store/quizStore';
 import { classAPI, assignmentAPI, lectureAPI } from '../../api/client';
 export function ClassDetail() {
@@ -25,6 +25,7 @@ export function ClassDetail() {
   const [showLectureForm, setShowLectureForm] = useState(false);
   const [lectureForm, setLectureForm] = useState({ title: '', scheduledAt: '' });
   const [lectureLoading, setLectureLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('stream');
 
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
@@ -236,6 +237,101 @@ export function ClassDetail() {
     alert('Lecture link copied!');
   };
 
+  const tabItems = [
+    { id: 'stream', label: 'Stream' },
+    { id: 'quizzes', label: 'Quizzes' },
+    { id: 'assignments', label: 'Assignments' },
+    { id: 'lectures', label: 'Live Lectures' },
+    { id: 'people', label: 'People' },
+  ];
+
+  const formatDate = (value) => {
+    if (!value) return 'No date';
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return 'No date';
+    return parsed.toLocaleString();
+  };
+
+  const getQuizQuestionCount = (quiz) =>
+    quiz?.questionCount || quiz?.questions?.length || quiz?.totalQuestions || quiz?.totalMarks || 0;
+
+  const streamItems = [
+    ...(Array.isArray(assignments) ? assignments : []).map((assignment) => ({
+      id: `assignment-${assignment._id}`,
+      kind: 'assignment',
+      title: assignment.title,
+      subtitle: assignment.dueDate ? `Assignment due ${formatDate(assignment.dueDate)}` : 'Assignment posted',
+      type: 'Assignment',
+      date: assignment.createdAt || assignment.updatedAt || assignment.dueDate || Date.now(),
+    })),
+    ...(Array.isArray(quizzes) ? quizzes : []).map((quiz) => {
+      const quizId = quiz._id || quiz.id;
+      return {
+        id: `quiz-${quizId}`,
+        kind: 'quiz',
+        quizId,
+        title: quiz.title,
+        subtitle: `${getQuizQuestionCount(quiz)} questions • ${quiz.timeLimit || quiz.durationMinutes || 'No'} min`,
+        type: 'Quiz',
+        date: quiz.createdAt || quiz.updatedAt || Date.now(),
+      };
+    }),
+    ...(lectures.live || []).map((lecture) => ({
+      id: `lecture-live-${lecture._id}`,
+      kind: 'lecture-live',
+      roomId: lecture.roomId,
+      title: lecture.title,
+      subtitle: `Live now • Started ${formatDate(lecture.createdAt)}`,
+      type: 'Lecture',
+      date: lecture.createdAt || Date.now(),
+    })),
+    ...(lectures.upcoming || []).map((lecture) => ({
+      id: `lecture-upcoming-${lecture._id}`,
+      kind: 'lecture-upcoming',
+      roomId: lecture.roomId,
+      title: lecture.title,
+      subtitle: `Scheduled for ${formatDate(lecture.scheduledAt)}`,
+      type: 'Lecture',
+      date: lecture.scheduledAt || Date.now(),
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const upcomingItems = [
+    ...(Array.isArray(assignments) ? assignments : []).map((assignment) => ({
+      id: `upcoming-assignment-${assignment._id}`,
+      title: assignment.title,
+      label: 'Assignment',
+      date: assignment.dueDate,
+    })),
+    ...(lectures.upcoming || []).map((lecture) => ({
+      id: `upcoming-lecture-${lecture._id}`,
+      title: lecture.title,
+      label: 'Lecture',
+      date: lecture.scheduledAt,
+    })),
+  ]
+    .filter((item) => item.date)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const handleStreamItemClick = (item) => {
+    if (item.kind === 'assignment') {
+      setActiveTab('assignments');
+      return;
+    }
+
+    if (item.kind === 'quiz' && item.quizId) {
+      navigate(`/teacher/quiz/${item.quizId}/review`);
+      return;
+    }
+
+    if (item.kind === 'lecture-live' && item.roomId) {
+      navigate(`/lecture/${item.roomId}`);
+      return;
+    }
+
+    setActiveTab('lectures');
+  };
+
   if (isLoading) {
     return (
       <MainLayout>
@@ -265,450 +361,469 @@ export function ClassDetail() {
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400 mb-4">
-          <Link to="/teacher/dashboard" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+        <div className="flex items-center gap-2 text-sm text-[#5f6368] mb-4">
+          <Link to="/teacher/dashboard" className="hover:text-[#1a73e8] transition-colors">
             Dashboard
           </Link>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-text-dark dark:text-slate-200">{classData.name}</span>
+          <span className="text-[#202124]">{classData.name}</span>
         </div>
 
-        {/* Class Header */}
-        <Card className="mb-6 overflow-hidden">
-          <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-6 -m-6 mb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-display font-bold text-white mb-2">{classData.name}</h1>
-                {classData.description && (
-                  <p className="text-white/80">{classData.description}</p>
+        <div className="rounded-2xl bg-[#5f7485] min-h-[180px] p-6 md:p-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight">{classData.name}</h1>
+            <p className="text-white/85 mt-2 text-base md:text-lg">{classData.description || 'Class stream and resources'}</p>
+            <p className="text-white/75 mt-4 text-sm">
+              {classData.teacher?.name || classData.teacher?.email || 'Teacher'}
+            </p>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-2 bg-white/15 border border-white/30">
+              <span className="text-white/90 text-sm">Class Code:</span>
+              <span className="text-white font-semibold tracking-wide">{classData.joinCode || 'Not available'}</span>
+            </div>
+          </div>
+          <div className="hidden md:flex w-24 h-24 rounded-2xl bg-white/10 items-center justify-center">
+            <svg className="w-12 h-12 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 14v7m0 0l-3-3m3 3l3-3M3 10a9 9 0 1118 0v4a2 2 0 01-2 2h-3.5a1.5 1.5 0 01-1.5-1.5v-2A1.5 1.5 0 0115.5 11H19v-.5a7 7 0 10-14 0V11h3.5A1.5 1.5 0 0110 12.5v2A1.5 1.5 0 018.5 16H5a2 2 0 01-2-2v-4z" />
+            </svg>
+          </div>
+        </div>
+
+        <div className="mt-4 border-b border-[#dadce0]">
+          <div className="flex items-center gap-6 overflow-x-auto">
+            {tabItems.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`pt-2 pb-3 text-sm whitespace-nowrap border-b-2 transition-colors ${
+                  activeTab === tab.id
+                    ? 'text-[#1a73e8] border-[#1a73e8] font-semibold'
+                    : 'text-[#5f6368] border-transparent hover:text-[#202124]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          {activeTab === 'stream' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
+                  <h3 className="text-2xl font-medium text-[#202124]">Upcoming</h3>
+                  {upcomingItems.length === 0 ? (
+                    <p className="text-[#5f6368] mt-4">Woohoo, no work due soon!</p>
+                  ) : (
+                    <div className="mt-4 space-y-3">
+                      {upcomingItems.slice(0, 3).map((item) => (
+                        <div key={item.id} className="rounded-xl border border-[#e8eaed] p-3">
+                          <p className="text-sm font-medium text-[#202124]">{item.title}</p>
+                          <p className="text-xs text-[#5f6368] mt-1">{item.label}</p>
+                          <p className="text-xs text-[#5f6368] mt-1">{formatDate(item.date)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="lg:col-span-2 space-y-4">
+                <button
+                  onClick={() => {
+                    setActiveTab('assignments');
+                    setShowAssignmentForm(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#d2e3fc] text-[#1967d2] px-5 py-3 font-medium hover:bg-[#c6dafc] transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  New Announcement
+                </button>
+
+                {streamItems.length === 0 ? (
+                  <div className="bg-white rounded-xl shadow-sm border border-[#e8eaed] p-6 text-[#5f6368]">
+                    No stream activity yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {streamItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => handleStreamItemClick(item)}
+                        className="w-full text-left bg-white rounded-xl shadow-sm border border-[#e8eaed] p-4 hover:bg-[#f8f9fa] transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-sm font-semibold">
+                              {item.type.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-semibold text-[#202124] truncate">{item.title}</p>
+                              <p className="text-sm text-[#5f6368] mt-1">{item.subtitle}</p>
+                              <p className="text-xs text-[#5f6368] mt-1">{formatDate(item.date)}</p>
+                            </div>
+                          </div>
+                          <span className="w-8 h-8 rounded-full text-[#5f6368] flex items-center justify-center">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+                            </svg>
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
-              <Link to={`/teacher/create-quiz?classId=${classId}`}>
-                <Button variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-                  <span className="flex items-center gap-2">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Quiz
-                  </span>
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Join Code Card */}
-          <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
-              <span>🔑</span> Join Code
-            </h2>
-            <div className="bg-gradient-to-r from-primary-50 to-primary-100 dark:from-primary-900/30 dark:to-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-6 text-center">
-              <p className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400 tracking-widest font-mono">
-                {classData.joinCode}
-              </p>
-              <p className="text-xs text-text-muted dark:text-slate-400 mt-3">Share this code with your students</p>
-            </div>
-          </Card>
-
-          {/* Stats Cards */}
-          <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
-              <span>👥</span> Students
-            </h2>
-            <div className="flex items-center justify-between">
-              <div className="text-4xl font-display font-bold text-primary-600 dark:text-primary-400">
-                {classData.students?.length || 0}
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-
-          <Card>
-            <h2 className="text-lg font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
-              <span>📝</span> Quizzes
-            </h2>
-            <div className="flex items-center justify-between">
-              <div className="text-4xl font-display font-bold text-secondary-600 dark:text-secondary-400">
-                {quizzes?.length || 0}
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-secondary-400 to-secondary-600 flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                  <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Students List */}
-        <Card className="mt-6">
-          <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
-            <span>🎓</span> Enrolled Students
-          </h2>
-          {!Array.isArray(classData.students) || classData.students.length === 0 ? (
-            <EmptyState
-              icon={
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              }
-              title="No students have joined yet"
-              description="Share the join code with your students to get started."
-            />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {(classData.students || []).map((student, index) => (
-                <div
-                  key={student._id || index}
-                  className="flex items-center gap-3 p-4 bg-bg-light dark:bg-dark-hover rounded-xl hover:shadow-warm transition-all duration-200"
-                >
-                  <Avatar name={student.email || 'Student'} size="md" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text-dark dark:text-slate-200 truncate">
-                      {student.email || 'Student'}
-                    </p>
-                    <p className="text-xs text-text-muted dark:text-slate-400">Student</p>
-                  </div>
-                </div>
-              ))}
             </div>
           )}
-        </Card>
 
-        {/* Quizzes List */}
-        <Card className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
-              <span>📋</span> Quizzes
-            </h2>
-            <Link to={`/teacher/create-quiz?classId=${classId}`}>
-              <Button variant="outline" size="sm">
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  Add Quiz
-                </span>
-              </Button>
-            </Link>
-          </div>
-
-          {!Array.isArray(quizzes) || quizzes.length === 0 ? (
-            <EmptyState
-              icon={
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              }
-              title="No quizzes created yet"
-              description="Create your first quiz to get started."
-              action={
+          {activeTab === 'quizzes' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff] flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-[#202124]">Quizzes</h2>
+                  <p className="text-sm text-[#5f6368] mt-1">Manage assessments and review outcomes</p>
+                </div>
                 <Link to={`/teacher/create-quiz?classId=${classId}`}>
-                  <Button>
-                    <span className="flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Create First Quiz
-                    </span>
-                  </Button>
+                  <Button variant="outline" size="sm">Create Quiz</Button>
                 </Link>
-              }
-            />
-          ) : (
-            <div className="space-y-3">
-              {(quizzes || []).map((quiz) => (
-                <div
-                  key={quiz._id}
-                  className="flex items-center justify-between p-4 bg-bg-light dark:bg-dark-hover rounded-xl hover:shadow-warm transition-all duration-200 group"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-600/20 flex items-center justify-center">
-                      <svg className="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </div>
+
+              <div className="p-6">
+
+                {!Array.isArray(quizzes) || quizzes.length === 0 ? (
+                  <EmptyState
+                    icon={
+                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-text-dark dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                        {quiz.title}
-                      </h3>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        <Badge variant="neutral" size="sm">{quiz.questions?.length || 0} questions</Badge>
-                        {quiz.timeLimit && <Badge variant="neutral" size="sm">{quiz.timeLimit} min</Badge>}
-                        <Badge 
-                          variant={quiz.difficulty === 'hard' ? 'error' : quiz.difficulty === 'easy' ? 'success' : 'warning'} 
-                          size="sm"
-                        >
-                          {quiz.difficulty || 'medium'}
-                        </Badge>
+                    }
+                    title="No quizzes created yet"
+                    description="Create your first quiz to get started."
+                    action={
+                      <Link to={`/teacher/create-quiz?classId=${classId}`}>
+                        <Button>Create First Quiz</Button>
+                      </Link>
+                    }
+                  />
+                ) : (
+                  <div className="space-y-3">
+                    {(quizzes || []).map((quiz) => (
+                      <div key={quiz._id} className="relative rounded-2xl border border-[#dfe5ee] p-4 pl-5 bg-[#fcfdff] hover:border-[#c6dafc] transition-colors">
+                        <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#8ab4f8]"></div>
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div>
+                            <h3 className="font-semibold text-[#202124]">{quiz.title}</h3>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <Badge variant="neutral" size="sm">{getQuizQuestionCount(quiz)} questions</Badge>
+                              {(quiz.timeLimit || quiz.durationMinutes) && (
+                                <Badge variant="neutral" size="sm">{quiz.timeLimit || quiz.durationMinutes} min</Badge>
+                              )}
+                              <Badge
+                                variant={quiz.difficulty === 'hard' ? 'error' : quiz.difficulty === 'easy' ? 'success' : 'warning'}
+                                size="sm"
+                              >
+                                {quiz.difficulty || 'medium'}
+                              </Badge>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Link to={`/teacher/quiz/${quiz._id || quiz.id}/review`}>
+                              <Button variant="ghost" size="sm">View</Button>
+                            </Link>
+                            <Link to={`/teacher/quiz/${quiz._id || quiz.id}/submissions`}>
+                              <Button variant="outline" size="sm">Submissions</Button>
+                            </Link>
+                            <Link to={`/teacher/quiz/${quiz._id || quiz.id}/leaderboard`}>
+                              <Button variant="outline" size="sm">Leaderboard</Button>
+                            </Link>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ))}
                   </div>
-                  <div className="flex gap-2">
-                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/review`}>
-                      <Button variant="ghost" size="sm">
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          View
-                        </span>
-                      </Button>
-                    </Link>
-                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/submissions`}>
-                      <Button variant="outline" size="sm">
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                          </svg>
-                          Submissions
-                        </span>
-                      </Button>
-                    </Link>
-                    <Link to={`/teacher/quiz/${quiz._id || quiz.id}/leaderboard`}>
-                      <Button variant="outline" size="sm">
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                          </svg>
-                          Leaderboard
-                        </span>
-                      </Button>
-                    </Link>
-                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'assignments' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff] flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-[#202124]">Assignments</h2>
+                  <p className="text-sm text-[#5f6368] mt-1">Distribute tasks and track submissions</p>
                 </div>
-              ))}
-            </div>
-          )}
-        </Card>
+                <Button variant="outline" size="sm" onClick={() => setShowAssignmentForm((v) => !v)}>
+                  {showAssignmentForm ? 'Close Form' : 'Create Assignment'}
+                </Button>
+              </div>
 
-        {/* Assignments Section */}
-        <Card className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
-              <span>📎</span> Assignments
-            </h2>
-            <Button variant="outline" size="sm" onClick={() => setShowAssignmentForm((v) => !v)}>
-              {showAssignmentForm ? 'Close Form' : 'Create Assignment'}
-            </Button>
-          </div>
+              <div className="p-6">
 
-          {assignmentError && (
-            <Alert type="error" className="mb-4" dismissible onDismiss={() => setAssignmentError(null)}>
-              {assignmentError}
-            </Alert>
-          )}
+                {assignmentError && (
+                  <Alert type="error" className="mb-4" dismissible onDismiss={() => setAssignmentError(null)}>
+                    {assignmentError}
+                  </Alert>
+                )}
 
-          {showAssignmentForm && (
-            <form onSubmit={handleCreateAssignment} className="mb-6 p-4 rounded-xl border border-primary-100 dark:border-dark-border space-y-4">
-              <Input
-                label="Title"
-                value={assignmentForm.title}
-                onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
-                placeholder="Assignment title"
-              />
-              <Textarea
-                label="Description"
-                value={assignmentForm.description}
-                onChange={(e) => handleAssignmentFormChange('description', e.target.value)}
-                placeholder="Instructions for students"
-                rows={4}
-              />
-              <Input
-                label="Due Date"
-                type="datetime-local"
-                value={assignmentForm.dueDate}
-                onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
-              />
-              <Input
-                label="Attachment (Optional: PDF, DOC, DOCX)"
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => handleAssignmentFormChange('file', e.target.files?.[0] || null)}
-              />
-              <Button type="submit">Post Assignment</Button>
-            </form>
-          )}
+                {showAssignmentForm && (
+                  <form onSubmit={handleCreateAssignment} className="mb-6 p-4 rounded-2xl border border-[#dfe5ee] space-y-4 bg-[#fafcff]">
+                    <Input
+                      label="Title"
+                      value={assignmentForm.title}
+                      onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
+                      placeholder="Assignment title"
+                    />
+                    <Textarea
+                      label="Description"
+                      value={assignmentForm.description}
+                      onChange={(e) => handleAssignmentFormChange('description', e.target.value)}
+                      placeholder="Instructions for students"
+                      rows={4}
+                    />
+                    <Input
+                      label="Due Date"
+                      type="datetime-local"
+                      value={assignmentForm.dueDate}
+                      onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
+                    />
+                    <Input
+                      label="Attachment (Optional: PDF, DOC, DOCX)"
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={(e) => handleAssignmentFormChange('file', e.target.files?.[0] || null)}
+                    />
+                    <Button type="submit">Post Assignment</Button>
+                  </form>
+                )}
 
-          {isAssignmentLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <Spinner size="lg" />
-            </div>
-          ) : assignments.length === 0 ? (
-            <EmptyState
-              icon="📭"
-              title="No assignments yet"
-              description="Create your first class assignment for enrolled students."
-            />
-          ) : (
-            <div className="space-y-4">
-              {assignments.map((assignment) => {
-                const subList = assignmentSubmissions[assignment._id] || [];
-                return (
-                  <div key={assignment._id} className="p-4 rounded-xl border border-primary-100 dark:border-dark-border">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-text-dark dark:text-slate-100">{assignment.title}</h3>
-                        <p className="text-sm text-text-muted dark:text-slate-400">{assignment.description}</p>
-                        <p className="text-xs text-text-muted dark:text-slate-500 mt-1">
-                          Due: {new Date(assignment.dueDate).toLocaleString()}
-                        </p>
-                      </div>
-                      <div className="flex gap-2 flex-wrap">
-                        {assignment.file && (
-                          <Button size="sm" variant="outline" onClick={() => handleDownloadAssignment(assignment)}>
-                            Download Attachment
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => handleLoadSubmissions(assignment._id)}>
-                          View Submissions
-                        </Button>
-                      </div>
-                    </div>
-
-                    {subList.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border space-y-2">
-                        {subList.map((submission) => (
-                          <div key={submission._id} className="flex items-center justify-between bg-bg-light dark:bg-dark-hover rounded-lg px-3 py-2">
+                {isAssignmentLoading ? (
+                  <div className="flex items-center justify-center py-10">
+                    <Spinner size="lg" />
+                  </div>
+                ) : assignments.length === 0 ? (
+                  <EmptyState
+                    icon="📭"
+                    title="No assignments yet"
+                    description="Create your first class assignment for enrolled students."
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {assignments.map((assignment) => {
+                      const subList = assignmentSubmissions[assignment._id] || [];
+                      return (
+                        <div key={assignment._id} className="relative rounded-2xl border border-[#dfe5ee] p-4 pl-5 bg-[#fcfdff]">
+                          <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#7cc6b8]"></div>
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
-                              <p className="text-sm font-medium text-text-dark dark:text-slate-100">
-                                {submission.student?.name || submission.student?.email || 'Student'}
-                              </p>
-                              <p className="text-xs text-text-muted dark:text-slate-400">
-                                Submitted: {new Date(submission.submittedAt).toLocaleString()}
+                              <h3 className="font-semibold text-[#202124]">{assignment.title}</h3>
+                              <p className="text-sm text-[#5f6368]">{assignment.description}</p>
+                              <p className="text-xs text-[#5f6368] mt-1">Due: {formatDate(assignment.dueDate)}</p>
+                              <p className="text-xs text-[#5f6368] mt-1">
+                                Submission status: {subList.length > 0 ? `${subList.length} loaded` : 'Not loaded'}
                               </p>
                             </div>
-                            <Button size="sm" variant="ghost" onClick={() => handleDownloadSubmission(submission)}>
-                              Download
-                            </Button>
+                            <div className="flex gap-2 flex-wrap">
+                              {assignment.file && (
+                                <Button size="sm" variant="outline" onClick={() => handleDownloadAssignment(assignment)}>
+                                  Download Attachment
+                                </Button>
+                              )}
+                              <Button size="sm" variant="outline" onClick={() => handleLoadSubmissions(assignment._id)}>
+                                View Submissions
+                              </Button>
+                            </div>
                           </div>
-                        ))}
+
+                          {subList.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-[#e8eaed] space-y-2">
+                              {subList.map((submission) => (
+                                <div key={submission._id} className="flex items-center justify-between bg-[#f7fbff] rounded-xl px-3 py-2 border border-[#e8eff8]">
+                                  <div>
+                                    <p className="text-sm font-medium text-[#202124]">
+                                      {submission.student?.name || submission.student?.email || 'Student'}
+                                    </p>
+                                    <p className="text-xs text-[#5f6368]">Submitted: {formatDate(submission.submittedAt)}</p>
+                                  </div>
+                                  <Button size="sm" variant="ghost" onClick={() => handleDownloadSubmission(submission)}>
+                                    Download
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'lectures' && (
+            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
+              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff] flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-[#202124]">Live Lectures</h2>
+                  <p className="text-sm text-[#5f6368] mt-1">Run live sessions and schedule upcoming classes</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="primary" size="sm" onClick={handleStartInstantLecture} disabled={lectureLoading}>
+                    Start Live Lecture
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setShowLectureForm((v) => !v)}>
+                    {showLectureForm ? 'Close' : 'Schedule Lecture'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-6">
+
+                {showLectureForm && (
+                  <form onSubmit={handleScheduleLecture} className="mb-6 p-4 rounded-2xl border border-[#dfe5ee] bg-[#fafcff] space-y-4">
+                    <Input
+                      label="Lecture Title"
+                      value={lectureForm.title}
+                      onChange={(e) => setLectureForm((f) => ({ ...f, title: e.target.value }))}
+                      placeholder="e.g. Chapter 5 Review"
+                      required
+                    />
+                    <Input
+                      label="Scheduled Date & Time"
+                      type="datetime-local"
+                      value={lectureForm.scheduledAt}
+                      onChange={(e) => setLectureForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+                      required
+                    />
+                    <Button type="submit" disabled={lectureLoading}>Schedule Lecture</Button>
+                  </form>
+                )}
+
+                {lectures.live.length > 0 && (
+                  <div className="mb-5">
+                    <h3 className="text-sm font-semibold text-[#202124] mb-2">LIVE</h3>
+                    <div className="space-y-3">
+                      {lectures.live.map((lec) => (
+                        <div key={lec._id} className="rounded-2xl border border-[#f2b8b5] bg-[#fff6f6] p-4">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-[#202124]">{lec.title}</p>
+                              <p className="text-xs text-[#5f6368]">Status: LIVE • Started {formatDate(lec.createdAt)}</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>Copy Link</Button>
+                              <Button size="sm" onClick={() => navigate(`/lecture/${lec.roomId}`)}>Join</Button>
+                              <Button size="sm" variant="outline" onClick={() => handleEndLecture(lec._id)}>End</Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {lectures.upcoming.length > 0 && (
+                  <div className="mb-5">
+                    <h3 className="text-sm font-semibold text-[#202124] mb-2">UPCOMING</h3>
+                    <div className="space-y-3">
+                      {lectures.upcoming.map((lec) => (
+                        <div key={lec._id} className="rounded-2xl border border-[#dfe5ee] p-4 bg-[#fcfdff]">
+                          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-[#202124]">{lec.title}</p>
+                              <p className="text-xs text-[#5f6368]">Status: UPCOMING • {formatDate(lec.scheduledAt)}</p>
+                            </div>
+                            <div className="flex gap-2 flex-wrap">
+                              <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>Copy Link</Button>
+                              <Button size="sm" onClick={() => handleStartScheduledLecture(lec._id)}>Start Now</Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {lectures.past.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-[#202124] mb-2">ENDED</h3>
+                    <div className="space-y-3">
+                      {lectures.past.map((lec) => (
+                        <div key={lec._id} className="rounded-2xl border border-[#e8eaed] p-4 bg-[#fbfbfb]">
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-[#202124]">{lec.title}</p>
+                              <p className="text-xs text-[#5f6368]">Status: ENDED • {formatDate(lec.createdAt)}</p>
+                            </div>
+                            <Badge variant="secondary">Ended</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {lectures.live.length === 0 && lectures.upcoming.length === 0 && lectures.past.length === 0 && (
+                  <EmptyState
+                    icon="🎥"
+                    title="No lectures yet"
+                    description="Start a live lecture or schedule one for later."
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'people' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
+                <h2 className="text-xl font-semibold text-[#202124] mb-4">Teacher</h2>
+                <div className="flex items-center gap-3 p-4 rounded-2xl border border-[#dfe5ee] bg-[#fafcff]">
+                  <Avatar name={classData.teacher?.name || classData.teacher?.email || 'Teacher'} size="md" />
+                  <div>
+                    <p className="text-[#202124] font-medium">{classData.teacher?.name || 'Class Teacher'}</p>
+                    <p className="text-sm text-[#5f6368]">{classData.teacher?.email || 'No email available'}</p>
+                  </div>
+                  <span className="ml-auto text-xs px-3 py-1 rounded-full bg-[#e8f0fe] text-[#1a73e8]">Instructor</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
+                <h2 className="text-xl font-semibold text-[#202124] mb-4">Students</h2>
+                {!Array.isArray(classData.students) || classData.students.length === 0 ? (
+                  <EmptyState
+                    icon={
+                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    }
+                    title="No students have joined yet"
+                    description="Share the join code with your students to get started."
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(classData.students || []).map((student, index) => (
+                      <div key={student._id || index} className="flex items-center gap-3 p-3 rounded-2xl border border-[#dfe5ee] bg-[#fcfdff] hover:border-[#c6dafc] transition-colors">
+                        <Avatar name={student.email || 'Student'} size="md" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#202124] truncate">{student.email || 'Student'}</p>
+                          <p className="text-xs text-[#5f6368]">Student</p>
+                        </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </Card>
-
-        {/* Lectures Section */}
-        <Card className="mt-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 flex items-center gap-2">
-              <span>🎥</span> Live Lectures
-            </h2>
-            <div className="flex gap-2">
-              <Button variant="primary" size="sm" onClick={handleStartInstantLecture} disabled={lectureLoading}>
-                🔴 Start Live Lecture
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowLectureForm((v) => !v)}>
-                {showLectureForm ? 'Close' : '📅 Schedule Lecture'}
-              </Button>
-            </div>
-          </div>
-
-          {showLectureForm && (
-            <form onSubmit={handleScheduleLecture} className="mb-6 p-4 rounded-xl border border-primary-100 dark:border-dark-border space-y-4">
-              <Input
-                label="Lecture Title"
-                value={lectureForm.title}
-                onChange={(e) => setLectureForm((f) => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. Chapter 5 Review"
-                required
-              />
-              <Input
-                label="Scheduled Date & Time"
-                type="datetime-local"
-                value={lectureForm.scheduledAt}
-                onChange={(e) => setLectureForm((f) => ({ ...f, scheduledAt: e.target.value }))}
-                required
-              />
-              <Button type="submit" disabled={lectureLoading}>Schedule Lecture</Button>
-            </form>
-          )}
-
-          {/* Live Now */}
-          {lectures.live.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center gap-1">
-                <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Live Now
-              </h3>
-              <div className="space-y-3">
-                {lectures.live.map((lec) => (
-                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-                    <div>
-                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
-                      <p className="text-xs text-text-muted dark:text-slate-400">Started {new Date(lec.createdAt).toLocaleString()}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
-                      <Button size="sm" onClick={() => navigate(`/lecture/${lec.roomId}`)}>Join</Button>
-                      <Button size="sm" variant="outline" onClick={() => handleEndLecture(lec._id)}>End</Button>
-                    </div>
-                  </div>
-                ))}
+                )}
               </div>
             </div>
           )}
-
-          {/* Upcoming */}
-          {lectures.upcoming.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-primary-600 dark:text-primary-400 mb-2">📅 Upcoming</h3>
-              <div className="space-y-3">
-                {lectures.upcoming.map((lec) => (
-                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-primary-100 dark:border-dark-border">
-                    <div>
-                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
-                      <p className="text-xs text-text-muted dark:text-slate-400">Scheduled: {new Date(lec.scheduledAt).toLocaleString()}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>📋 Copy Link</Button>
-                      <Button size="sm" onClick={() => handleStartScheduledLecture(lec._id)}>Start Now</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Past */}
-          {lectures.past.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-text-muted dark:text-slate-400 mb-2">📁 Past Lectures</h3>
-              <div className="space-y-2">
-                {lectures.past.map((lec) => (
-                  <div key={lec._id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-dark-border opacity-75">
-                    <div>
-                      <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
-                      <p className="text-xs text-text-muted dark:text-slate-400">{new Date(lec.createdAt).toLocaleString()}</p>
-                    </div>
-                    <Badge variant="secondary">Ended</Badge>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {lectures.live.length === 0 && lectures.upcoming.length === 0 && lectures.past.length === 0 && (
-            <EmptyState
-              icon="🎥"
-              title="No lectures yet"
-              description="Start a live lecture or schedule one for later."
-            />
-          )}
-        </Card>
+        </div>
       </div>
     </MainLayout>
   );

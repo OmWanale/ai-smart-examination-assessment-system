@@ -222,7 +222,8 @@ export const useQuizStore = create((set) => ({
       return quizzesArray;
     } catch (error) {
       console.error('[QuizStore] Failed to fetch quizzes:', error);
-      set({ error: 'Failed to fetch quizzes', quizzes: [], isLoading: false });
+      // Avoid surfacing transient list-fetch failures as global UI errors.
+      set((state) => ({ error: state.error === 'Failed to fetch quizzes' ? null : state.error, isLoading: false }));
       return [];
     }
   },
