@@ -36,6 +36,7 @@ const quizRoutes = require("./routes/quizzes");
 const submissionRoutes = require("./routes/submissions");
 const assignmentRoutes = require("./routes/assignments");
 const lectureRoutes = require("./routes/lectures");
+const paperRoutes = require("./routes/papers");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/classes/:classId/assignments", assignmentRoutes);
@@ -44,6 +45,7 @@ app.use("/api/lectures", lectureRoutes);
 app.use("/api/classes", classRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/submissions", submissionRoutes);
+app.use("/api/papers", paperRoutes);
 
 // --- SERVE PRODUCTION REACT APP ON WEB ---
 if (process.env.NODE_ENV === "production" || process.env.NODE_ENV === "development") {

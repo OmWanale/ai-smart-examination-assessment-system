@@ -1,10 +1,23 @@
 // API Client with axios
 import axios from 'axios';
 
+// Check if running locally (Electron dev mode or localhost browser)
+const isLocalEnvironment = () => {
+  if (typeof window === 'undefined') return false;
+  const { hostname, protocol } = window.location;
+  return protocol === 'file:' || hostname === 'localhost' || hostname === '127.0.0.1';
+};
+
+// Prefer local backend if environment variable is set or running locally
+const LOCAL_BACKEND_URL = 'http://localhost:5000/api';
+const PRODUCTION_URL = 'https://classyn-ai.onrender.com/api';
+
+// Use REACT_APP_API_URL if set, otherwise determine based on environment
 export const API_BASE_URL = 
-  process.env.NODE_ENV === 'production' 
-    ? 'https://classyn-ai.onrender.com/api'
-    : (process.env.REACT_APP_API_URL || 'http://localhost:5000/api');
+  process.env.REACT_APP_API_URL ||
+  (process.env.NODE_ENV === 'production' && !isLocalEnvironment()
+    ? PRODUCTION_URL
+    : LOCAL_BACKEND_URL);
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -81,6 +94,10 @@ export const quizAPI = {
     apiClient.post('/quizzes/ai-preview', data),
   publishFromPreview: (data) =>
     apiClient.post('/quizzes/ai-publish', data),
+  generateFromFiles: (formData) =>
+    apiClient.post('/quizzes/generate-from-files', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
 };
 
 export const submissionAPI = {
@@ -212,6 +229,17 @@ export const lectureAPI = {
     apiClient.post(`/lectures/${lectureId}/start`),
   endLecture: (lectureId) =>
     apiClient.post(`/lectures/${lectureId}/end`),
+};
+
+export const paperAPI = {
+  generatePaper: (formData) =>
+    apiClient.post('/papers/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  downloadPaper: (data) =>
+    apiClient.post('/papers/download', data, {
+      responseType: 'blob',
+    }),
 };
 
 export default apiClient;

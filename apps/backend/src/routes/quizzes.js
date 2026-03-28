@@ -1,9 +1,11 @@
 const express = require("express");
+const multer = require("multer");
 const {
   createQuiz,
   generateQuizWithAI,
   previewQuizWithAI,
   publishQuizFromPreview,
+  generateQuizFromFiles,
   getQuizzesForClass,
   getQuizById,
   getQuizForAttempt,
@@ -14,6 +16,31 @@ const {
 const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
+
+// Configure multer for file uploads (memory storage for processing)
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB per file
+    files: 10, // Maximum 10 files
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept PDF, DOC, DOCX
+    const allowedMimes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+    const allowedExts = ['.pdf', '.doc', '.docx'];
+    const ext = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+    
+    if (allowedMimes.includes(file.mimetype) || allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF, DOC, and DOCX files are allowed'), false);
+    }
+  }
+});
 
 // All routes require authentication
 router.use(authenticate);
@@ -45,6 +72,18 @@ router.post("/ai-preview", authorize("teacher"), previewQuizWithAI);
  * @access  Private/Teacher
  */
 router.post("/ai-publish", authorize("teacher"), publishQuizFromPreview);
+
+/**
+ * @route   POST /api/quizzes/generate-from-files
+ * @desc    Generate quiz questions from uploaded PDF/DOC/DOCX files
+ * @access  Private/Teacher
+ */
+router.post(
+  "/generate-from-files",
+  authorize("teacher"),
+  upload.array("files", 10),
+  generateQuizFromFiles
+);
 
 /**
  * @route   GET /api/quizzes/class/:classId

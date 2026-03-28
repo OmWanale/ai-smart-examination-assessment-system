@@ -172,6 +172,39 @@ export const useQuizStore = create((set) => ({
     }
   },
 
+  // Generate quiz from uploaded files (PDF/DOC/DOCX)
+  generateQuizFromFiles: async (classId, files, numberOfQuestions, difficulty, durationMinutes) => {
+    set({ isLoading: true, error: null });
+    try {
+      const formData = new FormData();
+      formData.append('classId', classId);
+      formData.append('numberOfQuestions', numberOfQuestions);
+      formData.append('difficulty', difficulty);
+      formData.append('durationMinutes', durationMinutes);
+      
+      // Append all files
+      for (const file of files) {
+        formData.append('files', file);
+      }
+
+      console.log('[QuizStore] generateQuizFromFiles:', { classId, numberOfQuestions, difficulty, durationMinutes, fileCount: files.length });
+
+      const response = await quizAPI.generateFromFiles(formData);
+      // Backend returns: { success, data: { preview: { ... } } }
+      const previewData = response.data?.data?.preview || response.data?.preview || response.data;
+      console.log('[QuizStore] generateQuizFromFiles response:', response.data);
+      console.log('[QuizStore] Preview data:', previewData);
+
+      set({ isLoading: false });
+      return { success: true, data: previewData };
+    } catch (error) {
+      console.error('[QuizStore] generateQuizFromFiles error:', error.response?.data || error.message);
+      const message = error.response?.data?.message || 'Failed to generate quiz from files';
+      set({ error: message, isLoading: false });
+      return { success: false, error: message };
+    }
+  },
+
   // Publish a previewed quiz
   publishQuizFromPreview: async (classId, quizData) => {
     set({ isLoading: true, error: null });
