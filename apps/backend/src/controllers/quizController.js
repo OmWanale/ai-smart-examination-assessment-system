@@ -2,7 +2,7 @@ const Quiz = require("../models/Quiz");
 const Class = require("../models/Class");
 const Submission = require("../models/Submission");
 const asyncHandler = require("../utils/asyncHandler");
-const { generateQuizQuestions } = require("../services/ai.service");
+const { generateQuizQuestions, generateQuizFromContent } = require("../services/ai.service");
 
 const validateQuestionsInput = (questions) => {
   if (!Array.isArray(questions) || questions.length === 0) {
@@ -1020,11 +1020,185 @@ const getQuizReviewForStudent = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @route   POST /api/quizzes/generate-from-files
+ * @desc    Generate quiz questions from uploaded PDF/DOC/DOCX files
+ * @access  Private/Teacher
+ */
+const generateQuizFromFiles = asyncHandler(async (req, res) => {
+  console.log('[generateQuizFromFiles] Request received');
+  console.log('[generateQuizFromFiles] Files:', req.files?.length || 0);
+  console.log('[generateQuizFromFiles] Body:', JSON.stringify(req.body, null, 2));
+
+  const { classId, numberOfQuestions, difficulty, durationMinutes } = req.body;
+  const files = req.files;
+
+  // Validation
+  if (!classId) {
+    return res.status(400).json({
+      success: false,
+      message: "classId is required",
+    });
+  }
+
+  if (!files || files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "At least one file is required",
+    });
+  }
+
+  if (!numberOfQuestions) {
+    return res.status(400).json({
+      success: false,
+      message: "numberOfQuestions is required",
+    });
+  }
+
+  const num = Number(numberOfQuestions);
+  if (!Number.isInteger(num) || num < 1 || num > 50) {
+    return res.status(400).json({
+      success: false,
+      message: "numberOfQuestions must be an integer between 1 and 50",
+    });
+  }
+
+  const validDifficulties = ["easy", "medium", "hard"];
+  const normalizedDifficulty = difficulty?.toLowerCase() || "medium";
+  if (!validDifficulties.includes(normalizedDifficulty)) {
+    return res.status(400).json({
+      success: false,
+      message: "Difficulty must be easy, medium, or hard",
+    });
+  }
+
+  // Parse duration - use provided value or default
+  const duration = durationMinutes ? Number(durationMinutes) : Math.max(num * 2, 10);
+  if (durationMinutes && (isNaN(duration) || duration < 1 || duration > 180)) {
+    return res.status(400).json({
+      success: false,
+      message: "durationMinutes must be between 1 and 180",
+    });
+  }
+
+  // Check if user has access to the class
+  const classData = await Class.findById(classId);
+  if (!classData) {
+    return res.status(404).json({
+      success: false,
+      message: "Class not found",
+    });
+  }
+
+  if (!classData.isTeacher(req.user._id)) {
+    return res.status(403).json({
+      success: false,
+      message: "Only the class teacher can create quizzes",
+    });
+  }
+
+  // Extract text from files
+  let combinedText = "";
+  const pdfParse = require("pdf-parse");
+  const mammoth = require("mammoth");
+
+  for (const file of files) {
+    try {
+      const ext = file.originalname.toLowerCase().split('.').pop();
+      console.log(`[generateQuizFromFiles] Processing file: ${file.originalname}, ext: ${ext}`);
+
+      let extractedText = "";
+
+      if (ext === "pdf") {
+        // Handle PDF files
+        const pdfData = await pdfParse(file.buffer);
+        extractedText = pdfData.text || "";
+        console.log(`[generateQuizFromFiles] Extracted ${extractedText.length} chars from PDF`);
+      } else if (ext === "doc" || ext === "docx") {
+        // Handle DOC/DOCX files
+        const result = await mammoth.extractRawText({ buffer: file.buffer });
+        extractedText = result.value || "";
+        console.log(`[generateQuizFromFiles] Extracted ${extractedText.length} chars from DOC/DOCX`);
+      } else {
+        console.log(`[generateQuizFromFiles] Skipping unsupported file type: ${ext}`);
+        continue;
+      }
+
+      if (extractedText.trim()) {
+        combinedText += extractedText + "\n\n";
+      }
+    } catch (fileError) {
+      console.error(`[generateQuizFromFiles] Error processing file ${file.originalname}:`, fileError.message);
+      // Continue processing other files
+    }
+  }
+
+  // Check if we have any content
+  if (!combinedText.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: "Could not extract text from uploaded files. Please ensure files are not empty or corrupted.",
+    });
+  }
+
+  // Truncate content if too long (limit to ~15,000 characters)
+  const maxContentLength = 15000;
+  if (combinedText.length > maxContentLength) {
+    console.log(`[generateQuizFromFiles] Truncating content from ${combinedText.length} to ${maxContentLength} chars`);
+    combinedText = combinedText.substring(0, maxContentLength);
+  }
+
+  console.log(`[generateQuizFromFiles] Total extracted text length: ${combinedText.length}`);
+
+  // Generate questions using AI
+  let aiQuestions;
+  try {
+    aiQuestions = await generateQuizFromContent({
+      content: combinedText,
+      difficulty: normalizedDifficulty,
+      numberOfQuestions: num,
+    });
+  } catch (error) {
+    console.error("[generateQuizFromFiles] AI generation error:", error);
+    return res.status(502).json({
+      success: false,
+      message: "AI generation failed",
+      error: error.message,
+    });
+  }
+
+  const validationError = validateQuestionsInput(aiQuestions);
+  if (validationError) {
+    return res.status(400).json({
+      success: false,
+      message: `AI output invalid: ${validationError}`,
+    });
+  }
+
+  // Return preview (same format as ai-preview)
+  res.status(200).json({
+    success: true,
+    message: "Quiz preview generated successfully from uploaded files",
+    data: {
+      preview: {
+        topic: "Document-Based Quiz",
+        title: "Quiz from Uploaded Documents",
+        description: `AI-generated quiz from ${files.length} uploaded file(s)`,
+        difficulty: normalizedDifficulty,
+        durationMinutes: duration,
+        questions: aiQuestions,
+        questionCount: aiQuestions.length,
+      },
+    },
+  });
+});
+
 module.exports = {
   createQuiz,
   generateQuizWithAI,
   previewQuizWithAI,
   publishQuizFromPreview,
+  generateQuizFromFiles,
   getQuizzesForClass,
   getQuizById,
   getQuizForAttempt,

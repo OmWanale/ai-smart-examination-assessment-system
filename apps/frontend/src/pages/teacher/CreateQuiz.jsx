@@ -209,7 +209,7 @@ export function CreateQuiz() {
   const classId = searchParams.get('classId');
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState('choose'); // 'choose', 'manual', 'ai', 'preview'
+  const [mode, setMode] = useState('choose'); // 'choose', 'manual', 'ai', 'pdf', 'preview'
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [timeLimit, setTimeLimit] = useState('');
@@ -220,16 +220,21 @@ export function CreateQuiz() {
   // AI generation fields
   const [topic, setTopic] = useState('');
   const [questionCount, setQuestionCount] = useState('5');
+  const [quizName, setQuizName] = useState(''); // Teacher-entered quiz name (displayed to students)
+
+  // PDF generation fields
+  const [uploadedFiles, setUploadedFiles] = useState([]);
 
   // Preview state
   const [previewData, setPreviewData] = useState(null);
+  const [previewSource, setPreviewSource] = useState(null); // 'ai' or 'pdf' - to know which regenerate to use
 
   // Visibility settings (for preview publish)
   const [showCorrectAnswers, setShowCorrectAnswers] = useState(true);
   const [showExplanations, setShowExplanations] = useState(true);
   const [showResultsToStudents, setShowResultsToStudents] = useState(true);
 
-  const { createQuiz, previewQuizWithAI, publishQuizFromPreview, isLoading, error, clearError } = useQuizStore();
+  const { createQuiz, previewQuizWithAI, publishQuizFromPreview, generateQuizFromFiles, isLoading, error, clearError } = useQuizStore();
   const harmlessStoreError = error === 'Failed to fetch quizzes' ? null : error;
 
   useEffect(() => {
@@ -329,6 +334,12 @@ export function CreateQuiz() {
     setErrors({});
     clearError();
 
+    // Validate quiz name
+    if (!quizName.trim()) {
+      setErrors({ quizName: 'Quiz name is required' });
+      return;
+    }
+
     if (!topic.trim()) {
       setErrors({ topic: 'Topic is required' });
       return;
@@ -354,11 +365,93 @@ export function CreateQuiz() {
 
     const result = await previewQuizWithAI(classId, topic.trim(), difficulty, count, duration);
     if (result.success) {
-      setPreviewData(result.data);
+      // Override the auto-generated title with the teacher's quiz name
+      const previewWithCustomName = {
+        ...result.data,
+        title: quizName.trim(),
+        description: result.data.description || `Quiz about ${topic.trim()}`,
+      };
+      setPreviewData(previewWithCustomName);
+      setPreviewSource('ai');
       setMode('preview');
     } else {
       setErrors({ submit: result.error });
     }
+  };
+
+  // Generate quiz from uploaded PDF/DOC files
+  const handleGenerateFromFiles = async (e) => {
+    e.preventDefault();
+    setErrors({});
+    clearError();
+
+    // Validate quiz name
+    if (!quizName.trim()) {
+      setErrors({ quizName: 'Quiz name is required' });
+      return;
+    }
+
+    if (uploadedFiles.length === 0) {
+      setErrors({ files: 'Please upload at least one file' });
+      return;
+    }
+
+    const count = parseInt(questionCount);
+    if (isNaN(count) || count < 1 || count > 50) {
+      setErrors({ questionCount: 'Question count must be between 1 and 50' });
+      return;
+    }
+
+    // Time limit is required
+    if (!timeLimit || !timeLimit.trim()) {
+      setErrors({ timeLimit: 'Time limit is required' });
+      return;
+    }
+
+    const duration = parseInt(timeLimit);
+    if (isNaN(duration) || duration < 1) {
+      setErrors({ timeLimit: 'Time limit must be at least 1 minute' });
+      return;
+    }
+
+    const result = await generateQuizFromFiles(classId, uploadedFiles, count, difficulty, duration);
+    if (result.success) {
+      // Override the auto-generated title with the teacher's quiz name
+      const previewWithCustomName = {
+        ...result.data,
+        title: quizName.trim(),
+        description: result.data.description || 'Quiz generated from uploaded documents',
+      };
+      setPreviewData(previewWithCustomName);
+      setPreviewSource('pdf');
+      setMode('preview');
+    } else {
+      setErrors({ submit: result.error });
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    const validFiles = files.filter(file => {
+      const ext = file.name.toLowerCase().split('.').pop();
+      return ['pdf', 'doc', 'docx'].includes(ext);
+    });
+    
+    if (validFiles.length !== files.length) {
+      setErrors({ files: 'Some files were rejected. Only PDF, DOC, and DOCX files are allowed.' });
+    } else {
+      setErrors({});
+    }
+    
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+    // Reset the input so the same file can be selected again if needed
+    e.target.value = '';
+  };
+
+  // Remove uploaded file
+  const handleRemoveFile = (index) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   // Edit preview question
@@ -404,7 +497,11 @@ export function CreateQuiz() {
 
   // Regenerate with same settings
   const handleRegenerate = async () => {
-    setMode('ai');
+    if (previewSource === 'pdf') {
+      setMode('pdf');
+    } else {
+      setMode('ai');
+    }
     setPreviewData(null);
   };
 
@@ -417,7 +514,7 @@ export function CreateQuiz() {
             subtitle="Choose how you'd like to create your quiz"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <ModeCard
               variant="primary"
               onClick={() => setMode('manual')}
@@ -440,6 +537,19 @@ export function CreateQuiz() {
               }
               title="AI Generation"
               description="Let AI generate questions automatically based on your chosen topic"
+            />
+
+            <ModeCard
+              variant="primary"
+              onClick={() => setMode('pdf')}
+              icon={
+                <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v6m-3-3h6" />
+                </svg>
+              }
+              title="Generate from PDF"
+              description="Upload PDF or Word documents and let AI create questions from the content"
             />
           </div>
 
@@ -494,14 +604,34 @@ export function CreateQuiz() {
             </Alert>
           )}
 
-          {/* Quiz Info Card */}
+          {/* Quiz Info Card - Editable Title and Description */}
           <Card className="shadow-soft mb-6">
-            <div className="flex flex-wrap gap-4 justify-between items-start">
+            <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-semibold text-text-dark dark:text-dark-text">{previewData.title}</h2>
-                <p className="text-neutral-500 dark:text-dark-muted text-sm mt-1">{previewData.description}</p>
+                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                  Quiz Name (displayed to students)
+                </label>
+                <input
+                  type="text"
+                  value={previewData.title}
+                  onChange={(e) => setPreviewData({ ...previewData, title: e.target.value })}
+                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="Enter quiz name..."
+                />
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div>
+                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                  Description (optional)
+                </label>
+                <input
+                  type="text"
+                  value={previewData.description || ''}
+                  onChange={(e) => setPreviewData({ ...previewData, description: e.target.value })}
+                  className="w-full px-4 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-600 dark:text-dark-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  placeholder="Add a description for this quiz..."
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 pt-2">
                 <Badge variant={previewData.difficulty === 'hard' ? 'error' : previewData.difficulty === 'medium' ? 'warning' : 'success'}>
                   {previewData.difficulty}
                 </Badge>
@@ -627,14 +757,24 @@ export function CreateQuiz() {
 
             <form onSubmit={handleGeneratePreview} className="space-y-6">
               <Input
-                label="Topic"
+                label="Quiz Name"
+                type="text"
+                placeholder="e.g., Chapter 5 Quiz, Midterm Review"
+                value={quizName}
+                onChange={(e) => setQuizName(e.target.value)}
+                error={errors.quizName}
+                required
+                autoFocus
+              />
+
+              <Input
+                label="Topic (for AI generation)"
                 type="text"
                 placeholder="e.g., World War II, Python Programming, Algebra"
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 error={errors.topic}
                 required
-                autoFocus
               />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -712,6 +852,231 @@ export function CreateQuiz() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                       </svg>
                       Generate Preview
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => navigate(`/teacher/class/${classId}`)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // PDF mode - Generate from uploaded files
+  if (mode === 'pdf') {
+    return (
+      <MainLayout>
+        <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
+          <button
+            onClick={() => setMode('choose')}
+            className="inline-flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to options
+          </button>
+
+          <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-2xl p-6 mb-8 text-white shadow-lg">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-xl">
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v6m-3-3h6" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-display font-bold">Generate Quiz from Documents</h1>
+                <p className="text-primary-100 text-sm mt-1">
+                  Upload PDF or Word documents and AI will create questions from the content
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Card className="shadow-soft">
+            {(harmlessStoreError || errors.submit) && (
+              <Alert type="error" className="mb-6">
+                {harmlessStoreError || errors.submit}
+              </Alert>
+            )}
+
+            <form onSubmit={handleGenerateFromFiles} className="space-y-6">
+              {/* Quiz Name */}
+              <Input
+                label="Quiz Name"
+                type="text"
+                placeholder="e.g., Chapter 5 Quiz, Final Exam Review"
+                value={quizName}
+                onChange={(e) => setQuizName(e.target.value)}
+                error={errors.quizName}
+                required
+                autoFocus
+              />
+
+              {/* File Upload Area */}
+              <div>
+                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                  Upload Documents
+                </label>
+                <div
+                  className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                    errors.files
+                      ? 'border-error-300 bg-error-50 dark:border-error-700 dark:bg-error-900/20'
+                      : 'border-neutral-300 dark:border-dark-border hover:border-primary-400 dark:hover:border-primary-600 bg-neutral-50 dark:bg-dark-hover'
+                  }`}
+                >
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={handleFileUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <svg className="mx-auto h-12 w-12 text-neutral-400 dark:text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p className="text-neutral-600 dark:text-dark-muted font-medium">
+                    Drop files here or click to upload
+                  </p>
+                  <p className="text-sm text-neutral-500 dark:text-dark-muted mt-1">
+                    PDF, DOC, DOCX files up to 10MB each
+                  </p>
+                </div>
+                {errors.files && (
+                  <p className="mt-2 text-sm text-error-500">{errors.files}</p>
+                )}
+              </div>
+
+              {/* Uploaded Files List */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-text-dark dark:text-dark-text">
+                    Uploaded Files ({uploadedFiles.length})
+                  </label>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg px-4 py-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <svg className="h-5 w-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-text-dark dark:text-dark-text truncate max-w-xs">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-dark-muted">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFile(index)}
+                          className="p-1.5 text-error-500 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
+                          title="Remove file"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Settings */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                    Difficulty
+                  </label>
+                  <select
+                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                    value={difficulty}
+                    onChange={(e) => setDifficulty(e.target.value)}
+                  >
+                    <option value="easy">Easy - Basic recall</option>
+                    <option value="medium">Medium - Application</option>
+                    <option value="hard">Hard - Critical thinking</option>
+                  </select>
+                </div>
+
+                <Input
+                  label="Number of Questions"
+                  type="number"
+                  min="1"
+                  max="50"
+                  placeholder="5"
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(e.target.value)}
+                  error={errors.questionCount}
+                  required
+                />
+
+                <Input
+                  label="Time Limit (minutes)"
+                  type="number"
+                  min="1"
+                  max="180"
+                  placeholder="Enter time limit..."
+                  value={timeLimit}
+                  onChange={(e) => setTimeLimit(e.target.value)}
+                  error={errors.timeLimit}
+                  required
+                />
+              </div>
+
+              <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-xl p-4">
+                <div className="flex">
+                  <svg
+                    className="h-5 w-5 text-primary-500 mr-3 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm text-primary-700 dark:text-primary-300">
+                      <strong>AI-Powered Generation!</strong> Questions will be created based on the content of your uploaded documents. You'll be able to review and edit all questions before publishing.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-4">
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || uploadedFiles.length === 0} 
+                  className="flex items-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span>Generating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                      </svg>
+                      Generate Quiz
                     </>
                   )}
                 </Button>
