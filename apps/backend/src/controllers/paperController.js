@@ -55,7 +55,240 @@ const extractTextFromFile = async (file) => {
 };
 
 /**
- * Build prompt for question paper generation
+ * Build prompt for 20-marks question paper generation
+ */
+const build20MarksPrompt = ({ content, difficulty }) => {
+  const difficultyGuidelines = {
+    easy: "Focus on basic facts, definitions, and recall questions.",
+    medium: "Include application and analysis questions requiring understanding.",
+    hard: "Include critical thinking, synthesis, and evaluation questions."
+  };
+
+  return `You are an expert exam paper creator. Generate a structured 20 marks question paper based on the provided content.
+
+STRICT STRUCTURE (MUST FOLLOW EXACTLY):
+
+Section A:
+- 3 questions
+- Each question = 3 marks
+- Instruction: "Solve any 2"
+- Total obtainable marks: 6
+
+Section B:
+- 2 questions
+- Each question = 7 marks
+- Instruction: "Solve any 1"
+- Total obtainable marks: 7
+
+Section C:
+- 2 questions
+- Each question = 7 marks
+- Instruction: "Solve any 1"
+- Total obtainable marks: 7
+
+DIFFICULTY LEVEL: ${difficulty} - ${difficultyGuidelines[difficulty] || difficultyGuidelines.medium}
+
+CRITICAL RULES:
+1. Return ONLY valid JSON - NO markdown, NO explanations
+2. Questions must be meaningful and exam-oriented
+3. Do NOT copy text directly from source
+4. Each question should be clear and educational
+5. Do not include answers
+
+EXACT JSON STRUCTURE:
+{
+  "title": "Examination Question Paper",
+  "totalMarks": 20,
+  "sections": [
+    {
+      "title": "Section A",
+      "instruction": "Solve any 2",
+      "marksPerQuestion": 3,
+      "questions": [
+        { "questionText": "Question 1 text here", "marks": 3 },
+        { "questionText": "Question 2 text here", "marks": 3 },
+        { "questionText": "Question 3 text here", "marks": 3 }
+      ]
+    },
+    {
+      "title": "Section B",
+      "instruction": "Solve any 1",
+      "marksPerQuestion": 7,
+      "questions": [
+        { "questionText": "Question 1 text here", "marks": 7 },
+        { "questionText": "Question 2 text here", "marks": 7 }
+      ]
+    },
+    {
+      "title": "Section C",
+      "instruction": "Solve any 1",
+      "marksPerQuestion": 7,
+      "questions": [
+        { "questionText": "Question 1 text here", "marks": 7 },
+        { "questionText": "Question 2 text here", "marks": 7 }
+      ]
+    }
+  ]
+}
+
+=== CONTENT TO BASE QUESTIONS ON ===
+${content.substring(0, 15000)}
+=== END OF CONTENT ===
+
+OUTPUT THE JSON QUESTION PAPER:`;
+};
+
+/**
+ * Build prompt for 60-marks question paper generation
+ */
+const build60MarksPrompt = ({ content, difficulty }) => {
+  const difficultyGuidelines = {
+    easy: "Focus on basic facts, definitions, and recall questions.",
+    medium: "Include application and analysis questions requiring understanding.",
+    hard: "Include critical thinking, synthesis, and evaluation questions."
+  };
+
+  return `You are an expert exam paper creator. Generate a structured 60 marks question paper based on the provided content.
+
+STRICT STRUCTURE (MUST FOLLOW EXACTLY):
+
+Section A:
+- 7 questions
+- Each question = 3 marks
+- Instruction: "Solve any 5"
+- Total obtainable marks: 15
+
+Sections B, C, D, E (EACH section has):
+- 3 questions with different marks:
+  - Question 1 = 4 marks
+  - Question 2 = 5 marks
+  - Question 3 = 6 marks
+- Instruction: "Attempt all questions"
+- Total marks per section: 15
+
+Overall Instruction for B-E:
+"Solve any 3 sections (if a section is selected, all 3 questions must be attempted)"
+Total obtainable from B-E: 45 marks
+
+TOTAL PAPER MARKS: 15 (Section A) + 45 (any 3 of B-E) = 60 marks
+
+DIFFICULTY LEVEL: ${difficulty} - ${difficultyGuidelines[difficulty] || difficultyGuidelines.medium}
+
+CRITICAL RULES:
+1. Return ONLY valid JSON - NO markdown, NO explanations
+2. Questions must be meaningful and exam-oriented
+3. Do NOT copy text directly from source
+4. Avoid duplication across sections
+5. Maintain consistent difficulty within each section
+
+EXACT JSON STRUCTURE:
+{
+  "title": "Examination Question Paper",
+  "totalMarks": 60,
+  "sections": [
+    {
+      "title": "Section A",
+      "instruction": "Solve any 5",
+      "marksPerQuestion": 3,
+      "questions": [
+        { "questionText": "Q1 text", "marks": 3 },
+        { "questionText": "Q2 text", "marks": 3 },
+        { "questionText": "Q3 text", "marks": 3 },
+        { "questionText": "Q4 text", "marks": 3 },
+        { "questionText": "Q5 text", "marks": 3 },
+        { "questionText": "Q6 text", "marks": 3 },
+        { "questionText": "Q7 text", "marks": 3 }
+      ]
+    },
+    {
+      "title": "Section B",
+      "instruction": "Attempt all questions",
+      "questions": [
+        { "questionText": "Q1 text", "marks": 4 },
+        { "questionText": "Q2 text", "marks": 5 },
+        { "questionText": "Q3 text", "marks": 6 }
+      ]
+    },
+    {
+      "title": "Section C",
+      "instruction": "Attempt all questions",
+      "questions": [
+        { "questionText": "Q1 text", "marks": 4 },
+        { "questionText": "Q2 text", "marks": 5 },
+        { "questionText": "Q3 text", "marks": 6 }
+      ]
+    },
+    {
+      "title": "Section D",
+      "instruction": "Attempt all questions",
+      "questions": [
+        { "questionText": "Q1 text", "marks": 4 },
+        { "questionText": "Q2 text", "marks": 5 },
+        { "questionText": "Q3 text", "marks": 6 }
+      ]
+    },
+    {
+      "title": "Section E",
+      "instruction": "Attempt all questions",
+      "questions": [
+        { "questionText": "Q1 text", "marks": 4 },
+        { "questionText": "Q2 text", "marks": 5 },
+        { "questionText": "Q3 text", "marks": 6 }
+      ]
+    }
+  ]
+}
+
+=== CONTENT TO BASE QUESTIONS ON ===
+${content.substring(0, 15000)}
+=== END OF CONTENT ===
+
+OUTPUT THE JSON QUESTION PAPER:`;
+};
+
+/**
+ * Build prompt for custom question generation
+ */
+const buildCustomQuestionsPrompt = ({ content, numQuestions, difficulty }) => {
+  const difficultyGuidelines = {
+    easy: "Focus on basic facts, definitions, and recall questions.",
+    medium: "Include application and analysis questions requiring understanding.",
+    hard: "Include critical thinking, synthesis, and evaluation questions."
+  };
+
+  return `You are an expert exam question creator. Generate ${numQuestions} exam questions based on the provided content.
+
+REQUIREMENTS:
+- Generate exactly ${numQuestions} questions
+- Difficulty: ${difficulty} - ${difficultyGuidelines[difficulty] || difficultyGuidelines.medium}
+- For each question, suggest appropriate marks (2, 3, 5, 7, or 10)
+- Questions must be meaningful and exam-oriented
+- Vary question types: definition, explanation, analysis, comparison, application
+
+CRITICAL RULES:
+1. Return ONLY valid JSON - NO markdown, NO explanations
+2. Do NOT copy text directly from source
+3. Each question should be clear and educational
+4. Do not include answers
+
+EXACT JSON STRUCTURE:
+{
+  "title": "Generated Questions",
+  "questions": [
+    { "questionText": "Question text here", "suggestedMarks": 3 },
+    { "questionText": "Another question", "suggestedMarks": 5 }
+  ]
+}
+
+=== CONTENT TO BASE QUESTIONS ON ===
+${content.substring(0, 15000)}
+=== END OF CONTENT ===
+
+OUTPUT THE JSON:`;
+};
+
+/**
+ * Build prompt for question paper generation (legacy/fallback)
  */
 const buildPaperPrompt = ({ content, totalMarks, marksPerQuestion, difficulty }) => {
   const numQuestions = Math.ceil(totalMarks / marksPerQuestion);
@@ -163,6 +396,124 @@ const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty }) => {
         )
       }
     ]
+  };
+};
+
+/**
+ * Generate mock 20-marks paper
+ */
+const generateMock20MarksPaper = ({ difficulty }) => {
+  return {
+    title: "Mock 20 Marks Question Paper",
+    totalMarks: 20,
+    sections: [
+      {
+        title: "Section A",
+        instruction: "Solve any 2",
+        marksPerQuestion: 3,
+        questions: [
+          { questionText: "[Mock] Define the key concept discussed in the document.", marks: 3 },
+          { questionText: "[Mock] Explain the significance of the main topic.", marks: 3 },
+          { questionText: "[Mock] What are the primary characteristics mentioned?", marks: 3 }
+        ]
+      },
+      {
+        title: "Section B",
+        instruction: "Solve any 1",
+        marksPerQuestion: 7,
+        questions: [
+          { questionText: "[Mock] Discuss in detail the main theme and its implications.", marks: 7 },
+          { questionText: "[Mock] Analyze the relationship between the concepts presented.", marks: 7 }
+        ]
+      },
+      {
+        title: "Section C",
+        instruction: "Solve any 1",
+        marksPerQuestion: 7,
+        questions: [
+          { questionText: "[Mock] Evaluate the arguments presented and provide your perspective.", marks: 7 },
+          { questionText: "[Mock] Compare and contrast the different viewpoints discussed.", marks: 7 }
+        ]
+      }
+    ]
+  };
+};
+
+/**
+ * Generate mock 60-marks paper
+ */
+const generateMock60MarksPaper = ({ difficulty }) => {
+  return {
+    title: "Mock 60 Marks Question Paper",
+    totalMarks: 60,
+    sections: [
+      {
+        title: "Section A",
+        instruction: "Solve any 5",
+        marksPerQuestion: 3,
+        questions: [
+          { questionText: "[Mock] Define the primary concept.", marks: 3 },
+          { questionText: "[Mock] What is the significance of the topic?", marks: 3 },
+          { questionText: "[Mock] List the main characteristics.", marks: 3 },
+          { questionText: "[Mock] Explain the basic principle.", marks: 3 },
+          { questionText: "[Mock] What are the key features?", marks: 3 },
+          { questionText: "[Mock] Describe the fundamental aspects.", marks: 3 },
+          { questionText: "[Mock] Outline the main points.", marks: 3 }
+        ]
+      },
+      {
+        title: "Section B",
+        instruction: "Attempt all questions",
+        questions: [
+          { questionText: "[Mock] Explain the concept with examples.", marks: 4 },
+          { questionText: "[Mock] Discuss the importance and applications.", marks: 5 },
+          { questionText: "[Mock] Analyze the factors and their impact.", marks: 6 }
+        ]
+      },
+      {
+        title: "Section C",
+        instruction: "Attempt all questions",
+        questions: [
+          { questionText: "[Mock] Describe the process in detail.", marks: 4 },
+          { questionText: "[Mock] Compare the different approaches.", marks: 5 },
+          { questionText: "[Mock] Evaluate the effectiveness of the methods.", marks: 6 }
+        ]
+      },
+      {
+        title: "Section D",
+        instruction: "Attempt all questions",
+        questions: [
+          { questionText: "[Mock] What are the advantages and disadvantages?", marks: 4 },
+          { questionText: "[Mock] Discuss the implications for practice.", marks: 5 },
+          { questionText: "[Mock] Critically examine the theoretical framework.", marks: 6 }
+        ]
+      },
+      {
+        title: "Section E",
+        instruction: "Attempt all questions",
+        questions: [
+          { questionText: "[Mock] Summarize the key findings.", marks: 4 },
+          { questionText: "[Mock] Propose solutions to the challenges identified.", marks: 5 },
+          { questionText: "[Mock] Synthesize the information and draw conclusions.", marks: 6 }
+        ]
+      }
+    ]
+  };
+};
+
+/**
+ * Generate mock custom questions
+ */
+const generateMockCustomQuestions = ({ numQuestions, difficulty }) => {
+  const count = parseInt(numQuestions) || 10;
+  const markOptions = [2, 3, 5, 7, 10];
+  
+  return {
+    title: "Generated Questions",
+    questions: Array(count).fill(null).map((_, i) => ({
+      questionText: `[Mock Q${i + 1}] This is a sample ${difficulty} difficulty question about the document content.`,
+      suggestedMarks: markOptions[i % markOptions.length]
+    }))
   };
 };
 
@@ -302,6 +653,180 @@ const generatePaperWithAI = async ({ content, totalMarks, marksPerQuestion, diff
 };
 
 /**
+ * Generate 20-marks paper using AI
+ */
+const generate20MarksPaperWithAI = async ({ content, difficulty }) => {
+  if (shouldUseMock()) {
+    console.log("[Paper] Using mock mode for 20-marks");
+    return generateMock20MarksPaper({ difficulty });
+  }
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || apiKey.length < 10) {
+    console.log("[Paper] No valid API key, using mock for 20-marks");
+    return generateMock20MarksPaper({ difficulty });
+  }
+
+  const prompt = build20MarksPrompt({ content, difficulty });
+  const models = [getGroqModel(), "llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+  const uniqueModels = [...new Set(models)];
+
+  let lastError;
+
+  for (const model of uniqueModels) {
+    for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+      try {
+        console.log(`[Paper] 20-marks: Trying ${model}, attempt ${attempt}`);
+        
+        const rawResponse = await makeGroqRequest(apiKey, prompt, DEFAULT_TIMEOUT_MS, model);
+        const parsed = JSON.parse(rawResponse);
+        const aiText = parsed?.choices?.[0]?.message?.content;
+        
+        if (!aiText) throw new Error("No content in response");
+        
+        const paper = extractJson(aiText);
+        
+        // Validate paper structure
+        if (!paper.sections || !Array.isArray(paper.sections) || paper.sections.length !== 3) {
+          throw new Error("Invalid 20-marks paper structure");
+        }
+        
+        console.log("[Paper] 20-marks generated successfully");
+        return paper;
+        
+      } catch (err) {
+        console.error(`[Paper] 20-marks attempt failed:`, err.message);
+        lastError = err;
+        
+        if (err.message.includes("429")) break;
+        if (attempt < MAX_RETRIES + 1) {
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
+  }
+
+  console.log("[Paper] 20-marks falling back to mock");
+  return generateMock20MarksPaper({ difficulty });
+};
+
+/**
+ * Generate 60-marks paper using AI
+ */
+const generate60MarksPaperWithAI = async ({ content, difficulty }) => {
+  if (shouldUseMock()) {
+    console.log("[Paper] Using mock mode for 60-marks");
+    return generateMock60MarksPaper({ difficulty });
+  }
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || apiKey.length < 10) {
+    console.log("[Paper] No valid API key, using mock for 60-marks");
+    return generateMock60MarksPaper({ difficulty });
+  }
+
+  const prompt = build60MarksPrompt({ content, difficulty });
+  const models = [getGroqModel(), "llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+  const uniqueModels = [...new Set(models)];
+
+  let lastError;
+
+  for (const model of uniqueModels) {
+    for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+      try {
+        console.log(`[Paper] 60-marks: Trying ${model}, attempt ${attempt}`);
+        
+        const rawResponse = await makeGroqRequest(apiKey, prompt, DEFAULT_TIMEOUT_MS, model);
+        const parsed = JSON.parse(rawResponse);
+        const aiText = parsed?.choices?.[0]?.message?.content;
+        
+        if (!aiText) throw new Error("No content in response");
+        
+        const paper = extractJson(aiText);
+        
+        // Validate paper structure
+        if (!paper.sections || !Array.isArray(paper.sections) || paper.sections.length !== 5) {
+          throw new Error("Invalid 60-marks paper structure");
+        }
+        
+        console.log("[Paper] 60-marks generated successfully");
+        return paper;
+        
+      } catch (err) {
+        console.error(`[Paper] 60-marks attempt failed:`, err.message);
+        lastError = err;
+        
+        if (err.message.includes("429")) break;
+        if (attempt < MAX_RETRIES + 1) {
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
+  }
+
+  console.log("[Paper] 60-marks falling back to mock");
+  return generateMock60MarksPaper({ difficulty });
+};
+
+/**
+ * Generate custom questions using AI
+ */
+const generateCustomQuestionsWithAI = async ({ content, numQuestions, difficulty }) => {
+  if (shouldUseMock()) {
+    console.log("[Paper] Using mock mode for custom questions");
+    return generateMockCustomQuestions({ numQuestions, difficulty });
+  }
+
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey || apiKey.length < 10) {
+    console.log("[Paper] No valid API key, using mock for custom questions");
+    return generateMockCustomQuestions({ numQuestions, difficulty });
+  }
+
+  const prompt = buildCustomQuestionsPrompt({ content, numQuestions, difficulty });
+  const models = [getGroqModel(), "llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+  const uniqueModels = [...new Set(models)];
+
+  let lastError;
+
+  for (const model of uniqueModels) {
+    for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+      try {
+        console.log(`[Paper] Custom questions: Trying ${model}, attempt ${attempt}`);
+        
+        const rawResponse = await makeGroqRequest(apiKey, prompt, DEFAULT_TIMEOUT_MS, model);
+        const parsed = JSON.parse(rawResponse);
+        const aiText = parsed?.choices?.[0]?.message?.content;
+        
+        if (!aiText) throw new Error("No content in response");
+        
+        const result = extractJson(aiText);
+        
+        // Validate structure
+        if (!result.questions || !Array.isArray(result.questions)) {
+          throw new Error("Invalid custom questions structure");
+        }
+        
+        console.log("[Paper] Custom questions generated successfully");
+        return result;
+        
+      } catch (err) {
+        console.error(`[Paper] Custom questions attempt failed:`, err.message);
+        lastError = err;
+        
+        if (err.message.includes("429")) break;
+        if (attempt < MAX_RETRIES + 1) {
+          await new Promise(r => setTimeout(r, 1000 * attempt));
+        }
+      }
+    }
+  }
+
+  console.log("[Paper] Custom questions falling back to mock");
+  return generateMockCustomQuestions({ numQuestions, difficulty });
+};
+
+/**
  * @route   POST /api/papers/generate
  * @desc    Generate question paper from uploaded documents
  * @access  Private/Teacher
@@ -309,7 +834,7 @@ const generatePaperWithAI = async ({ content, totalMarks, marksPerQuestion, diff
 const generatePaper = asyncHandler(async (req, res) => {
   console.log("[Paper] Generate request received");
   
-  const { totalMarks, marksPerQuestion, difficulty = 'medium' } = req.body;
+  const { mode = '20-marks', difficulty = 'medium', numQuestions, totalMarks, marksPerQuestion } = req.body;
   const files = req.files;
 
   // Validation
@@ -320,33 +845,20 @@ const generatePaper = asyncHandler(async (req, res) => {
     });
   }
 
-  if (!totalMarks || !marksPerQuestion) {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide total marks and marks per question"
-    });
-  }
-
-  const marks = parseInt(totalMarks);
-  const perQuestion = parseInt(marksPerQuestion);
-
-  if (isNaN(marks) || marks < 10 || marks > 500) {
-    return res.status(400).json({
-      success: false,
-      message: "Total marks must be between 10 and 500"
-    });
-  }
-
-  if (isNaN(perQuestion) || perQuestion < 1 || perQuestion > 20) {
-    return res.status(400).json({
-      success: false,
-      message: "Marks per question must be between 1 and 20"
-    });
+  // Validate mode-specific inputs
+  if (mode === 'custom') {
+    const num = parseInt(numQuestions);
+    if (isNaN(num) || num < 1 || num > 50) {
+      return res.status(400).json({
+        success: false,
+        message: "Number of questions must be between 1 and 50"
+      });
+    }
   }
 
   try {
     // Extract text from all files
-    console.log(`[Paper] Processing ${files.length} files`);
+    console.log(`[Paper] Processing ${files.length} files for mode: ${mode}`);
     const textParts = [];
     
     for (const file of files) {
@@ -367,13 +879,49 @@ const generatePaper = asyncHandler(async (req, res) => {
     const combinedText = textParts.join("\n\n---\n\n");
     console.log(`[Paper] Combined text length: ${combinedText.length}`);
 
-    // Generate paper using AI
-    const paper = await generatePaperWithAI({
-      content: combinedText,
-      totalMarks: marks,
-      marksPerQuestion: perQuestion,
-      difficulty
-    });
+    let paper;
+
+    // Generate paper based on mode
+    switch (mode) {
+      case '20-marks':
+        paper = await generate20MarksPaperWithAI({
+          content: combinedText,
+          difficulty
+        });
+        break;
+        
+      case '60-marks':
+        paper = await generate60MarksPaperWithAI({
+          content: combinedText,
+          difficulty
+        });
+        break;
+        
+      case 'custom':
+        paper = await generateCustomQuestionsWithAI({
+          content: combinedText,
+          numQuestions: parseInt(numQuestions),
+          difficulty
+        });
+        break;
+        
+      default:
+        // Legacy fallback for old API calls
+        if (totalMarks && marksPerQuestion) {
+          paper = await generatePaperWithAI({
+            content: combinedText,
+            totalMarks: parseInt(totalMarks),
+            marksPerQuestion: parseInt(marksPerQuestion),
+            difficulty
+          });
+        } else {
+          // Default to 20-marks if no valid mode specified
+          paper = await generate20MarksPaperWithAI({
+            content: combinedText,
+            difficulty
+          });
+        }
+    }
 
     res.json({
       success: true,
@@ -395,9 +943,10 @@ const generatePaper = asyncHandler(async (req, res) => {
  * @access  Private/Teacher
  */
 const downloadPaper = asyncHandler(async (req, res) => {
-  const { paper, examTitle, duration, instructions } = req.body;
+  const { paper, examTitle, duration, instructions, mode } = req.body;
 
-  if (!paper || !paper.sections) {
+  // Handle both sectioned papers and custom questions
+  if (!paper || (!paper.sections && !paper.questions)) {
     return res.status(400).json({
       success: false,
       message: "Invalid paper data"
@@ -425,48 +974,142 @@ const downloadPaper = asyncHandler(async (req, res) => {
     doc.moveDown(0.5);
     
     // Total marks and duration
-    doc.fontSize(12).font('Helvetica')
-       .text(`Total Marks: ${paper.totalMarks}`, { align: 'center' });
+    if (paper.totalMarks) {
+      doc.fontSize(12).font('Helvetica')
+         .text(`Total Marks: ${paper.totalMarks}`, { align: 'center' });
+    }
     
     if (duration) {
-      doc.text(`Duration: ${duration}`, { align: 'center' });
+      doc.fontSize(12).font('Helvetica')
+         .text(`Duration: ${duration}`, { align: 'center' });
     }
 
     doc.moveDown();
 
-    // Instructions
+    // General Instructions
     if (instructions) {
-      doc.fontSize(11).font('Helvetica-Bold').text('Instructions:', { underline: true });
+      doc.fontSize(11).font('Helvetica-Bold').text('General Instructions:', { underline: true });
       doc.fontSize(10).font('Helvetica').text(instructions);
       doc.moveDown();
     }
 
-    // Sections
-    let questionNumber = 1;
-    
-    for (const section of paper.sections) {
-      doc.moveDown(0.5);
-      
-      // Section header
-      doc.fontSize(14).font('Helvetica-Bold')
-         .text(`${section.title} (${section.marksPerQuestion} marks each)`);
-      
-      if (section.instructions) {
-        doc.fontSize(10).font('Helvetica-Oblique')
-           .text(section.instructions);
-      }
-      
-      doc.moveDown(0.5);
+    // Add mode-specific general instructions
+    if (mode === '60-marks') {
+      doc.fontSize(10).font('Helvetica-Oblique')
+         .text('Note: Solve any 3 sections from B, C, D, E. If a section is selected, all questions in that section must be attempted.', {
+           indent: 10
+         });
+      doc.moveDown();
+    }
 
-      // Questions
-      for (const question of section.questions) {
-        doc.fontSize(11).font('Helvetica')
-           .text(`${questionNumber}. ${question}`, {
-             indent: 20,
-             lineGap: 4
+    // Handle custom questions (flat array)
+    if (paper.questions && !paper.sections) {
+      doc.fontSize(15).font('Helvetica-Bold').text('Questions');
+      doc.moveDown(0.8);
+      
+      // Fixed left margin for all questions
+      const leftMargin = doc.page.margins.left;
+      const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const numberWidth = 30;
+      
+      paper.questions.forEach((question, index) => {
+        const questionText = typeof question === 'object' ? question.questionText : question;
+        const marks = typeof question === 'object' ? (question.marks || question.suggestedMarks) : null;
+        
+        // Format: "Question text... (X marks)" - marks at end
+        const marksText = marks ? ` (${marks} marks)` : '';
+        const fullQuestionText = `${questionText}${marksText}`;
+        
+        // Reset X to left margin before each question
+        const startY = doc.y;
+        
+        // Draw question number at fixed position
+        doc.fontSize(12).font('Helvetica')
+           .text(`${index + 1}.`, leftMargin, startY, { 
+             width: numberWidth, 
+             continued: false 
            });
-        doc.moveDown(0.5);
-        questionNumber++;
+        
+        // Draw question text aligned to the right of number
+        doc.fontSize(12).font('Helvetica')
+           .text(fullQuestionText, leftMargin + numberWidth, startY, {
+             width: contentWidth - numberWidth,
+             lineGap: 3
+           });
+        
+        doc.moveDown(0.8);
+      });
+    }
+
+    // Handle sectioned papers
+    if (paper.sections) {
+      let questionNumber = 1;
+      
+      // Fixed left margin for all questions
+      const leftMargin = doc.page.margins.left;
+      const contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const numberWidth = 30;
+      
+      for (const section of paper.sections) {
+        doc.moveDown(1.2);
+        
+        // Check if section has variable marks (questions with individual marks)
+        const hasVariableMarks = section.questions?.some(q => typeof q === 'object' && q.marks);
+        
+        // Section header - reset X position
+        doc.x = leftMargin;
+        if (hasVariableMarks) {
+          doc.fontSize(15).font('Helvetica-Bold')
+             .text(section.title);
+        } else {
+          doc.fontSize(15).font('Helvetica-Bold')
+             .text(`${section.title}${section.marksPerQuestion ? ` (${section.marksPerQuestion} marks each)` : ''}`);
+        }
+        
+        // Section instruction (e.g., "Solve any 2") - reset X position
+        doc.x = leftMargin;
+        if (section.instruction) {
+          doc.fontSize(11).font('Helvetica-Oblique')
+             .text(`Instruction: ${section.instruction}`);
+        } else if (section.instructions) {
+          doc.fontSize(11).font('Helvetica-Oblique')
+             .text(section.instructions);
+        }
+        
+        doc.moveDown(0.8);
+
+        // Questions
+        for (const question of section.questions || []) {
+          const questionText = typeof question === 'object' ? question.questionText : question;
+          const questionMarks = typeof question === 'object' ? question.marks : section.marksPerQuestion;
+          
+          // Format: "Question text... (X marks)" - marks always at end
+          let marksText = '';
+          if (hasVariableMarks && questionMarks) {
+            marksText = ` (${questionMarks} marks)`;
+          }
+          const fullQuestionText = `${questionText}${marksText}`;
+          
+          // Get current Y position, use fixed X
+          const startY = doc.y;
+          
+          // Draw question number at fixed left margin position
+          doc.fontSize(12).font('Helvetica')
+             .text(`${questionNumber}.`, leftMargin, startY, { 
+               width: numberWidth, 
+               continued: false 
+             });
+          
+          // Draw question text aligned to the right of number
+          doc.fontSize(12).font('Helvetica')
+             .text(fullQuestionText, leftMargin + numberWidth, startY, {
+               width: contentWidth - numberWidth,
+               lineGap: 3
+             });
+          
+          doc.moveDown(0.8);
+          questionNumber++;
+        }
       }
     }
 
