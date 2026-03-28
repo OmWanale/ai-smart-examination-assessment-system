@@ -31,19 +31,69 @@ const TrashIcon = () => (
   </svg>
 );
 
+// Edit Icon
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
+
+// Check Icon (for Save)
+const CheckIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+  </svg>
+);
+
+// X Icon (for Cancel)
+const XIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+// Mode configuration
+const PAPER_MODES = {
+  '20-marks': {
+    id: '20-marks',
+    label: '20 Marks Paper',
+    description: 'Structured exam with 3 sections (A, B, C)',
+    totalMarks: 20,
+  },
+  '60-marks': {
+    id: '60-marks',
+    label: '60 Marks Paper',
+    description: 'Full exam with 5 sections (A, B, C, D, E)',
+    totalMarks: 60,
+  },
+  'custom': {
+    id: 'custom',
+    label: 'Generate Questions',
+    description: 'Custom question generation with suggested marks',
+    totalMarks: null,
+  },
+};
+
 export function QuestionPaper() {
   const [files, setFiles] = useState([]);
-  const [totalMarks, setTotalMarks] = useState('100');
-  const [marksPerQuestion, setMarksPerQuestion] = useState('5');
+  const [mode, setMode] = useState('20-marks');
   const [difficulty, setDifficulty] = useState('medium');
   const [examTitle, setExamTitle] = useState('');
   const [duration, setDuration] = useState('');
-  const [instructions, setInstructions] = useState('');
+  const [customInstructions, setCustomInstructions] = useState('');
+  
+  // Custom mode specific
+  const [numQuestions, setNumQuestions] = useState('10');
   
   const [isGenerating, setIsGenerating] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
   const [paper, setPaper] = useState(null);
+  
+  // Edit state: { sectionIndex, questionIndex } or { questionIndex } for custom mode
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [editText, setEditText] = useState('');
+  const [editMarks, setEditMarks] = useState('');
 
   const handleFileUpload = (e) => {
     const newFiles = Array.from(e.target.files);
@@ -74,17 +124,13 @@ export function QuestionPaper() {
       return;
     }
 
-    const marks = parseInt(totalMarks);
-    const perQuestion = parseInt(marksPerQuestion);
-
-    if (isNaN(marks) || marks < 10 || marks > 500) {
-      setError('Total marks must be between 10 and 500');
-      return;
-    }
-
-    if (isNaN(perQuestion) || perQuestion < 1 || perQuestion > 20) {
-      setError('Marks per question must be between 1 and 20');
-      return;
+    // Validate custom mode inputs
+    if (mode === 'custom') {
+      const num = parseInt(numQuestions);
+      if (isNaN(num) || num < 1 || num > 50) {
+        setError('Number of questions must be between 1 and 50');
+        return;
+      }
     }
 
     setIsGenerating(true);
@@ -92,9 +138,12 @@ export function QuestionPaper() {
     try {
       const formData = new FormData();
       files.forEach(file => formData.append('files', file));
-      formData.append('totalMarks', marks.toString());
-      formData.append('marksPerQuestion', perQuestion.toString());
+      formData.append('mode', mode);
       formData.append('difficulty', difficulty);
+      
+      if (mode === 'custom') {
+        formData.append('numQuestions', numQuestions);
+      }
 
       const response = await paperAPI.generatePaper(formData);
       
@@ -121,7 +170,8 @@ export function QuestionPaper() {
         paper,
         examTitle: examTitle || paper.title,
         duration,
-        instructions
+        instructions: customInstructions,
+        mode
       });
 
       // Create blob and download
@@ -129,7 +179,7 @@ export function QuestionPaper() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `question-paper-${Date.now()}.pdf`;
+      a.download = `question-paper-${mode}-${Date.now()}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -145,6 +195,225 @@ export function QuestionPaper() {
   const handleReset = () => {
     setPaper(null);
     setError(null);
+    setEditingQuestion(null);
+  };
+
+  // Start editing a question
+  const startEditQuestion = (sectionIndex, questionIndex, questionText, marks) => {
+    setEditingQuestion({ sectionIndex, questionIndex });
+    setEditText(questionText);
+    setEditMarks(marks?.toString() || '');
+  };
+
+  // Start editing a custom question (flat array)
+  const startEditCustomQuestion = (questionIndex, questionText, marks) => {
+    setEditingQuestion({ questionIndex, isCustom: true });
+    setEditText(questionText);
+    setEditMarks(marks?.toString() || '');
+  };
+
+  // Cancel editing
+  const cancelEdit = () => {
+    setEditingQuestion(null);
+    setEditText('');
+    setEditMarks('');
+  };
+
+  // Save edited question
+  const saveEditQuestion = () => {
+    if (!editingQuestion || !paper) return;
+    
+    const updatedPaper = { ...paper };
+    
+    if (editingQuestion.isCustom) {
+      // Custom mode - flat questions array
+      const updatedQuestions = [...(updatedPaper.questions || [])];
+      const q = updatedQuestions[editingQuestion.questionIndex];
+      if (typeof q === 'object') {
+        updatedQuestions[editingQuestion.questionIndex] = {
+          ...q,
+          questionText: editText,
+          suggestedMarks: editMarks ? parseInt(editMarks) : q.suggestedMarks
+        };
+      }
+      updatedPaper.questions = updatedQuestions;
+    } else {
+      // Sectioned mode
+      const updatedSections = [...(updatedPaper.sections || [])];
+      const section = { ...updatedSections[editingQuestion.sectionIndex] };
+      const updatedQuestions = [...(section.questions || [])];
+      const q = updatedQuestions[editingQuestion.questionIndex];
+      
+      if (typeof q === 'object') {
+        updatedQuestions[editingQuestion.questionIndex] = {
+          ...q,
+          questionText: editText,
+          marks: editMarks ? parseInt(editMarks) : q.marks
+        };
+      } else {
+        // String question - convert to object if marks provided
+        updatedQuestions[editingQuestion.questionIndex] = editText;
+      }
+      
+      section.questions = updatedQuestions;
+      updatedSections[editingQuestion.sectionIndex] = section;
+      updatedPaper.sections = updatedSections;
+    }
+    
+    setPaper(updatedPaper);
+    cancelEdit();
+  };
+
+  // Get mode info label for display
+  const getModeInfo = () => {
+    const modeConfig = PAPER_MODES[mode];
+    if (mode === '20-marks') {
+      return 'Section A: 3 × 3 marks (solve 2) | Section B: 2 × 7 marks (solve 1) | Section C: 2 × 7 marks (solve 1)';
+    } else if (mode === '60-marks') {
+      return 'Section A: 7 × 3 marks (solve 5) | Sections B-E: 3 questions each (4+5+6 marks, solve any 3 sections)';
+    }
+    return modeConfig?.description || '';
+  };
+
+  // Render a question with proper formatting and edit capability
+  const renderQuestionItem = (question, qIndex, sectionIndex, sectionMarksPerQuestion, isCustom = false) => {
+    const questionText = typeof question === 'object' ? question.questionText : question;
+    const questionMarks = typeof question === 'object' 
+      ? (question.marks || question.suggestedMarks) 
+      : sectionMarksPerQuestion;
+    
+    const isEditing = isCustom 
+      ? (editingQuestion?.isCustom && editingQuestion?.questionIndex === qIndex)
+      : (!editingQuestion?.isCustom && editingQuestion?.sectionIndex === sectionIndex && editingQuestion?.questionIndex === qIndex);
+    
+    return (
+      <div
+        key={qIndex}
+        className="p-4 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg group hover:shadow-sm transition-shadow"
+        style={{ marginBottom: '10px' }}
+      >
+        {isEditing ? (
+          // Edit Mode
+          <div className="space-y-3">
+            {/* Question number + textarea */}
+            <div className="flex items-start gap-0">
+              <span 
+                className="flex-shrink-0 font-medium pt-2"
+                style={{ width: '24px', color: '#202124', lineHeight: '1.5', fontSize: '15px' }}
+              >
+                <span className="dark:text-slate-100">{qIndex + 1}.</span>
+              </span>
+              <textarea
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                className="flex-1 p-3 border border-neutral-300 dark:border-dark-border rounded-lg bg-neutral-50 dark:bg-dark-hover dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                style={{ lineHeight: '1.5', fontSize: '15px', minHeight: '80px' }}
+                rows={3}
+                placeholder="Enter question text..."
+              />
+            </div>
+            {/* Marks input + buttons */}
+            <div className="flex items-center gap-3 pl-6">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium" style={{ color: '#5f6368' }}>
+                  <span className="dark:text-slate-400">Marks:</span>
+                </label>
+                <input
+                  type="number"
+                  value={editMarks}
+                  onChange={(e) => setEditMarks(e.target.value)}
+                  className="w-16 px-2 py-1 text-center border border-neutral-300 dark:border-dark-border rounded-lg bg-neutral-50 dark:bg-dark-hover dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  style={{ color: '#202124' }}
+                  min="1"
+                  max="20"
+                />
+              </div>
+              <div className="flex-1" />
+              <Button size="sm" onClick={saveEditQuestion}>
+                Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={cancelEdit}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          // View Mode - Proper flex alignment for multi-line questions
+          <div className="flex items-start gap-0">
+            {/* Question Number - Fixed width, text-based */}
+            <span 
+              className="flex-shrink-0 font-medium"
+              style={{ width: '24px', color: '#202124', lineHeight: '1.5', fontSize: '15px' }}
+            >
+              <span className="dark:text-slate-100">{qIndex + 1}.</span>
+            </span>
+            
+            {/* Question Text - Flex grow, wraps properly, marks at end */}
+            <div className="flex-1 min-w-0" style={{ lineHeight: '1.5', fontSize: '15px' }}>
+              <span style={{ color: '#202124' }}>
+                <span className="dark:text-slate-100">
+                  {questionText}
+                  {questionMarks && (
+                    <span className="text-neutral-600 dark:text-slate-400 ml-1">
+                      ({questionMarks} marks)
+                    </span>
+                  )}
+                </span>
+              </span>
+            </div>
+            
+            {/* Edit Button - Visible on hover */}
+            <button
+              onClick={() => {
+                if (isCustom) {
+                  startEditCustomQuestion(qIndex, questionText, questionMarks);
+                } else {
+                  startEditQuestion(sectionIndex, qIndex, questionText, questionMarks);
+                }
+              }}
+              className="flex-shrink-0 ml-2 p-2 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+              title="Edit question"
+            >
+              <EditIcon />
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Render section preview based on paper structure
+  const renderSectionPreview = (section, sIndex) => {
+    return (
+      <div key={sIndex} style={{ marginBottom: '20px' }}>
+        {/* Section Header */}
+        <div className="flex flex-wrap items-center gap-3 mb-3 pb-2 border-b-2 border-primary-500">
+          <h3 className="text-lg font-bold" style={{ color: '#202124' }}>
+            <span className="dark:text-slate-100">{section.title}</span>
+          </h3>
+          {section.marksPerQuestion && (
+            <Badge variant="primary">{section.marksPerQuestion} marks each</Badge>
+          )}
+          {section.totalMarks && (
+            <Badge variant="secondary">Total: {section.totalMarks} marks</Badge>
+          )}
+        </div>
+        
+        {/* Section Instruction - Italic */}
+        {section.instruction && (
+          <p className="text-sm italic mb-4 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-700" style={{ color: '#b45309' }}>
+            <span className="dark:text-amber-400">📝 {section.instruction}</span>
+          </p>
+        )}
+
+        {/* Questions List - 10px spacing between questions */}
+        <div>
+          {section.questions?.map((question, qIndex) => 
+            renderQuestionItem(question, qIndex, sIndex, section.marksPerQuestion, false)
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -163,10 +432,47 @@ export function QuestionPaper() {
       {!paper ? (
         // Input Form
         <div className="grid gap-6">
+          {/* Mode Selector - Tab Style */}
+          <Card>
+            <h3 className="text-lg font-semibold mb-4" style={{ color: '#202124' }}>
+              <span className="dark:text-slate-100">Select Paper Type</span>
+            </h3>
+            
+            <div className="border-b border-[#dadce0] dark:border-dark-border mb-4">
+              <div className="flex items-center gap-1 overflow-x-auto">
+                {Object.values(PAPER_MODES).map((modeOption) => (
+                  <button
+                    key={modeOption.id}
+                    onClick={() => setMode(modeOption.id)}
+                    className={`px-4 py-3 text-sm whitespace-nowrap border-b-2 transition-colors rounded-t-lg ${
+                      mode === modeOption.id
+                        ? 'text-[#1a73e8] border-[#1a73e8] font-semibold bg-blue-50 dark:bg-blue-900/20'
+                        : 'text-[#5f6368] dark:text-slate-400 border-transparent hover:text-[#202124] dark:hover:text-slate-200 hover:bg-neutral-50 dark:hover:bg-dark-hover'
+                    }`}
+                  >
+                    {modeOption.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mode Description */}
+            <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                {PAPER_MODES[mode].description}
+              </p>
+              {mode !== 'custom' && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+                  {getModeInfo()}
+                </p>
+              )}
+            </div>
+          </Card>
+
           {/* File Upload Card */}
           <Card>
             <h3 className="text-lg font-semibold mb-4" style={{ color: '#202124' }}>
-              Upload Documents
+              <span className="dark:text-slate-100">Upload Documents</span>
             </h3>
             
             {/* Drop Zone */}
@@ -228,33 +534,14 @@ export function QuestionPaper() {
             )}
           </Card>
 
-          {/* Exam Settings Card */}
+          {/* Settings Card */}
           <Card>
             <h3 className="text-lg font-semibold mb-4" style={{ color: '#202124' }}>
-              <span className="dark:text-slate-100">Exam Settings</span>
+              <span className="dark:text-slate-100">Paper Settings</span>
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <Input
-                label="Total Marks"
-                type="number"
-                value={totalMarks}
-                onChange={(e) => setTotalMarks(e.target.value)}
-                placeholder="e.g., 100"
-                min="10"
-                max="500"
-              />
-              
-              <Input
-                label="Marks per Question"
-                type="number"
-                value={marksPerQuestion}
-                onChange={(e) => setMarksPerQuestion(e.target.value)}
-                placeholder="e.g., 5"
-                min="1"
-                max="20"
-              />
-              
+              {/* Difficulty - Always shown */}
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: '#202124' }}>
                   <span className="dark:text-slate-100">Difficulty</span>
@@ -262,7 +549,7 @@ export function QuestionPaper() {
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-slate-100"
                   style={{ color: '#202124' }}
                 >
                   <option value="easy">Easy</option>
@@ -270,6 +557,31 @@ export function QuestionPaper() {
                   <option value="hard">Hard</option>
                 </select>
               </div>
+
+              {/* Custom mode - Number of questions */}
+              {mode === 'custom' && (
+                <Input
+                  label="Number of Questions"
+                  type="number"
+                  value={numQuestions}
+                  onChange={(e) => setNumQuestions(e.target.value)}
+                  placeholder="e.g., 10"
+                  min="1"
+                  max="50"
+                />
+              )}
+
+              {/* Show total marks for predefined modes */}
+              {mode !== 'custom' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#202124' }}>
+                    <span className="dark:text-slate-100">Total Marks</span>
+                  </label>
+                  <div className="px-4 py-3 bg-neutral-100 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-600 dark:text-slate-400">
+                    {PAPER_MODES[mode].totalMarks} marks (fixed)
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-6 flex justify-end">
@@ -288,7 +600,7 @@ export function QuestionPaper() {
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Generate Question Paper
+                    Generate {mode === 'custom' ? 'Questions' : 'Question Paper'}
                   </>
                 )}
               </Button>
@@ -306,7 +618,9 @@ export function QuestionPaper() {
                   <span className="dark:text-slate-100">{paper.title || 'Question Paper'}</span>
                 </h2>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge variant="primary">Total: {paper.totalMarks} marks</Badge>
+                  <Badge variant="primary">
+                    {mode === 'custom' ? 'Custom Questions' : `${PAPER_MODES[mode]?.totalMarks} marks`}
+                  </Badge>
                   <Badge variant="secondary">{paper.sections?.length || 0} sections</Badge>
                   <Badge variant={difficulty === 'hard' ? 'error' : difficulty === 'medium' ? 'warning' : 'success'}>
                     {difficulty}
@@ -354,50 +668,37 @@ export function QuestionPaper() {
                 placeholder="e.g., 3 hours"
               />
               <Input
-                label="Instructions (optional)"
+                label="Additional Instructions (optional)"
                 type="text"
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="e.g., Answer all questions"
+                value={customInstructions}
+                onChange={(e) => setCustomInstructions(e.target.value)}
+                placeholder="e.g., Use blue or black pen only"
               />
             </div>
 
             {/* Sections */}
-            <div className="space-y-6">
-              {paper.sections?.map((section, sIndex) => (
-                <div key={sIndex} className="border-l-4 border-primary-500 pl-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h3 className="text-lg font-semibold" style={{ color: '#202124' }}>
-                      <span className="dark:text-slate-100">{section.title}</span>
+            <div>
+              {paper.sections?.map((section, sIndex) => renderSectionPreview(section, sIndex))}
+              
+              {/* For custom mode with flat questions array */}
+              {mode === 'custom' && paper.questions && !paper.sections?.length && (
+                <div style={{ marginBottom: '20px' }}>
+                  {/* Section Header for Custom Questions */}
+                  <div className="flex flex-wrap items-center gap-3 mb-3 pb-2 border-b-2 border-primary-500">
+                    <h3 className="text-lg font-bold" style={{ color: '#202124' }}>
+                      <span className="dark:text-slate-100">Generated Questions</span>
                     </h3>
-                    <Badge variant="primary">{section.marksPerQuestion} marks each</Badge>
+                    <Badge variant="primary">{paper.questions.length} questions</Badge>
                   </div>
                   
-                  {section.instructions && (
-                    <p className="text-sm italic mb-3" style={{ color: '#5f6368' }}>
-                      <span className="dark:text-slate-400">{section.instructions}</span>
-                    </p>
-                  )}
-
-                  <div className="space-y-3">
-                    {section.questions?.map((question, qIndex) => (
-                      <div
-                        key={qIndex}
-                        className="p-4 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 rounded-full text-sm font-semibold">
-                            {qIndex + 1}
-                          </span>
-                          <p className="flex-1 pt-1" style={{ color: '#202124' }}>
-                            <span className="dark:text-slate-100">{question}</span>
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Questions List */}
+                  <div>
+                    {paper.questions.map((question, qIndex) => 
+                      renderQuestionItem(question, qIndex, null, null, true)
+                    )}
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </Card>
         </div>
