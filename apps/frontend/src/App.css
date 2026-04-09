@@ -70,7 +70,14 @@
   top: 64px;
   height: calc(100vh - 64px);
   overflow: hidden;
-  transition: background-color 0.2s;
+  opacity: 1;
+  transition: width 220ms ease, opacity 180ms ease, background-color 0.2s, border-color 0.2s;
+}
+.gc-sidebar.gc-sidebar-collapsed {
+  width: 0;
+  opacity: 0;
+  border-right-color: transparent;
+  pointer-events: none;
 }
 @media (min-width: 1024px) {
   .gc-sidebar { display: flex; }

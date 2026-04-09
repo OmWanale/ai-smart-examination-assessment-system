@@ -12,6 +12,35 @@ const DEFAULT_TIMEOUT_MS = Number(process.env.AI_TIMEOUT_MS || 60000);
 const MAX_RETRIES = Number(process.env.AI_MAX_RETRIES || 2);
 const shouldUseMock = () => process.env.USE_MOCK_AI === "true";
 const getGroqModel = () => process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+const DEFAULT_TOPIC = "the provided topic";
+
+const inferTopicFromContent = (content = "") => {
+  const clean = String(content || "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!clean) return DEFAULT_TOPIC;
+
+  const sentence = (clean.match(/[A-Za-z][^.!?\n]{3,180}/) || [clean.slice(0, 120)])[0]
+    .trim();
+
+  const topic = sentence
+    .replace(/\bmodule\s*(no\.?|number)?\s*[:\-]?\s*\d+\b/gi, "")
+    .replace(/\bunit\s*(no\.?|number)?\s*[:\-]?\s*\d+\b/gi, "")
+    .replace(/\bchapter\s*(no\.?|number)?\s*[:\-]?\s*\d+\b/gi, "")
+    .replace(/\blesson\s*(no\.?|number)?\s*[:\-]?\s*\d+\b/gi, "")
+    .replace(/\btopic\s*(no\.?|number)?\s*[:\-]?\s*\d+\b/gi, "")
+    .replace(/\bno\.?\s*\d+\b/gi, "")
+    .replace(/\b\d+\b$/g, "")
+    .replace(/[:\-]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/^[^A-Za-z]+/, "")
+    .replace(/[^\w\s-]+$/g, "")
+    .slice(0, 80)
+    .trim();
+
+  return topic || DEFAULT_TOPIC;
+};
 
 /**
  * Extract text from PDF buffer
@@ -94,6 +123,7 @@ CRITICAL RULES:
 3. Do NOT copy text directly from source
 4. Each question should be clear and educational
 5. Do not include answers
+6. Every question must explicitly mention a concrete topic/concept from the content (avoid vague wording like "the concept" or "the topic" without naming it)
 
 EXACT JSON STRUCTURE:
 {
@@ -180,6 +210,7 @@ CRITICAL RULES:
 3. Do NOT copy text directly from source
 4. Avoid duplication across sections
 5. Maintain consistent difficulty within each section
+6. Every question must explicitly mention a concrete topic/concept from the content (avoid vague wording like "the concept" or "the topic" without naming it)
 
 EXACT JSON STRUCTURE:
 {
@@ -270,6 +301,7 @@ CRITICAL RULES:
 2. Do NOT copy text directly from source
 3. Each question should be clear and educational
 4. Do not include answers
+5. Every question must explicitly mention a concrete topic/concept from the content (avoid vague wording like "the concept" or "the topic" without naming it)
 
 EXACT JSON STRUCTURE:
 {
@@ -335,6 +367,7 @@ CRITICAL OUTPUT RULES:
 3. Each question should be clear and educational
 4. Do not include answers in the question paper
 5. Vary question types: definition, explanation, analysis, comparison, application
+6. Every question must explicitly mention a concrete topic/concept from the content (avoid vague wording like "the concept" or "the topic" without naming it)
 
 EXACT JSON STRUCTURE:
 {
@@ -372,8 +405,9 @@ OUTPUT THE JSON QUESTION PAPER:`;
 /**
  * Generate mock question paper for testing
  */
-const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty }) => {
+const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty, topic }) => {
   const numQuestions = Math.ceil(totalMarks / marksPerQuestion);
+  const safeTopic = topic || DEFAULT_TOPIC;
   
   return {
     title: "Mock Examination Question Paper",
@@ -384,7 +418,7 @@ const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty }) => {
         marksPerQuestion: 2,
         instructions: "Answer all questions briefly",
         questions: Array(Math.min(5, Math.floor(numQuestions / 2))).fill(null).map((_, i) => 
-          `[Mock Q${i + 1}] Define and explain a key concept from the document.`
+          `Q${i + 1} Define and explain a key concept of ${safeTopic}.`
         )
       },
       {
@@ -392,7 +426,7 @@ const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty }) => {
         marksPerQuestion: marksPerQuestion,
         instructions: "Answer all questions in detail",
         questions: Array(Math.ceil(numQuestions / 2)).fill(null).map((_, i) => 
-          `[Mock Q${i + 1}] Discuss and analyze an important topic from the document.`
+          `Q${i + 1} Discuss and analyze an important aspect of ${safeTopic}.`
         )
       }
     ]
@@ -402,7 +436,8 @@ const generateMockPaper = ({ totalMarks, marksPerQuestion, difficulty }) => {
 /**
  * Generate mock 20-marks paper
  */
-const generateMock20MarksPaper = ({ difficulty }) => {
+const generateMock20MarksPaper = ({ difficulty, topic }) => {
+  const safeTopic = topic || DEFAULT_TOPIC;
   return {
     title: "Mock 20 Marks Question Paper",
     totalMarks: 20,
@@ -412,9 +447,9 @@ const generateMock20MarksPaper = ({ difficulty }) => {
         instruction: "Solve any 2",
         marksPerQuestion: 3,
         questions: [
-          { questionText: "[Mock] Define the key concept discussed in the document.", marks: 3 },
-          { questionText: "[Mock] Explain the significance of the main topic.", marks: 3 },
-          { questionText: "[Mock] What are the primary characteristics mentioned?", marks: 3 }
+          { questionText: `Define a key concept in ${safeTopic}.`, marks: 3 },
+          { questionText: `Explain the significance of ${safeTopic}.`, marks: 3 },
+          { questionText: `What are the primary characteristics of ${safeTopic}?`, marks: 3 }
         ]
       },
       {
@@ -422,8 +457,8 @@ const generateMock20MarksPaper = ({ difficulty }) => {
         instruction: "Solve any 1",
         marksPerQuestion: 7,
         questions: [
-          { questionText: "[Mock] Discuss in detail the main theme and its implications.", marks: 7 },
-          { questionText: "[Mock] Analyze the relationship between the concepts presented.", marks: 7 }
+          { questionText: `Discuss ${safeTopic} in detail and explain its implications.`, marks: 7 },
+          { questionText: `Analyze how the major concepts within ${safeTopic} are related.`, marks: 7 }
         ]
       },
       {
@@ -431,8 +466,8 @@ const generateMock20MarksPaper = ({ difficulty }) => {
         instruction: "Solve any 1",
         marksPerQuestion: 7,
         questions: [
-          { questionText: "[Mock] Evaluate the arguments presented and provide your perspective.", marks: 7 },
-          { questionText: "[Mock] Compare and contrast the different viewpoints discussed.", marks: 7 }
+          { questionText: `Evaluate key arguments related to ${safeTopic} and provide your perspective.`, marks: 7 },
+          { questionText: `Compare and contrast different viewpoints about ${safeTopic}.`, marks: 7 }
         ]
       }
     ]
@@ -442,7 +477,8 @@ const generateMock20MarksPaper = ({ difficulty }) => {
 /**
  * Generate mock 60-marks paper
  */
-const generateMock60MarksPaper = ({ difficulty }) => {
+const generateMock60MarksPaper = ({ difficulty, topic }) => {
+  const safeTopic = topic || DEFAULT_TOPIC;
   return {
     title: "Mock 60 Marks Question Paper",
     totalMarks: 60,
@@ -452,49 +488,49 @@ const generateMock60MarksPaper = ({ difficulty }) => {
         instruction: "Solve any 5",
         marksPerQuestion: 3,
         questions: [
-          { questionText: "[Mock] Define the primary concept.", marks: 3 },
-          { questionText: "[Mock] What is the significance of the topic?", marks: 3 },
-          { questionText: "[Mock] List the main characteristics.", marks: 3 },
-          { questionText: "[Mock] Explain the basic principle.", marks: 3 },
-          { questionText: "[Mock] What are the key features?", marks: 3 },
-          { questionText: "[Mock] Describe the fundamental aspects.", marks: 3 },
-          { questionText: "[Mock] Outline the main points.", marks: 3 }
+          { questionText: `Define the primary concept of ${safeTopic}.`, marks: 3 },
+          { questionText: `What is the significance of ${safeTopic}?`, marks: 3 },
+          { questionText: `List the main characteristics of ${safeTopic}.`, marks: 3 },
+          { questionText: `Explain a basic principle related to ${safeTopic}.`, marks: 3 },
+          { questionText: `What are key features of ${safeTopic}?`, marks: 3 },
+          { questionText: `Describe the fundamental aspects of ${safeTopic}.`, marks: 3 },
+          { questionText: `Outline the main points of ${safeTopic}.`, marks: 3 }
         ]
       },
       {
         title: "Section B",
         instruction: "Attempt all questions",
         questions: [
-          { questionText: "[Mock] Explain the concept with examples.", marks: 4 },
-          { questionText: "[Mock] Discuss the importance and applications.", marks: 5 },
-          { questionText: "[Mock] Analyze the factors and their impact.", marks: 6 }
+          { questionText: `Explain the concept of ${safeTopic} with examples.`, marks: 4 },
+          { questionText: `Discuss the importance and applications of ${safeTopic}.`, marks: 5 },
+          { questionText: `Analyze major factors affecting ${safeTopic} and their impact.`, marks: 6 }
         ]
       },
       {
         title: "Section C",
         instruction: "Attempt all questions",
         questions: [
-          { questionText: "[Mock] Describe the process in detail.", marks: 4 },
-          { questionText: "[Mock] Compare the different approaches.", marks: 5 },
-          { questionText: "[Mock] Evaluate the effectiveness of the methods.", marks: 6 }
+          { questionText: `Describe an important process in ${safeTopic} in detail.`, marks: 4 },
+          { questionText: `Compare different approaches used in ${safeTopic}.`, marks: 5 },
+          { questionText: `Evaluate the effectiveness of methods applied in ${safeTopic}.`, marks: 6 }
         ]
       },
       {
         title: "Section D",
         instruction: "Attempt all questions",
         questions: [
-          { questionText: "[Mock] What are the advantages and disadvantages?", marks: 4 },
-          { questionText: "[Mock] Discuss the implications for practice.", marks: 5 },
-          { questionText: "[Mock] Critically examine the theoretical framework.", marks: 6 }
+          { questionText: `What are the advantages and disadvantages of ${safeTopic}?`, marks: 4 },
+          { questionText: `Discuss practical implications of ${safeTopic}.`, marks: 5 },
+          { questionText: `Critically examine the theoretical framework behind ${safeTopic}.`, marks: 6 }
         ]
       },
       {
         title: "Section E",
         instruction: "Attempt all questions",
         questions: [
-          { questionText: "[Mock] Summarize the key findings.", marks: 4 },
-          { questionText: "[Mock] Propose solutions to the challenges identified.", marks: 5 },
-          { questionText: "[Mock] Synthesize the information and draw conclusions.", marks: 6 }
+          { questionText: `Summarize key findings related to ${safeTopic}.`, marks: 4 },
+          { questionText: `Propose solutions to common challenges in ${safeTopic}.`, marks: 5 },
+          { questionText: `Synthesize information about ${safeTopic} and draw conclusions.`, marks: 6 }
         ]
       }
     ]
@@ -504,14 +540,15 @@ const generateMock60MarksPaper = ({ difficulty }) => {
 /**
  * Generate mock custom questions
  */
-const generateMockCustomQuestions = ({ numQuestions, difficulty }) => {
+const generateMockCustomQuestions = ({ numQuestions, difficulty, topic }) => {
   const count = parseInt(numQuestions) || 10;
   const markOptions = [2, 3, 5, 7, 10];
+  const safeTopic = topic || DEFAULT_TOPIC;
   
   return {
     title: "Generated Questions",
     questions: Array(count).fill(null).map((_, i) => ({
-      questionText: `[Mock Q${i + 1}] This is a sample ${difficulty} difficulty question about the document content.`,
+      questionText: `Q${i + 1} This is a sample ${difficulty} difficulty question about ${safeTopic}.`,
       suggestedMarks: markOptions[i % markOptions.length]
     }))
   };
@@ -598,15 +635,16 @@ const extractJson = (rawText) => {
  * Generate question paper using AI
  */
 const generatePaperWithAI = async ({ content, totalMarks, marksPerQuestion, difficulty }) => {
+  const topic = inferTopicFromContent(content);
   if (shouldUseMock()) {
     console.log("[Paper] Using mock mode");
-    return generateMockPaper({ totalMarks, marksPerQuestion, difficulty });
+    return generateMockPaper({ totalMarks, marksPerQuestion, difficulty, topic });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey || apiKey.length < 10) {
     console.log("[Paper] No valid API key, using mock");
-    return generateMockPaper({ totalMarks, marksPerQuestion, difficulty });
+    return generateMockPaper({ totalMarks, marksPerQuestion, difficulty, topic });
   }
 
   const prompt = buildPaperPrompt({ content, totalMarks, marksPerQuestion, difficulty });
@@ -649,22 +687,23 @@ const generatePaperWithAI = async ({ content, totalMarks, marksPerQuestion, diff
   }
 
   console.log("[Paper] Falling back to mock");
-  return generateMockPaper({ totalMarks, marksPerQuestion, difficulty });
+  return generateMockPaper({ totalMarks, marksPerQuestion, difficulty, topic });
 };
 
 /**
  * Generate 20-marks paper using AI
  */
 const generate20MarksPaperWithAI = async ({ content, difficulty }) => {
+  const topic = inferTopicFromContent(content);
   if (shouldUseMock()) {
     console.log("[Paper] Using mock mode for 20-marks");
-    return generateMock20MarksPaper({ difficulty });
+    return generateMock20MarksPaper({ difficulty, topic });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey || apiKey.length < 10) {
     console.log("[Paper] No valid API key, using mock for 20-marks");
-    return generateMock20MarksPaper({ difficulty });
+    return generateMock20MarksPaper({ difficulty, topic });
   }
 
   const prompt = build20MarksPrompt({ content, difficulty });
@@ -707,22 +746,23 @@ const generate20MarksPaperWithAI = async ({ content, difficulty }) => {
   }
 
   console.log("[Paper] 20-marks falling back to mock");
-  return generateMock20MarksPaper({ difficulty });
+  return generateMock20MarksPaper({ difficulty, topic });
 };
 
 /**
  * Generate 60-marks paper using AI
  */
 const generate60MarksPaperWithAI = async ({ content, difficulty }) => {
+  const topic = inferTopicFromContent(content);
   if (shouldUseMock()) {
     console.log("[Paper] Using mock mode for 60-marks");
-    return generateMock60MarksPaper({ difficulty });
+    return generateMock60MarksPaper({ difficulty, topic });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey || apiKey.length < 10) {
     console.log("[Paper] No valid API key, using mock for 60-marks");
-    return generateMock60MarksPaper({ difficulty });
+    return generateMock60MarksPaper({ difficulty, topic });
   }
 
   const prompt = build60MarksPrompt({ content, difficulty });
@@ -765,22 +805,23 @@ const generate60MarksPaperWithAI = async ({ content, difficulty }) => {
   }
 
   console.log("[Paper] 60-marks falling back to mock");
-  return generateMock60MarksPaper({ difficulty });
+  return generateMock60MarksPaper({ difficulty, topic });
 };
 
 /**
  * Generate custom questions using AI
  */
 const generateCustomQuestionsWithAI = async ({ content, numQuestions, difficulty }) => {
+  const topic = inferTopicFromContent(content);
   if (shouldUseMock()) {
     console.log("[Paper] Using mock mode for custom questions");
-    return generateMockCustomQuestions({ numQuestions, difficulty });
+    return generateMockCustomQuestions({ numQuestions, difficulty, topic });
   }
 
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey || apiKey.length < 10) {
     console.log("[Paper] No valid API key, using mock for custom questions");
-    return generateMockCustomQuestions({ numQuestions, difficulty });
+    return generateMockCustomQuestions({ numQuestions, difficulty, topic });
   }
 
   const prompt = buildCustomQuestionsPrompt({ content, numQuestions, difficulty });
@@ -823,7 +864,7 @@ const generateCustomQuestionsWithAI = async ({ content, numQuestions, difficulty
   }
 
   console.log("[Paper] Custom questions falling back to mock");
-  return generateMockCustomQuestions({ numQuestions, difficulty });
+  return generateMockCustomQuestions({ numQuestions, difficulty, topic });
 };
 
 /**

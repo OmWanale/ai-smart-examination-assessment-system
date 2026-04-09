@@ -245,9 +245,71 @@ const getClassById = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @route   DELETE /api/classes/:id
+ * @desc    Delete a class and all associated data
+ * @access  Private/Teacher (owner only)
+ */
+const deleteClass = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const teacherId = req.user._id;
+
+  const classData = await Class.findById(id);
+
+  if (!classData) {
+    return res.status(404).json({
+      success: false,
+      message: "Class not found",
+    });
+  }
+
+  // Verify the teacher owns this class
+  if (!classData.isTeacher(teacherId)) {
+    return res.status(403).json({
+      success: false,
+      message: "You can only delete your own classes",
+    });
+  }
+
+  // Import models needed for cleanup
+  const Quiz = require("../models/Quiz");
+  const Submission = require("../models/Submission");
+  const Assignment = require("../models/Assignment");
+
+  // Get all quizzes for this class
+  const quizzes = await Quiz.find({ class: id });
+  const quizIds = quizzes.map(q => q._id);
+
+  // Delete all submissions for quizzes in this class
+  if (quizIds.length > 0) {
+    await Submission.deleteMany({ quiz: { $in: quizIds } });
+  }
+
+  // Delete all quizzes for this class
+  await Quiz.deleteMany({ class: id });
+
+  // Delete all assignments for this class
+  await Assignment.deleteMany({ class: id });
+
+  // Remove class from all enrolled students' classes array
+  await User.updateMany(
+    { classes: id },
+    { $pull: { classes: id } }
+  );
+
+  // Delete the class
+  await Class.findByIdAndDelete(id);
+
+  res.status(200).json({
+    success: true,
+    message: "Class and all associated data deleted successfully",
+  });
+});
+
 module.exports = {
   createClass,
   joinClassByCode,
   getMyClasses,
   getClassById,
+  deleteClass,
 };

@@ -25,7 +25,7 @@ function StudentQuestionCard({ question, index, showCorrectAnswers, showExplanat
             {index + 1}
           </div>
           <div>
-            <span className="text-sm text-neutral-500 dark:text-dark-muted">Question {index + 1}</span>
+            <span className="text-sm text-neutral-500 dark:text-slate-400">Question {index + 1}</span>
             <div className="mt-1">
               {isCorrect ? (
                 <Badge variant="success">
@@ -52,7 +52,7 @@ function StudentQuestionCard({ question, index, showCorrectAnswers, showExplanat
       </div>
 
       {/* Question Text */}
-      <p className="text-lg font-medium text-text-dark dark:text-dark-text mb-4">
+      <p className="text-lg font-medium text-text-dark dark:text-slate-100 mb-4">
         {question.questionText}
       </p>
 
@@ -64,17 +64,17 @@ function StudentQuestionCard({ question, index, showCorrectAnswers, showExplanat
           const isWrongSelection = isSelected && !isCorrect;
           
           let bgClass = 'bg-neutral-50 dark:bg-dark-hover border-neutral-200 dark:border-dark-border';
-          let textClass = 'text-neutral-700 dark:text-dark-text';
+          let textClass = 'text-neutral-700 dark:text-slate-100';
           
           if (isCorrectOption) {
-            bgClass = 'bg-success-50 dark:bg-success-900/20 border-success-400 dark:border-success-600';
-            textClass = 'text-success-700 dark:text-success-400 font-medium';
+            bgClass = 'bg-success-50 dark:bg-success-100 border-success-400 dark:border-success-300';
+            textClass = 'font-medium';
           } else if (isWrongSelection) {
             bgClass = 'bg-error-50 dark:bg-error-900/20 border-error-400 dark:border-error-600';
             textClass = 'text-error-700 dark:text-error-400';
           } else if (isSelected && isCorrect) {
-            bgClass = 'bg-success-50 dark:bg-success-900/20 border-success-400 dark:border-success-600';
-            textClass = 'text-success-700 dark:text-success-400 font-medium';
+            bgClass = 'bg-success-50 dark:bg-success-100 border-success-400 dark:border-success-300';
+            textClass = 'font-medium';
           }
           
           return (
@@ -89,21 +89,24 @@ function StudentQuestionCard({ question, index, showCorrectAnswers, showExplanat
                     ? 'bg-error-500 text-white'
                     : isSelected && isCorrect
                       ? 'bg-success-500 text-white'
-                      : 'bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-dark-muted'
+                      : 'bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-slate-400'
               }`}>
                 {String.fromCharCode(65 + oIdx)}
               </div>
-              <span className={`flex-1 ${textClass}`}>
+              <span
+                className={`flex-1 ${textClass}`}
+                style={isCorrectOption || (isSelected && isCorrect) || isWrongSelection ? { color: '#111111' } : undefined}
+              >
                 {option}
               </span>
               <div className="flex items-center gap-2">
                 {isSelected && (
-                  <span className="text-xs font-medium px-2 py-1 rounded bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-dark-muted">
+                  <span className="text-xs font-medium px-2 py-1 rounded bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-slate-400">
                     Your Answer
                   </span>
                 )}
                 {isCorrectOption && (
-                  <div className="flex items-center gap-1 text-success-600 dark:text-success-400">
+                  <div className="flex items-center gap-1" style={{ color: '#111111' }}>
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
@@ -187,7 +190,7 @@ export function StudentQuizReview() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-neutral-500 dark:text-dark-muted mt-4">Loading review...</p>
+            <p className="text-neutral-500 dark:text-slate-400 mt-4">Loading review...</p>
           </div>
         </div>
       </MainLayout>
@@ -215,7 +218,7 @@ export function StudentQuizReview() {
                   <div className="text-5xl font-display font-bold text-primary-600 dark:text-primary-400 mb-2">
                     {stateData.submission.percentage}%
                   </div>
-                  <p className="text-neutral-500 dark:text-dark-muted">
+                  <p className="text-neutral-500 dark:text-slate-400">
                     You scored {stateData.submission.score} out of {stateData.submission.totalQuestions}
                   </p>
                 </div>
@@ -295,7 +298,7 @@ export function StudentQuizReview() {
         {/* Back Button */}
         <button
           onClick={() => navigate('/student/dashboard')}
-          className="flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+          className="flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -317,8 +320,8 @@ export function StudentQuizReview() {
             <div className={`text-6xl font-display font-bold ${performance.color} mb-2`}>
               {percentage}%
             </div>
-            <p className="text-neutral-500 dark:text-dark-muted">
-              You answered <strong className="text-text-dark dark:text-dark-text">{submission.score}</strong> out of <strong className="text-text-dark dark:text-dark-text">{submission.totalQuestions}</strong> questions correctly
+            <p className="text-neutral-500 dark:text-slate-400">
+              You answered <strong className="text-text-dark dark:text-slate-100">{submission.score}</strong> out of <strong className="text-text-dark dark:text-slate-100">{submission.totalQuestions}</strong> questions correctly
             </p>
           </div>
         </Card>
@@ -334,7 +337,7 @@ export function StudentQuizReview() {
             <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400 mb-1">
               {correctCount}
             </div>
-            <p className="text-neutral-500 dark:text-dark-muted text-sm">Correct</p>
+            <p className="text-neutral-500 dark:text-slate-400 text-sm">Correct</p>
           </Card>
 
           <Card className="text-center">
@@ -346,7 +349,7 @@ export function StudentQuizReview() {
             <div className="text-3xl font-display font-bold text-error-600 dark:text-error-400 mb-1">
               {incorrectCount}
             </div>
-            <p className="text-neutral-500 dark:text-dark-muted text-sm">Incorrect</p>
+            <p className="text-neutral-500 dark:text-slate-400 text-sm">Incorrect</p>
           </Card>
 
           <Card className="text-center">
@@ -358,19 +361,19 @@ export function StudentQuizReview() {
             <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400 mb-1">
               {submission.timeTakenMinutes || '-'}
             </div>
-            <p className="text-neutral-500 dark:text-dark-muted text-sm">Minutes</p>
+            <p className="text-neutral-500 dark:text-slate-400 text-sm">Minutes</p>
           </Card>
         </div>
 
         {/* Progress Bars */}
         <Card className="mb-8">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             📊 Performance
           </h3>
           <div className="space-y-4">
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-neutral-500 dark:text-dark-muted flex items-center gap-2">
+                <span className="text-neutral-500 dark:text-slate-400 flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-success-500"></span>
                   Correct
                 </span>
@@ -380,7 +383,7 @@ export function StudentQuizReview() {
             </div>
             <div>
               <div className="flex justify-between items-center mb-2">
-                <span className="text-neutral-500 dark:text-dark-muted flex items-center gap-2">
+                <span className="text-neutral-500 dark:text-slate-400 flex items-center gap-2">
                   <span className="w-3 h-3 rounded-full bg-error-500"></span>
                   Incorrect
                 </span>
@@ -393,7 +396,7 @@ export function StudentQuizReview() {
 
         {/* Questions Review */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             📝 Question Review
           </h3>
           {!quiz.showCorrectAnswers && !quiz.showExplanations ? (

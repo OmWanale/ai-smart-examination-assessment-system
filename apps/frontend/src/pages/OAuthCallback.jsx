@@ -60,7 +60,7 @@ export function OAuthCallback() {
       <Card className="text-center">
         <div className="flex flex-col items-center justify-center py-12">
           <Spinner size="lg" />
-          <p className="mt-4 text-neutral-600 dark:text-dark-muted">Completing sign in...</p>
+          <p className="mt-4 text-neutral-600 dark:text-slate-400">Completing sign in...</p>
         </div>
       </Card>
     </AuthLayout>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navbar } from './Navigation/Navbar';
 import { Sidebar } from './Navigation/Sidebar';
 import { useThemeStore } from '../store/themeStore';
@@ -6,6 +6,7 @@ import { useThemeStore } from '../store/themeStore';
 /* ═══════════════ Main (dashboard) Layout ═══════════════ */
 export function MainLayout({ children }) {
   const { initializeTheme } = useThemeStore();
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   useEffect(() => {
     initializeTheme();
@@ -14,9 +15,9 @@ export function MainLayout({ children }) {
   return (
     <div className="min-h-screen" style={{ background: '#f1f3f4' }}>
       <div className="dark:bg-[#0f172a] min-h-screen">
-        <Navbar />
+        <Navbar onToggleSidebar={() => setIsSidebarVisible((prev) => !prev)} />
         <div className="flex">
-          <Sidebar />
+          <Sidebar isVisible={isSidebarVisible} />
           <main className="flex-1 overflow-auto min-h-[calc(100vh-64px)]">
             <div className="page-container animate-fade-in">
               {children}

@@ -12,6 +12,7 @@ const {
   getQuizSubmissions,
   getQuizForTeacher,
   getQuizReviewForStudent,
+  deleteQuiz,
 } = require("../controllers/quizController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -126,5 +127,12 @@ router.get("/:id/student-review", authorize("student"), getQuizReviewForStudent)
  * @access  Private (teacher or enrolled student)
  */
 router.get("/:id", getQuizById);
+
+/**
+ * @route   DELETE /api/quizzes/:id
+ * @desc    Delete a quiz and all its submissions
+ * @access  Private/Teacher (creator only)
+ */
+router.delete("/:id", authorize("teacher"), deleteQuiz);
 
 module.exports = router;

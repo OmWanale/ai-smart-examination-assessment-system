@@ -26,7 +26,7 @@ function QuestionCard({ question, index }) {
             {index + 1}
           </div>
           <div>
-            <span className="text-sm text-neutral-500 dark:text-dark-muted">Question {index + 1}</span>
+            <span className="text-sm text-neutral-500 dark:text-slate-400">Question {index + 1}</span>
             {question.difficulty && (
               <div className="mt-1">{getDifficultyBadge(question.difficulty)}</div>
             )}
@@ -35,7 +35,7 @@ function QuestionCard({ question, index }) {
       </div>
 
       {/* Question Text */}
-      <p className="text-lg font-medium text-text-dark dark:text-dark-text mb-4">
+      <p className="text-lg font-medium text-text-dark dark:text-slate-100 mb-4">
         {question.questionText}
       </p>
 
@@ -49,26 +49,27 @@ function QuestionCard({ question, index }) {
               key={oIdx}
               className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                 isCorrect
-                  ? 'bg-success-50 dark:bg-success-900/20 border-success-400 dark:border-success-600'
+                  ? 'bg-success-50 dark:bg-success-100 border-success-400 dark:border-success-300'
                   : 'bg-neutral-50 dark:bg-dark-hover border-neutral-200 dark:border-dark-border'
               }`}
             >
               <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold text-sm ${
                 isCorrect
                   ? 'bg-success-500 text-white'
-                  : 'bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-dark-muted'
+                  : 'bg-neutral-200 dark:bg-dark-border text-neutral-600 dark:text-slate-400'
               }`}>
                 {String.fromCharCode(65 + oIdx)}
               </div>
               <span className={`flex-1 ${
                 isCorrect
-                  ? 'text-success-700 dark:text-success-400 font-medium'
-                  : 'text-neutral-700 dark:text-dark-text'
-              }`}>
+                  ? 'font-medium'
+                  : 'text-neutral-700 dark:text-slate-100'
+              }`}
+              style={isCorrect ? { color: '#111111' } : undefined}>
                 {option}
               </span>
               {isCorrect && (
-                <div className="flex items-center gap-1 text-success-600 dark:text-success-400">
+                <div className="flex items-center gap-1" style={{ color: '#111111' }}>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -147,7 +148,7 @@ export function TeacherQuizReview() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-neutral-500 dark:text-dark-muted mt-4">Loading quiz...</p>
+            <p className="text-neutral-500 dark:text-slate-400 mt-4">Loading quiz...</p>
           </div>
         </div>
       </MainLayout>
@@ -173,7 +174,7 @@ export function TeacherQuizReview() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+          className="flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -204,47 +205,47 @@ export function TeacherQuizReview() {
             <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400">
               {quiz.questionCount}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Questions</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Questions</p>
           </Card>
           <Card className="text-center">
             <div className="text-3xl font-display font-bold text-secondary-600 dark:text-secondary-400">
               {quiz.durationMinutes}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Minutes</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Minutes</p>
           </Card>
           <Card className="text-center">
             <Badge variant={quiz.difficulty === 'hard' ? 'error' : quiz.difficulty === 'medium' ? 'warning' : 'success'} className="text-lg px-4 py-1">
               {quiz.difficulty}
             </Badge>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted mt-1">Difficulty</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">Difficulty</p>
           </Card>
           <Card className="text-center">
             <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400">
               {quiz.submissionCount || 0}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Submissions</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Submissions</p>
           </Card>
         </div>
 
         {/* Visibility Settings */}
         <Card className="mb-8">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4">Student Review Settings</h3>
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4">Student Review Settings</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${quiz.showResultsToStudents ? 'bg-success-500' : 'bg-error-500'}`} />
-              <span className="text-neutral-600 dark:text-dark-muted">
+              <span className="text-neutral-600 dark:text-slate-400">
                 Show Results: <strong>{quiz.showResultsToStudents ? 'Yes' : 'No'}</strong>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${quiz.showCorrectAnswers ? 'bg-success-500' : 'bg-error-500'}`} />
-              <span className="text-neutral-600 dark:text-dark-muted">
+              <span className="text-neutral-600 dark:text-slate-400">
                 Show Answers: <strong>{quiz.showCorrectAnswers ? 'Yes' : 'No'}</strong>
               </span>
             </div>
             <div className="flex items-center gap-3">
               <div className={`w-3 h-3 rounded-full ${quiz.showExplanations ? 'bg-success-500' : 'bg-error-500'}`} />
-              <span className="text-neutral-600 dark:text-dark-muted">
+              <span className="text-neutral-600 dark:text-slate-400">
                 Show Explanations: <strong>{quiz.showExplanations ? 'Yes' : 'No'}</strong>
               </span>
             </div>
@@ -253,7 +254,7 @@ export function TeacherQuizReview() {
 
         {/* Questions */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             <span>📝</span> Questions
           </h3>
           {quiz.questions && quiz.questions.map((question, index) => (

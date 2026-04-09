@@ -12,6 +12,8 @@ export function StudentAssignments() {
   const [submission, setSubmission] = useState({});
   const [errors, setErrors] = useState({});
 
+  const getEntityId = (entity) => entity?._id || entity?.id;
+
   useEffect(() => {
     fetchClasses();
   }, []);
@@ -35,11 +37,17 @@ export function StudentAssignments() {
     try {
       const allAssignments = [];
       for (const cls of classList) {
-        const classId = cls._id || cls.id;
+        const classId = getEntityId(cls);
+        if (!classId) continue;
         try {
           const response = await assignmentAPI.getClassAssignments(classId);
           const items = response.data?.data || [];
-          const withClass = items.map((a) => ({ ...a, className: cls.name, classId }));
+          const withClass = items.map((a) => ({
+            ...a,
+            className: cls.name,
+            classId,
+            assignmentId: getEntityId(a),
+          }));
           allAssignments.push(...withClass);
         } catch {
           // skip classes where fetching fails
@@ -65,7 +73,8 @@ export function StudentAssignments() {
   const handleDownloadAssignment = async (assignment) => {
     try {
       const classId = assignment.classId || assignment.class?._id || assignment.class;
-      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const assignmentId = getEntityId(assignment);
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignmentId);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -78,18 +87,19 @@ export function StudentAssignments() {
       console.error('Download failed:', error);
       setErrors((prev) => ({
         ...prev,
-        [assignment._id]: 'Failed to download file',
+        [getEntityId(assignment)]: 'Failed to download file',
       }));
     }
   };
 
   const handleSubmitAssignment = async (assignment) => {
-    const file = submission[assignment._id];
+    const assignmentId = getEntityId(assignment);
+    const file = submission[assignmentId];
 
     if (!file) {
       setErrors((prev) => ({
         ...prev,
-        [assignment._id]: 'Please select a file to submit',
+        [assignmentId]: 'Please select a file to submit',
       }));
       return;
     }
@@ -100,17 +110,17 @@ export function StudentAssignments() {
       formData.append('file', file);
 
       const classId = assignment.classId || assignment.class?._id || assignment.class;
-      await assignmentAPI.submitClassAssignment(classId, assignment._id, formData);
+      await assignmentAPI.submitClassAssignment(classId, assignmentId, formData);
 
       // Mark as submitted
-      setSubmittedAssignments((prev) => new Set([...prev, assignment._id]));
-      setSubmission((prev) => ({ ...prev, [assignment._id]: null }));
+      setSubmittedAssignments((prev) => new Set([...prev, assignmentId]));
+      setSubmission((prev) => ({ ...prev, [assignmentId]: null }));
       setExpandedId(null);
     } catch (error) {
       const errorMsg = error.response?.data?.message || error.message || 'Failed to submit assignment';
       setErrors((prev) => ({
         ...prev,
-        [assignment._id]: errorMsg,
+        [assignmentId]: errorMsg,
       }));
     } finally {
       setIsLoading(false);
@@ -162,14 +172,15 @@ export function StudentAssignments() {
           />
         ) : (
           assignments.map((assignment) => {
+            const assignmentId = getEntityId(assignment);
             const dueDate = formatDate(assignment.dueDate);
-            const isSubmitted = submittedAssignments.has(assignment._id);
+            const isSubmitted = submittedAssignments.has(assignmentId) || Boolean(assignment.hasSubmitted);
             const daysRemaining = getDaysRemaining(assignment.dueDate);
-            const isExpanded = expandedId === assignment._id;
+            const isExpanded = expandedId === assignmentId;
 
             return (
               <Card
-                key={assignment._id}
+                key={assignmentId}
                 className={`hover:shadow-md transition-all ${
                   isSubmitted
                     ? 'border-2 border-success-500'
@@ -210,7 +221,7 @@ export function StudentAssignments() {
                 </div>
 
                 {!isExpanded ? (
-                  <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700">
+                  <div className="flex gap-3 pt-3 border-t border-primary-100 dark:border-dark-border">
                     {assignment.file && (
                       <Button
                         size="sm"
@@ -220,16 +231,16 @@ export function StudentAssignments() {
                         Download Attachment
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      onClick={() => setExpandedId(assignment._id)}
-                      disabled={isSubmitted}
-                    >
+                      <Button
+                        size="sm"
+                        onClick={() => setExpandedId(assignmentId)}
+                        disabled={isSubmitted}
+                      >
                       {isSubmitted ? 'Submitted' : 'Submit Work'}
                     </Button>
                   </div>
                 ) : (
-                  <div className="pt-3 border-t border-gray-200 dark:border-slate-700 space-y-4">
+                  <div className="pt-3 border-t border-primary-100 dark:border-dark-border space-y-4">
                     <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
                       <p className="text-sm text-blue-900 dark:text-blue-400 font-medium mb-2">
                         Instructions
@@ -239,27 +250,27 @@ export function StudentAssignments() {
                       </p>
                     </div>
 
-                    {errors[assignment._id] && (
-                      <Alert type="error" dismissible onDismiss={() => setErrors((prev) => ({ ...prev, [assignment._id]: '' }))}>
-                        {errors[assignment._id]}
+                    {errors[assignmentId] && (
+                      <Alert type="error" dismissible onDismiss={() => setErrors((prev) => ({ ...prev, [assignmentId]: '' }))}>
+                        {errors[assignmentId]}
                       </Alert>
                     )}
 
                     <div className="w-full">
                       <label className="block text-sm font-medium text-text-dark dark:text-slate-200 mb-1">Submit Your Work</label>
                       <div className="border-2 border-dashed border-primary-300 dark:border-slate-600 rounded-lg p-6 text-center cursor-pointer hover:bg-primary-50 dark:hover:bg-dark-hover transition-colors"
-                        onClick={() => document.getElementById(`file-input-${assignment._id}`).click()}
+                        onClick={() => document.getElementById(`file-input-${assignmentId}`).click()}
                       >
                         <p className="text-text-muted dark:text-slate-400">
-                          {submission[assignment._id]
-                            ? submission[assignment._id].name
+                          {submission[assignmentId]
+                            ? submission[assignmentId].name
                             : 'Click to upload file (PDF, DOC, DOCX)'}
                         </p>
                         <input
-                          id={`file-input-${assignment._id}`}
+                          id={`file-input-${assignmentId}`}
                           type="file"
                           accept=".pdf,.doc,.docx"
-                          onChange={(e) => handleFileChange(e, assignment._id)}
+                          onChange={(e) => handleFileChange(e, assignmentId)}
                           className="hidden"
                         />
                       </div>
@@ -268,7 +279,7 @@ export function StudentAssignments() {
                     <div className="flex gap-3">
                       <Button
                         onClick={() => handleSubmitAssignment(assignment)}
-                        disabled={!submission[assignment._id] || isLoading}
+                        disabled={!submission[assignmentId] || isLoading}
                       >
                         {isLoading ? 'Submitting...' : 'Submit Assignment'}
                       </Button>

@@ -31,8 +31,8 @@ export function CreateClassPage() {
   return (
     <MainLayout>
       <div className="p-6 max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-text-dark mb-2">Create New Class</h1>
-        <p className="text-gray-600 mb-8">Set up a class and get your join code</p>
+        <h1 className="text-3xl font-bold text-text-dark dark:text-slate-100 mb-2">Create New Class</h1>
+        <p className="text-text-muted dark:text-slate-400 mb-8">Set up a class and get your join code</p>
 
         <Card>
           {error && <Alert type="error" className="mb-4">{error}</Alert>}
