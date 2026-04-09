@@ -1193,6 +1193,45 @@ const generateQuizFromFiles = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Delete a quiz
+ * @route   DELETE /api/quizzes/:id
+ * @access  Private/Teacher (creator only)
+ */
+const deleteQuiz = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const teacherId = req.user.id;
+
+  // Find the quiz
+  const quiz = await Quiz.findById(id);
+
+  if (!quiz) {
+    return res.status(404).json({
+      success: false,
+      message: "Quiz not found",
+    });
+  }
+
+  // Verify the teacher owns this quiz
+  if (quiz.createdBy.toString() !== teacherId.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: "You can only delete your own quizzes",
+    });
+  }
+
+  // Delete all submissions for this quiz
+  await Submission.deleteMany({ quiz: id });
+
+  // Delete the quiz
+  await Quiz.findByIdAndDelete(id);
+
+  res.status(200).json({
+    success: true,
+    message: "Quiz and all associated submissions deleted successfully",
+  });
+});
+
 module.exports = {
   createQuiz,
   generateQuizWithAI,
@@ -1205,4 +1244,5 @@ module.exports = {
   getQuizSubmissions,
   getQuizForTeacher,
   getQuizReviewForStudent,
+  deleteQuiz,
 };

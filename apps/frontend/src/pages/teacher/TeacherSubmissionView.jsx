@@ -27,10 +27,10 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
             {submission.student.name.charAt(0).toUpperCase()}
           </div>
           <div>
-            <h3 className="font-semibold text-text-dark dark:text-dark-text">
+            <h3 className="font-semibold text-text-dark dark:text-slate-100">
               {submission.student.name}
             </h3>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">
+            <p className="text-sm text-neutral-500 dark:text-slate-400">
               {submission.student.email}
             </p>
           </div>
@@ -61,7 +61,7 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
       {isExpanded && (
         <div className="mt-6 pt-6 border-t border-neutral-200 dark:border-dark-border">
           {/* Time Info */}
-          <div className="flex items-center gap-6 mb-6 text-sm text-neutral-500 dark:text-dark-muted">
+          <div className="flex items-center gap-6 mb-6 text-sm text-neutral-500 dark:text-slate-400">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -77,7 +77,7 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
           </div>
 
           {/* Answers */}
-          <h4 className="font-semibold text-text-dark dark:text-dark-text mb-4">Answers</h4>
+          <h4 className="font-semibold text-text-dark dark:text-slate-100 mb-4">Answers</h4>
           <div className="space-y-4">
             {submission.answers.map((answer, idx) => (
               <div 
@@ -89,7 +89,7 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <span className="text-sm font-medium text-neutral-600 dark:text-dark-muted">
+                  <span className="text-sm font-medium text-neutral-600 dark:text-slate-400">
                     Question {answer.questionIndex + 1}
                   </span>
                   {answer.isCorrect ? (
@@ -99,13 +99,13 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
                   )}
                 </div>
 
-                <p className="font-medium text-text-dark dark:text-dark-text mb-3">
+                <p className="font-medium text-text-dark dark:text-slate-100 mb-3">
                   {answer.questionText}
                 </p>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="text-neutral-500 dark:text-dark-muted">Student answered:</span>
+                    <span className="text-neutral-500 dark:text-slate-400">Student answered:</span>
                     <span className={answer.isCorrect ? 'text-success-600 dark:text-success-400 font-medium' : 'text-error-600 dark:text-error-400 font-medium'}>
                       {answer.selectedOption}
                     </span>
@@ -113,7 +113,7 @@ function SubmissionCard({ submission, isExpanded, onToggle }) {
                   
                   {!answer.isCorrect && (
                     <div className="flex items-center gap-2">
-                      <span className="text-neutral-500 dark:text-dark-muted">Correct answer:</span>
+                      <span className="text-neutral-500 dark:text-slate-400">Correct answer:</span>
                       <span className="text-success-600 dark:text-success-400 font-medium">
                         {answer.correctOption}
                       </span>
@@ -176,7 +176,7 @@ export function TeacherSubmissionView() {
         <div className="flex items-center justify-center py-16">
           <div className="text-center">
             <Spinner size="xl" />
-            <p className="text-neutral-500 dark:text-dark-muted mt-4">Loading submissions...</p>
+            <p className="text-neutral-500 dark:text-slate-400 mt-4">Loading submissions...</p>
           </div>
         </div>
       </MainLayout>
@@ -211,7 +211,7 @@ export function TeacherSubmissionView() {
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+          className="flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -240,38 +240,38 @@ export function TeacherSubmissionView() {
             <div className="text-3xl font-display font-bold text-primary-600 dark:text-primary-400">
               {submissionCount}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Total Submissions</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Total Submissions</p>
           </Card>
           <Card className="text-center">
             <div className="text-3xl font-display font-bold text-secondary-600 dark:text-secondary-400">
               {avgScore}%
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Average Score</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Average Score</p>
           </Card>
           <Card className="text-center">
             <div className="text-3xl font-display font-bold text-success-600 dark:text-success-400">
               {passedCount}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Passed (≥60%)</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Passed (≥60%)</p>
           </Card>
           <Card className="text-center">
             <div className="text-3xl font-display font-bold text-accent-600 dark:text-accent-400">
               {quiz.questionCount}
             </div>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted">Questions</p>
+            <p className="text-sm text-neutral-500 dark:text-slate-400">Questions</p>
           </Card>
         </div>
 
         {/* Submissions List */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4 flex items-center gap-2">
             <span>👨‍🎓</span> Students ({submissionCount})
           </h3>
 
           {submissions.length === 0 ? (
             <Card className="text-center py-8">
               <div className="text-4xl mb-2">📭</div>
-              <p className="text-neutral-500 dark:text-dark-muted">No submissions yet</p>
+              <p className="text-neutral-500 dark:text-slate-400">No submissions yet</p>
             </Card>
           ) : (
             submissions.map((submission) => (

@@ -77,6 +77,7 @@ export const classAPI = {
   joinByCode: (joinCode) =>
     apiClient.post('/classes/join', { joinCode }),
   getClass: (classId) => apiClient.get(`/classes/${classId}`),
+  deleteClass: (classId) => apiClient.delete(`/classes/${classId}`),
 };
 
 export const quizAPI = {
@@ -98,6 +99,7 @@ export const quizAPI = {
     apiClient.post('/quizzes/generate-from-files', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
+  deleteQuiz: (quizId) => apiClient.delete(`/quizzes/${quizId}`),
 };
 
 export const submissionAPI = {
@@ -134,6 +136,8 @@ export const assignmentAPI = {
     apiClient.get(`/classes/${classId}/assignments/submissions/${submissionId}/download`, {
       responseType: 'blob',
     }),
+  deleteClassAssignment: (classId, assignmentId) =>
+    apiClient.delete(`/classes/${classId}/assignments/${assignmentId}`),
 
   // Backward-compatibility aliases for existing pages/components.
   createAssignment: (classId, formData) =>
@@ -156,6 +160,8 @@ export const assignmentAPI = {
     apiClient.get(`/classes/${classId}/assignments/submissions/${submissionId}/download`, {
       responseType: 'blob',
     }),
+  deleteAssignment: (classId, assignmentId) =>
+    apiClient.delete(`/classes/${classId}/assignments/${assignmentId}`),
 };
 
 export const lectureAPI = {

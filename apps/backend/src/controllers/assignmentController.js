@@ -73,6 +73,44 @@ const getAssignments = asyncHandler(async (req, res) => {
     .populate("createdBy", "name email")
     .sort({ createdAt: -1 });
 
+  if (isStudent && assignments.length > 0) {
+    const assignmentIds = assignments.map((assignment) => assignment._id);
+    const studentSubmissions = await AssignmentSubmission.find({
+      class: classId,
+      student: req.user._id,
+      assignment: { $in: assignmentIds },
+    }).select("assignment submittedAt");
+
+    const submissionMap = new Map(
+      studentSubmissions.map((submission) => [
+        submission.assignment.toString(),
+        submission,
+      ])
+    );
+
+    const enrichedAssignments = assignments.map((assignment) => {
+      const submission = submissionMap.get(assignment._id.toString());
+      const assignmentJson = assignment.toObject({ virtuals: true });
+      return {
+        ...assignmentJson,
+        hasSubmitted: Boolean(submission),
+        submissionStatus: submission ? "Submitted" : "Pending",
+        submission: submission
+          ? {
+              status: "Submitted",
+              submittedAt: submission.submittedAt,
+            }
+          : null,
+      };
+    });
+
+    return res.json({
+      success: true,
+      count: enrichedAssignments.length,
+      data: enrichedAssignments,
+    });
+  }
+
   res.json({
     success: true,
     count: assignments.length,
@@ -272,6 +310,46 @@ const downloadSubmissionFile = asyncHandler(async (req, res) => {
   res.download(filePath, submission.originalFileName);
 });
 
+/**
+ * @desc    Delete an assignment and all its submissions
+ * @route   DELETE /api/classes/:classId/assignments/:assignmentId
+ * @access  Private / Teacher (must own the class)
+ */
+const deleteAssignment = asyncHandler(async (req, res) => {
+  const { classId, assignmentId } = req.params;
+
+  // Verify the class exists and the teacher owns it
+  const classDoc = await Class.findById(classId);
+  if (!classDoc) {
+    res.status(404);
+    throw new Error("Class not found.");
+  }
+  if (!classDoc.isTeacher(req.user._id)) {
+    res.status(403);
+    throw new Error("Only the class teacher can delete assignments.");
+  }
+
+  const assignment = await Assignment.findOne({
+    _id: assignmentId,
+    class: classId,
+  });
+  if (!assignment) {
+    res.status(404);
+    throw new Error("Assignment not found in this class.");
+  }
+
+  // Delete all submissions for this assignment
+  await AssignmentSubmission.deleteMany({ assignment: assignmentId });
+
+  // Delete the assignment
+  await Assignment.findByIdAndDelete(assignmentId);
+
+  res.status(200).json({
+    success: true,
+    message: "Assignment and all submissions deleted successfully.",
+  });
+});
+
 module.exports = {
   createAssignment,
   getAssignments,
@@ -279,4 +357,5 @@ module.exports = {
   submitAssignment,
   getSubmissions,
   downloadSubmissionFile,
+  deleteAssignment,
 };

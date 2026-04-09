@@ -19,6 +19,8 @@ export function StudentClassDetail() {
   const [activeTab, setActiveTab] = useState('stream');
   const [focusedQuizId, setFocusedQuizId] = useState(null);
 
+  const getEntityId = (entity) => entity?._id || entity?.id;
+
   const { quizzes, getQuizzesForClass } = useQuizStore();
 
   useEffect(() => {
@@ -89,7 +91,11 @@ export function StudentClassDetail() {
     try {
       const response = await assignmentAPI.getClassAssignments(classId);
       const assignmentList = response.data?.data || [];
-      setAssignments(Array.isArray(assignmentList) ? assignmentList : []);
+      const normalizedAssignments = (Array.isArray(assignmentList) ? assignmentList : []).map((assignment) => ({
+        ...assignment,
+        assignmentId: getEntityId(assignment),
+      }));
+      setAssignments(normalizedAssignments);
     } catch (err) {
       console.error('[StudentClassDetail] Failed to load assignments:', err);
       setAssignmentError(err.response?.data?.message || 'Failed to load assignments');
@@ -118,7 +124,8 @@ export function StudentClassDetail() {
 
   const handleDownloadAssignment = async (assignment) => {
     try {
-      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const assignmentId = getEntityId(assignment);
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignmentId);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -138,7 +145,8 @@ export function StudentClassDetail() {
   };
 
   const handleSubmitAssignment = async (assignment) => {
-    const file = assignmentFiles[assignment._id];
+    const assignmentId = getEntityId(assignment);
+    const file = assignmentFiles[assignmentId];
     if (!file) {
       setAssignmentError('Please select a file before submitting.');
       return;
@@ -150,8 +158,8 @@ export function StudentClassDetail() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      await assignmentAPI.submitClassAssignment(classId, assignment._id, formData);
-      setAssignmentFiles((prev) => ({ ...prev, [assignment._id]: null }));
+      await assignmentAPI.submitClassAssignment(classId, assignmentId, formData);
+      setAssignmentFiles((prev) => ({ ...prev, [assignmentId]: null }));
       await loadAssignments();
     } catch (err) {
       console.error('[StudentClassDetail] Failed to submit assignment:', err);
@@ -210,7 +218,7 @@ export function StudentClassDetail() {
 
   const streamItems = [
     ...(Array.isArray(assignments) ? assignments : []).map((assignment) => ({
-      id: `assignment-${assignment._id}`,
+      id: `assignment-${getEntityId(assignment)}`,
       type: 'assignment',
       title: assignment.title,
       subtitle: `Due ${formatDate(assignment.dueDate)} • ${getAssignmentSubmissionStatus(assignment)}`,
@@ -254,7 +262,7 @@ export function StudentClassDetail() {
 
   const upcomingItems = [
     ...(Array.isArray(assignments) ? assignments : []).map((assignment) => ({
-      id: `upcoming-assignment-${assignment._id}`,
+      id: `upcoming-assignment-${getEntityId(assignment)}`,
       title: assignment.title,
       label: 'Assignment',
       date: assignment.dueDate,
@@ -331,14 +339,14 @@ export function StudentClassDetail() {
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-2 text-sm text-[#5f6368] mb-4">
-          <Link to="/student/dashboard" className="hover:text-[#1a73e8] transition-colors">
+        <div className="flex items-center gap-2 text-sm text-text-muted dark:text-slate-400 mb-4">
+          <Link to="/student/dashboard" className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             Dashboard
           </Link>
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-[#202124]">{classData.name}</span>
+          <span className="text-text-dark dark:text-slate-200">{classData.name}</span>
         </div>
 
         <div className="rounded-2xl bg-[#5f7485] min-h-[180px] p-6 md:p-8 flex items-start justify-between">
@@ -358,7 +366,7 @@ export function StudentClassDetail() {
           </div>
         </div>
 
-        <div className="mt-4 border-b border-[#dadce0]">
+        <div className="mt-4 border-b border-primary-100 dark:border-dark-border">
           <div className="flex items-center gap-6 overflow-x-auto">
             {tabItems.map((tab) => (
               <button
@@ -366,8 +374,8 @@ export function StudentClassDetail() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`pt-2 pb-3 text-sm whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'text-[#1a73e8] border-[#1a73e8] font-semibold'
-                    : 'text-[#5f6368] border-transparent hover:text-[#202124]'
+                    ? 'text-primary-600 dark:text-primary-400 border-primary-600 dark:border-primary-400 font-semibold'
+                    : 'text-text-muted dark:text-slate-400 border-transparent hover:text-text-dark dark:hover:text-slate-200'
                 }`}
               >
                 {tab.label}
@@ -380,17 +388,17 @@ export function StudentClassDetail() {
           {activeTab === 'stream' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
-                <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
-                  <h3 className="text-2xl font-medium text-[#202124]">Upcoming</h3>
+                <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border p-6">
+                  <h3 className="text-2xl font-medium text-text-dark dark:text-slate-100">Upcoming</h3>
                   {upcomingItems.length === 0 ? (
-                    <p className="text-[#5f6368] mt-4">Woohoo, no work due soon!</p>
+                    <p className="text-text-muted dark:text-slate-400 mt-4">Woohoo, no work due soon!</p>
                   ) : (
                     <div className="mt-4 space-y-3">
                       {upcomingItems.slice(0, 3).map((item) => (
-                        <div key={item.id} className="rounded-xl border border-[#e8eaed] p-3">
-                          <p className="text-sm font-medium text-[#202124]">{item.title}</p>
-                          <p className="text-xs text-[#5f6368] mt-1">{item.label}</p>
-                          <p className="text-xs text-[#5f6368] mt-1">{formatDate(item.date)}</p>
+                        <div key={item.id} className="rounded-xl border border-primary-100 dark:border-dark-border p-3">
+                          <p className="text-sm font-medium text-text-dark dark:text-slate-200">{item.title}</p>
+                          <p className="text-xs text-text-muted dark:text-slate-400 mt-1">{item.label}</p>
+                          <p className="text-xs text-text-muted dark:text-slate-400 mt-1">{formatDate(item.date)}</p>
                         </div>
                       ))}
                     </div>
@@ -401,7 +409,7 @@ export function StudentClassDetail() {
               <div className="lg:col-span-2 space-y-4">
                 <button
                   onClick={() => setActiveTab('assignments')}
-                  className="inline-flex items-center gap-2 rounded-full bg-[#d2e3fc] text-[#1967d2] px-5 py-3 font-medium hover:bg-[#c6dafc] transition-colors"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-5 py-3 font-medium hover:bg-primary-200 dark:hover:bg-primary-900/50 transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -410,7 +418,7 @@ export function StudentClassDetail() {
                 </button>
 
                 {streamItems.length === 0 ? (
-                  <div className="bg-white rounded-xl shadow-sm border border-[#e8eaed] p-6 text-[#5f6368]">
+                  <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-primary-100 dark:border-dark-border p-6 text-text-muted dark:text-slate-400">
                     No stream activity yet.
                   </div>
                 ) : (
@@ -420,20 +428,20 @@ export function StudentClassDetail() {
                         key={item.id}
                         type="button"
                         onClick={() => handleStreamItemClick(item)}
-                        className="w-full text-left bg-white rounded-xl shadow-sm border border-[#e8eaed] p-4 hover:bg-[#f8f9fa] transition-colors"
+                        className="w-full text-left bg-white dark:bg-dark-card rounded-xl shadow-sm border border-primary-100 dark:border-dark-border p-4 hover:bg-bg-light dark:hover:bg-dark-hover transition-colors"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-full bg-[#1a73e8] text-white flex items-center justify-center text-sm font-semibold">
+                            <div className="w-10 h-10 rounded-full bg-primary-600 dark:bg-primary-500 text-white flex items-center justify-center text-sm font-semibold">
                               {item.type.startsWith('lecture') ? 'L' : item.type.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-[#202124] truncate">{item.title}</p>
-                              <p className="text-sm text-[#5f6368] mt-1">{item.subtitle}</p>
-                              <p className="text-xs text-[#5f6368] mt-1">{formatDate(item.date)}</p>
+                              <p className="font-semibold text-text-dark dark:text-slate-100 truncate">{item.title}</p>
+                              <p className="text-sm text-text-muted dark:text-slate-400 mt-1">{item.subtitle}</p>
+                              <p className="text-xs text-text-muted dark:text-slate-400 mt-1">{formatDate(item.date)}</p>
                             </div>
                           </div>
-                          <span className="w-8 h-8 rounded-full text-[#5f6368] flex items-center justify-center">
+                          <span className="w-8 h-8 rounded-full text-text-muted dark:text-slate-400 flex items-center justify-center">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                             </svg>
@@ -448,11 +456,11 @@ export function StudentClassDetail() {
           )}
 
           {activeTab === 'quizzes' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff] flex justify-between items-center">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border overflow-hidden">
+              <div className="px-6 py-4 border-b border-primary-100 dark:border-dark-border bg-bg-light dark:bg-dark-surface flex justify-between items-center">
                 <div>
-                  <h2 className="text-xl font-semibold text-[#202124]">Quizzes</h2>
-                  <p className="text-sm text-[#5f6368] mt-1">Take tests and track your completion status</p>
+                  <h2 className="text-xl font-semibold text-text-dark dark:text-slate-100">Quizzes</h2>
+                  <p className="text-sm text-text-muted dark:text-slate-400 mt-1">Take tests and track your completion status</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={loadData}>Refresh</Button>
               </div>
@@ -485,14 +493,14 @@ export function StudentClassDetail() {
                         <div
                           id={`quiz-card-${quizId}`}
                           key={quizId}
-                          className={`relative rounded-2xl border p-4 pl-5 bg-[#fcfdff] transition-colors ${
-                            isFocused ? 'border-[#8ab4f8] ring-2 ring-[#d2e3fc]' : 'border-[#dfe5ee] hover:border-[#c6dafc]'
+                          className={`relative rounded-2xl border p-4 pl-5 bg-bg-light dark:bg-dark-surface transition-colors ${
+                            isFocused ? 'border-primary-400 dark:border-primary-500 ring-2 ring-primary-100 dark:ring-primary-900/30' : 'border-primary-100 dark:border-dark-border hover:border-primary-300 dark:hover:border-primary-600'
                           }`}
                         >
-                          <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#8ab4f8]"></div>
+                          <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary-400 dark:bg-primary-500"></div>
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
-                              <h3 className="font-semibold text-[#202124]">{quiz.title}</h3>
+                              <h3 className="font-semibold text-text-dark dark:text-slate-100">{quiz.title}</h3>
                               <div className="flex flex-wrap gap-2 mt-2">
                                 <Badge variant="neutral" size="sm">{getQuizQuestionCount(quiz)} questions</Badge>
                                 {getQuizDurationMinutes(quiz) > 0 && (
@@ -564,11 +572,11 @@ export function StudentClassDetail() {
           )}
 
           {activeTab === 'assignments' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff] flex justify-between items-center">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border overflow-hidden">
+              <div className="px-6 py-4 border-b border-primary-100 dark:border-dark-border bg-bg-light dark:bg-dark-surface flex justify-between items-center">
                 <div>
-                  <h2 className="text-xl font-semibold text-[#202124]">Class Assignments</h2>
-                  <p className="text-sm text-[#5f6368] mt-1">Submit work and keep track of due dates</p>
+                  <h2 className="text-xl font-semibold text-text-dark dark:text-slate-100">Class Assignments</h2>
+                  <p className="text-sm text-text-muted dark:text-slate-400 mt-1">Submit work and keep track of due dates</p>
                 </div>
                 <Button variant="ghost" size="sm" onClick={loadAssignments}>Refresh</Button>
               </div>
@@ -589,15 +597,19 @@ export function StudentClassDetail() {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {assignments.map((assignment) => (
-                      <div key={assignment._id} className="relative rounded-2xl border border-[#dfe5ee] p-4 pl-5 bg-[#fcfdff]">
-                        <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-[#7cc6b8]"></div>
+                    {assignments.map((assignment) => {
+                      const assignmentId = getEntityId(assignment);
+                      const submissionStatus = getAssignmentSubmissionStatus(assignment);
+                      const isSubmitted = String(submissionStatus).toLowerCase() === 'submitted';
+                      return (
+                      <div key={assignmentId} className="relative rounded-2xl border border-primary-100 dark:border-dark-border p-4 pl-5 bg-bg-light dark:bg-dark-surface">
+                        <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-success-500 dark:bg-success-400"></div>
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                           <div>
-                            <h3 className="font-semibold text-[#202124]">{assignment.title}</h3>
-                            <p className="text-sm text-[#5f6368]">{assignment.description}</p>
-                            <p className="text-xs text-[#5f6368] mt-1">Due: {formatDate(assignment.dueDate)}</p>
-                            <p className="text-xs text-[#5f6368] mt-1">Submission status: {getAssignmentSubmissionStatus(assignment)}</p>
+                            <h3 className="font-semibold text-text-dark dark:text-slate-100">{assignment.title}</h3>
+                            <p className="text-sm text-text-muted dark:text-slate-400">{assignment.description}</p>
+                            <p className="text-xs text-text-muted dark:text-slate-400 mt-1">Due: {formatDate(assignment.dueDate)}</p>
+                            <p className="text-xs text-text-muted dark:text-slate-400 mt-1">Submission status: {getAssignmentSubmissionStatus(assignment)}</p>
                           </div>
                           {assignment.file && (
                             <Button size="sm" variant="outline" onClick={() => handleDownloadAssignment(assignment)}>
@@ -606,21 +618,28 @@ export function StudentClassDetail() {
                           )}
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-[#e8eaed] flex flex-col md:flex-row gap-3 md:items-end">
-                          <div className="flex-1">
-                            <Input
-                              label="Upload Submission (PDF, DOC, DOCX)"
-                              type="file"
-                              accept=".pdf,.doc,.docx"
-                              onChange={(e) => handleSelectSubmissionFile(assignment._id, e.target.files?.[0] || null)}
-                            />
+                        {isSubmitted ? (
+                          <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border">
+                            <Badge variant="success">Assignment Submitted</Badge>
                           </div>
-                          <Button onClick={() => handleSubmitAssignment(assignment)} disabled={isSubmittingAssignment}>
-                            {isSubmittingAssignment ? 'Submitting...' : 'Submit Assignment'}
-                          </Button>
-                        </div>
+                        ) : (
+                          <div className="mt-4 pt-4 border-t border-primary-100 dark:border-dark-border flex flex-col md:flex-row gap-3 md:items-end">
+                            <div className="flex-1">
+                              <Input
+                                label="Upload Submission (PDF, DOC, DOCX)"
+                                type="file"
+                                accept=".pdf,.doc,.docx"
+                                onChange={(e) => handleSelectSubmissionFile(assignmentId, e.target.files?.[0] || null)}
+                              />
+                            </div>
+                            <Button onClick={() => handleSubmitAssignment(assignment)} disabled={isSubmittingAssignment}>
+                              {isSubmittingAssignment ? 'Submitting...' : 'Submit Assignment'}
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    );
+                    })}
                   </div>
                 )}
               </div>
@@ -628,24 +647,24 @@ export function StudentClassDetail() {
           )}
 
           {activeTab === 'lectures' && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] overflow-hidden">
-              <div className="px-6 py-4 border-b border-[#e8eaed] bg-[#f8fbff]">
-                <h2 className="text-xl font-semibold text-[#202124]">Live Lectures</h2>
-                <p className="text-sm text-[#5f6368] mt-1">Join active sessions and view upcoming timetable</p>
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border overflow-hidden">
+              <div className="px-6 py-4 border-b border-primary-100 dark:border-dark-border bg-bg-light dark:bg-dark-surface">
+                <h2 className="text-xl font-semibold text-text-dark dark:text-slate-100">Live Lectures</h2>
+                <p className="text-sm text-text-muted dark:text-slate-400 mt-1">Join active sessions and view upcoming timetable</p>
               </div>
 
               <div className="p-6">
 
                 {lectures.live.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-[#202124] mb-2">LIVE</h3>
+                    <h3 className="text-sm font-semibold text-text-dark dark:text-slate-100 mb-2">LIVE</h3>
                     <div className="space-y-3">
                       {lectures.live.map((lec) => (
-                        <div key={lec._id} className="rounded-2xl border border-[#f2b8b5] bg-[#fff6f6] p-4">
+                        <div key={lec._id} className="rounded-2xl border border-error-300 dark:border-error-600 bg-error-50 dark:bg-error-900/20 p-4">
                           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                             <div>
-                              <p className="font-medium text-[#202124]">{lec.title}</p>
-                              <p className="text-xs text-[#5f6368]">Status: LIVE • By {lec.teacherId?.name || 'Teacher'}</p>
+                              <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                              <p className="text-xs text-text-muted dark:text-slate-400">Status: LIVE • By {lec.teacherId?.name || 'Teacher'}</p>
                             </div>
                             <div className="flex gap-2">
                               <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>Copy Link</Button>
@@ -660,14 +679,14 @@ export function StudentClassDetail() {
 
                 {lectures.upcoming.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-[#202124] mb-2">UPCOMING</h3>
+                    <h3 className="text-sm font-semibold text-text-dark dark:text-slate-100 mb-2">UPCOMING</h3>
                     <div className="space-y-3">
                       {lectures.upcoming.map((lec) => (
-                        <div key={lec._id} className="rounded-2xl border border-[#dfe5ee] p-4 bg-[#fcfdff]">
+                        <div key={lec._id} className="rounded-2xl border border-primary-100 dark:border-dark-border p-4 bg-bg-light dark:bg-dark-surface">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="font-medium text-[#202124]">{lec.title}</p>
-                              <p className="text-xs text-[#5f6368]">Status: UPCOMING • {formatDate(lec.scheduledAt)}</p>
+                              <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                              <p className="text-xs text-text-muted dark:text-slate-400">Status: UPCOMING • {formatDate(lec.scheduledAt)}</p>
                             </div>
                             <Button size="sm" variant="outline" onClick={() => copyLectureLink(lec.roomId)}>Copy Link</Button>
                           </div>
@@ -679,14 +698,14 @@ export function StudentClassDetail() {
 
                 {lectures.past.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-semibold text-[#202124] mb-2">ENDED</h3>
+                    <h3 className="text-sm font-semibold text-text-dark dark:text-slate-100 mb-2">ENDED</h3>
                     <div className="space-y-2">
                       {lectures.past.map((lec) => (
-                        <div key={lec._id} className="rounded-2xl border border-[#e8eaed] p-4 bg-[#fbfbfb]">
+                        <div key={lec._id} className="rounded-2xl border border-primary-100 dark:border-dark-border p-4 bg-bg-light dark:bg-dark-hover">
                           <div className="flex items-center justify-between gap-3">
                             <div>
-                              <p className="font-medium text-[#202124]">{lec.title}</p>
-                              <p className="text-xs text-[#5f6368]">Status: ENDED • {formatDate(lec.createdAt)}</p>
+                              <p className="font-medium text-text-dark dark:text-slate-100">{lec.title}</p>
+                              <p className="text-xs text-text-muted dark:text-slate-400">Status: ENDED • {formatDate(lec.createdAt)}</p>
                             </div>
                             <Badge variant="secondary">Ended</Badge>
                           </div>
@@ -709,20 +728,20 @@ export function StudentClassDetail() {
 
           {activeTab === 'people' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
-                <h2 className="text-xl font-semibold text-[#202124] mb-4">Teacher</h2>
-                <div className="flex items-center gap-3 p-4 rounded-2xl border border-[#dfe5ee] bg-[#fafcff]">
+              <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border p-6">
+                <h2 className="text-xl font-semibold text-text-dark dark:text-slate-100 mb-4">Teacher</h2>
+                <div className="flex items-center gap-3 p-4 rounded-2xl border border-primary-100 dark:border-dark-border bg-bg-light dark:bg-dark-surface">
                   <Avatar name={classData.teacher?.name || classData.teacher?.email || 'Teacher'} size="md" />
                   <div>
-                    <p className="text-[#202124] font-medium">{classData.teacher?.name || 'Class Teacher'}</p>
-                    <p className="text-sm text-[#5f6368]">{classData.teacher?.email || 'No email available'}</p>
+                    <p className="text-text-dark dark:text-slate-100 font-medium">{classData.teacher?.name || 'Class Teacher'}</p>
+                    <p className="text-sm text-text-muted dark:text-slate-400">{classData.teacher?.email || 'No email available'}</p>
                   </div>
-                  <span className="ml-auto text-xs px-3 py-1 rounded-full bg-[#e8f0fe] text-[#1a73e8]">Instructor</span>
+                  <span className="ml-auto text-xs px-3 py-1 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400">Instructor</span>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e8eaed] p-6">
-                <h2 className="text-xl font-semibold text-[#202124] mb-4">Students</h2>
+              <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-primary-100 dark:border-dark-border p-6">
+                <h2 className="text-xl font-semibold text-text-dark dark:text-slate-100 mb-4">Students</h2>
                 {!Array.isArray(classData.students) || classData.students.length === 0 ? (
                   <EmptyState
                     icon={
@@ -736,11 +755,11 @@ export function StudentClassDetail() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {(classData.students || []).map((student, index) => (
-                      <div key={student._id || index} className="flex items-center gap-3 p-3 rounded-2xl border border-[#dfe5ee] bg-[#fcfdff] hover:border-[#c6dafc] transition-colors">
+                      <div key={student._id || index} className="flex items-center gap-3 p-3 rounded-2xl border border-primary-100 dark:border-dark-border bg-bg-light dark:bg-dark-surface hover:border-primary-300 dark:hover:border-primary-600 transition-colors">
                         <Avatar name={student.email || 'Student'} size="md" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-[#202124] truncate">{student.email || 'Student'}</p>
-                          <p className="text-xs text-[#5f6368]">Student</p>
+                          <p className="text-sm font-medium text-text-dark dark:text-slate-200 truncate">{student.email || 'Student'}</p>
+                          <p className="text-xs text-text-muted dark:text-slate-400">Student</p>
                         </div>
                       </div>
                     ))}

@@ -22,7 +22,7 @@ export function ClassDetailPage() {
     return (
       <MainLayout>
         <div className="p-6 text-center">
-          <p className="text-gray-600">Loading class...</p>
+          <p className="text-text-muted dark:text-slate-400">Loading class...</p>
         </div>
       </MainLayout>
     );
@@ -35,40 +35,40 @@ export function ClassDetailPage() {
         <div className="mb-8">
           <button
             onClick={() => navigate('/teacher/dashboard')}
-            className="text-primary-600 hover:text-primary-700 mb-4 flex items-center gap-2"
+            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-4 flex items-center gap-2"
           >
             ← Back to Dashboard
           </button>
-          <h1 className="text-3xl font-bold text-text-dark">{classData.name}</h1>
-          <p className="text-gray-600 mt-2">{classData.description}</p>
+          <h1 className="text-3xl font-bold text-text-dark dark:text-slate-100">{classData.name}</h1>
+          <p className="text-text-muted dark:text-slate-400 mt-2">{classData.description}</p>
         </div>
 
         {/* Class Info */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
-            <h3 className="text-sm text-gray-600 mb-2">Join Code</h3>
-            <p className="text-2xl font-mono font-bold text-primary-600">{classData.joinCode}</p>
-            <p className="text-xs text-gray-500 mt-2">Share with students</p>
+            <h3 className="text-sm text-text-muted dark:text-slate-400 mb-2">Join Code</h3>
+            <p className="text-2xl font-mono font-bold text-primary-600 dark:text-primary-400">{classData.joinCode}</p>
+            <p className="text-xs text-text-muted dark:text-slate-500 mt-2">Share with students</p>
           </Card>
           <Card>
-            <h3 className="text-sm text-gray-600 mb-2">Students</h3>
-            <p className="text-2xl font-bold">{classData.students?.length || 0}</p>
+            <h3 className="text-sm text-text-muted dark:text-slate-400 mb-2">Students</h3>
+            <p className="text-2xl font-bold text-text-dark dark:text-slate-100">{classData.students?.length || 0}</p>
           </Card>
           <Card>
-            <h3 className="text-sm text-gray-600 mb-2">Quizzes</h3>
-            <p className="text-2xl font-bold">{quizzes.length}</p>
+            <h3 className="text-sm text-text-muted dark:text-slate-400 mb-2">Quizzes</h3>
+            <p className="text-2xl font-bold text-text-dark dark:text-slate-100">{quizzes.length}</p>
           </Card>
         </div>
 
         {/* Students List */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-text-dark mb-4">Students</h2>
+          <h2 className="text-2xl font-bold text-text-dark dark:text-slate-100 mb-4">Students</h2>
           {classData.students && classData.students.length > 0 ? (
             <Card>
               <div className="space-y-2">
                 {classData.students.map((student) => (
-                  <div key={student._id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                    <span className="text-text-dark">{student.email}</span>
+                  <div key={student._id} className="flex items-center justify-between py-2 border-b border-primary-100 dark:border-dark-border last:border-b-0">
+                    <span className="text-text-dark dark:text-slate-200">{student.email}</span>
                     <Badge variant="secondary">Student</Badge>
                   </div>
                 ))}
@@ -76,7 +76,7 @@ export function ClassDetailPage() {
             </Card>
           ) : (
             <Card>
-              <p className="text-center text-gray-600">No students joined yet</p>
+              <p className="text-center text-text-muted dark:text-slate-400">No students joined yet</p>
             </Card>
           )}
         </div>
@@ -84,7 +84,7 @@ export function ClassDetailPage() {
         {/* Quizzes */}
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-text-dark">Quizzes</h2>
+            <h2 className="text-2xl font-bold text-text-dark dark:text-slate-100">Quizzes</h2>
             <Link to={`/teacher/create-quiz?classId=${classId}`}>
               <Button>+ Create Quiz</Button>
             </Link>
@@ -93,7 +93,7 @@ export function ClassDetailPage() {
           {quizzes.length === 0 ? (
             <Card>
               <div className="text-center py-8">
-                <p className="text-gray-600 mb-4">No quizzes created yet</p>
+                <p className="text-text-muted dark:text-slate-400 mb-4">No quizzes created yet</p>
                 <Link to={`/teacher/create-quiz?classId=${classId}`}>
                   <Button>Create First Quiz</Button>
                 </Link>
@@ -103,12 +103,12 @@ export function ClassDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {quizzes.map((quiz) => (
                 <Card key={quiz._id}>
-                  <h3 className="text-xl font-bold text-text-dark mb-2">{quiz.title}</h3>
+                  <h3 className="text-xl font-bold text-text-dark dark:text-slate-100 mb-2">{quiz.title}</h3>
                   <div className="flex justify-between items-center mb-4">
                     <Badge variant="primary">{quiz.difficulty}</Badge>
-                    <span className="text-sm text-gray-600">{quiz.durationMinutes} min</span>
+                    <span className="text-sm text-text-muted dark:text-slate-400">{quiz.durationMinutes} min</span>
                   </div>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-text-muted dark:text-slate-400 mb-4">
                     {quiz.questions?.length || 0} questions
                   </p>
                   <Link to={`/teacher/quiz/${quiz._id}/leaderboard`}>

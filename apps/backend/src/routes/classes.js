@@ -4,6 +4,7 @@ const {
   joinClassByCode,
   getMyClasses,
   getClassById,
+  deleteClass,
 } = require("../controllers/classController");
 const { authenticate, authorize } = require("../middleware/auth");
 
@@ -39,5 +40,12 @@ router.post("/join", authorize("student"), joinClassByCode);
  * @access  Private (teacher or enrolled student)
  */
 router.get("/:id", getClassById);
+
+/**
+ * @route   DELETE /api/classes/:id
+ * @desc    Delete a class and all associated data
+ * @access  Private/Teacher (owner only)
+ */
+router.delete("/:id", authorize("teacher"), deleteClass);
 
 module.exports = router;

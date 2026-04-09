@@ -20,10 +20,10 @@ function ModeCard({ icon, title, description, onClick, variant = 'primary' }) {
         <div className={`mx-auto flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br ${gradients[variant]} shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300`}>
           {icon}
         </div>
-        <h3 className="text-xl font-display font-semibold text-text-dark dark:text-dark-text mb-2">
+        <h3 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100 mb-2">
           {title}
         </h3>
-        <p className="text-neutral-600 dark:text-dark-muted text-sm">
+        <p className="text-neutral-600 dark:text-slate-400 text-sm">
           {description}
         </p>
       </div>
@@ -47,9 +47,9 @@ function ToggleSwitch({ label, description, checked, onChange }) {
         <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform peer-checked:translate-x-5" />
       </div>
       <div className="flex-1">
-        <div className="font-medium text-text-dark dark:text-dark-text">{label}</div>
+        <div className="font-medium text-text-dark dark:text-slate-100">{label}</div>
         {description && (
-          <div className="text-sm text-neutral-500 dark:text-dark-muted">{description}</div>
+          <div className="text-sm text-neutral-500 dark:text-slate-400">{description}</div>
         )}
       </div>
     </label>
@@ -80,9 +80,9 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-1">Question</label>
+            <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-1">Question</label>
             <textarea
-              className="w-full px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
               value={editedQuestion.questionText}
               onChange={(e) => setEditedQuestion({ ...editedQuestion, questionText: e.target.value })}
               rows={2}
@@ -90,7 +90,7 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
           </div>
           
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-text-dark dark:text-dark-text">Options</label>
+            <label className="block text-sm font-medium text-text-dark dark:text-slate-100">Options</label>
             {editedQuestion.options.map((option, oIdx) => (
               <div key={oIdx} className="flex items-center gap-2">
                 <input
@@ -102,7 +102,7 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
                 />
                 <input
                   type="text"
-                  className="flex-1 px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="flex-1 px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
                   value={option}
                   onChange={(e) => {
                     const newOptions = [...editedQuestion.options];
@@ -115,9 +115,9 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-1">Explanation</label>
+            <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-1">Explanation</label>
             <textarea
-              className="w-full px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
               value={editedQuestion.explanation || ''}
               onChange={(e) => setEditedQuestion({ ...editedQuestion, explanation: e.target.value })}
               rows={2}
@@ -167,7 +167,7 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
         </div>
       </div>
 
-      <p className="font-medium text-text-dark dark:text-dark-text mb-3">{question.questionText}</p>
+      <p className="font-medium text-text-dark dark:text-slate-100 mb-3">{question.questionText}</p>
       
       <div className="space-y-2 mb-3">
         {question.options.map((option, oIdx) => (
@@ -175,9 +175,10 @@ function PreviewQuestionCard({ question, index, onEdit, onDelete }) {
             key={oIdx}
             className={`px-3 py-2 rounded-lg text-sm ${
               oIdx === question.correctOptionIndex
-                ? 'bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 border border-success-300 dark:border-success-700'
-                : 'bg-white dark:bg-dark-card text-neutral-600 dark:text-dark-muted border border-neutral-200 dark:border-dark-border'
+                ? 'bg-success-100 dark:bg-success-100 border border-success-300 dark:border-success-300'
+                : 'bg-white dark:bg-dark-card text-neutral-600 dark:text-slate-400 border border-neutral-200 dark:border-dark-border'
             }`}
+            style={oIdx === question.correctOptionIndex ? { color: '#111111' } : undefined}
           >
             <span className="font-medium">{String.fromCharCode(65 + oIdx)}.</span> {option}
             {oIdx === question.correctOptionIndex && (
@@ -557,7 +558,7 @@ export function CreateQuiz() {
             <Button 
               variant="ghost" 
               onClick={() => navigate(`/teacher/class/${classId}`)}
-              className="text-neutral-600 dark:text-dark-muted hover:text-text-dark dark:hover:text-dark-text"
+              className="text-neutral-600 dark:text-slate-400 hover:text-text-dark dark:hover:text-slate-100"
             >
               ← Cancel and go back
             </Button>
@@ -574,7 +575,7 @@ export function CreateQuiz() {
         <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
           <button
             onClick={handleRegenerate}
-            className="inline-flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -608,26 +609,26 @@ export function CreateQuiz() {
           <Card className="shadow-soft mb-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                   Quiz Name (displayed to students)
                 </label>
                 <input
                   type="text"
                   value={previewData.title}
                   onChange={(e) => setPreviewData({ ...previewData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-slate-100 text-xl font-semibold focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   placeholder="Enter quiz name..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                   Description (optional)
                 </label>
                 <input
                   type="text"
                   value={previewData.description || ''}
                   onChange={(e) => setPreviewData({ ...previewData, description: e.target.value })}
-                  className="w-full px-4 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-600 dark:text-dark-muted text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-neutral-600 dark:text-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   placeholder="Add a description for this quiz..."
                 />
               </div>
@@ -643,7 +644,7 @@ export function CreateQuiz() {
 
           {/* Questions List */}
           <div className="space-y-4 mb-8">
-            <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text">Questions</h3>
+            <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100">Questions</h3>
             {previewData.questions.map((question, index) => (
               <PreviewQuestionCard
                 key={index}
@@ -657,8 +658,8 @@ export function CreateQuiz() {
 
           {/* Visibility Settings */}
           <Card className="shadow-soft mb-8">
-            <h3 className="text-lg font-semibold text-text-dark dark:text-dark-text mb-4">Student Result Settings</h3>
-            <p className="text-sm text-neutral-500 dark:text-dark-muted mb-4">Control what students see after completing the quiz</p>
+            <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100 mb-4">Student Result Settings</h3>
+            <p className="text-sm text-neutral-500 dark:text-slate-400 mb-4">Control what students see after completing the quiz</p>
             
             <div className="space-y-4">
               <ToggleSwitch
@@ -724,7 +725,7 @@ export function CreateQuiz() {
         <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
           <button
             onClick={() => setMode('choose')}
-            className="inline-flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -779,17 +780,17 @@ export function CreateQuiz() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                  <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                     Difficulty
                   </label>
                   <select
-                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                    className="w-full h-[50px] px-4 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                   >
-                    <option value="easy">Easy - Basic recall questions</option>
-                    <option value="medium">Medium - Application & analysis</option>
-                    <option value="hard">Hard - Critical thinking required</option>
+                    <option value="easy" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Easy - Basic recall questions</option>
+                    <option value="medium" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Medium - Application & analysis</option>
+                    <option value="hard" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Hard - Critical thinking required</option>
                   </select>
                 </div>
 
@@ -877,7 +878,7 @@ export function CreateQuiz() {
         <div className="max-w-3xl mx-auto px-4 py-8 animate-fade-in">
           <button
             onClick={() => setMode('choose')}
-            className="inline-flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -924,7 +925,7 @@ export function CreateQuiz() {
 
               {/* File Upload Area */}
               <div>
-                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                   Upload Documents
                 </label>
                 <div
@@ -941,13 +942,13 @@ export function CreateQuiz() {
                     onChange={handleFileUpload}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <svg className="mx-auto h-12 w-12 text-neutral-400 dark:text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="mx-auto h-12 w-12 text-neutral-400 dark:text-slate-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
-                  <p className="text-neutral-600 dark:text-dark-muted font-medium">
+                  <p className="text-neutral-600 dark:text-slate-400 font-medium">
                     Drop files here or click to upload
                   </p>
-                  <p className="text-sm text-neutral-500 dark:text-dark-muted mt-1">
+                  <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">
                     PDF, DOC, DOCX files up to 10MB each
                   </p>
                 </div>
@@ -959,7 +960,7 @@ export function CreateQuiz() {
               {/* Uploaded Files List */}
               {uploadedFiles.length > 0 && (
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-text-dark dark:text-dark-text">
+                  <label className="block text-sm font-medium text-text-dark dark:text-slate-100">
                     Uploaded Files ({uploadedFiles.length})
                   </label>
                   <div className="space-y-2">
@@ -973,10 +974,10 @@ export function CreateQuiz() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                           </svg>
                           <div>
-                            <p className="text-sm font-medium text-text-dark dark:text-dark-text truncate max-w-xs">
+                            <p className="text-sm font-medium text-text-dark dark:text-slate-100 truncate max-w-xs">
                               {file.name}
                             </p>
-                            <p className="text-xs text-neutral-500 dark:text-dark-muted">
+                            <p className="text-xs text-neutral-500 dark:text-slate-400">
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </p>
                           </div>
@@ -1000,17 +1001,17 @@ export function CreateQuiz() {
               {/* Settings */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                  <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                     Difficulty
                   </label>
                   <select
-                    className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                    className="w-full h-[50px] px-4 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                   >
-                    <option value="easy">Easy - Basic recall</option>
-                    <option value="medium">Medium - Application</option>
-                    <option value="hard">Hard - Critical thinking</option>
+                    <option value="easy" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Easy - Basic recall</option>
+                    <option value="medium" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Medium - Application</option>
+                    <option value="hard" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Hard - Critical thinking</option>
                   </select>
                 </div>
 
@@ -1101,7 +1102,7 @@ export function CreateQuiz() {
       <div className="max-w-4xl mx-auto px-4 py-8 animate-fade-in">
         <button
           onClick={() => setMode('choose')}
-          className="inline-flex items-center gap-2 text-neutral-600 dark:text-dark-muted hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
+          className="inline-flex items-center gap-2 text-neutral-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium mb-6 transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -1145,11 +1146,11 @@ export function CreateQuiz() {
             />
 
             <div>
-              <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+              <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                 Description (Optional)
               </label>
               <textarea
-                className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text placeholder-neutral-400 dark:placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all min-h-[100px] resize-y"
+                className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-slate-100 placeholder-neutral-400 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all min-h-[100px] resize-y"
                 placeholder="Brief description of the quiz..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -1168,24 +1169,24 @@ export function CreateQuiz() {
               />
 
               <div>
-                <label className="block text-sm font-medium text-text-dark dark:text-dark-text mb-2">
+                <label className="block text-sm font-medium text-text-dark dark:text-slate-100 mb-2">
                   Difficulty
                 </label>
                 <select
-                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-dark-text focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                  className="w-full h-[50px] px-4 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl text-text-dark dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
                 >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
+                  <option value="easy" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Easy</option>
+                  <option value="medium" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Medium</option>
+                  <option value="hard" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Hard</option>
                 </select>
               </div>
             </div>
 
             <div className="border-t border-neutral-200 dark:border-dark-border pt-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-display font-semibold text-text-dark dark:text-dark-text">
+                <h2 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100">
                   Questions
                 </h2>
                 <Button type="button" variant="outline" size="sm" onClick={handleAddQuestion}>
@@ -1204,11 +1205,11 @@ export function CreateQuiz() {
 
               {questions.length === 0 ? (
                 <div className="text-center py-12 bg-neutral-50 dark:bg-dark-hover rounded-xl border-2 border-dashed border-neutral-200 dark:border-dark-border">
-                  <svg className="w-12 h-12 mx-auto text-neutral-300 dark:text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-12 h-12 mx-auto text-neutral-300 dark:text-slate-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <p className="text-neutral-500 dark:text-dark-muted font-medium">No questions yet</p>
-                  <p className="text-neutral-400 dark:text-dark-muted text-sm mt-1">Click "Add Question" to get started</p>
+                  <p className="text-neutral-500 dark:text-slate-400 font-medium">No questions yet</p>
+                  <p className="text-neutral-400 dark:text-slate-400 text-sm mt-1">Click "Add Question" to get started</p>
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -1247,7 +1248,7 @@ export function CreateQuiz() {
                       />
 
                       <div className="mt-4 space-y-3">
-                        <label className="block text-sm font-medium text-text-dark dark:text-dark-text">
+                        <label className="block text-sm font-medium text-text-dark dark:text-slate-100">
                           Answer Options
                         </label>
                         {q.options.map((option, oIndex) => (
@@ -1275,12 +1276,12 @@ export function CreateQuiz() {
                               onChange={(e) =>
                                 handleOptionChange(qIndex, oIndex, e.target.value)
                               }
-                              className="flex-1 px-4 py-2.5 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-dark-text placeholder-neutral-400 dark:placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+                              className="flex-1 px-4 py-2.5 bg-white dark:bg-dark-card border border-neutral-200 dark:border-dark-border rounded-lg text-text-dark dark:text-slate-100 placeholder-neutral-400 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
                               required
                             />
                           </div>
                         ))}
-                        <p className="text-xs text-neutral-500 dark:text-dark-muted mt-2 flex items-center gap-1">
+                        <p className="text-xs text-neutral-500 dark:text-slate-400 mt-2 flex items-center gap-1">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>

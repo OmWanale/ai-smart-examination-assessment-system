@@ -23,6 +23,8 @@ export function TeacherAssignments() {
 
   const [errors, setErrors] = useState({});
 
+  const getEntityId = (entity) => entity?._id || entity?.id;
+
   useEffect(() => {
     fetchClasses();
   }, []);
@@ -46,11 +48,17 @@ export function TeacherAssignments() {
     try {
       const allAssignments = [];
       for (const cls of classList) {
-        const classId = cls._id || cls.id;
+        const classId = getEntityId(cls);
+        if (!classId) continue;
         try {
           const response = await assignmentAPI.getClassAssignments(classId);
           const items = response.data?.data || [];
-          const withClass = items.map((a) => ({ ...a, className: cls.name, classId }));
+          const withClass = items.map((a) => ({
+            ...a,
+            className: cls.name,
+            classId,
+            assignmentId: getEntityId(a),
+          }));
           allAssignments.push(...withClass);
         } catch {
           // skip classes where fetching fails
@@ -126,7 +134,8 @@ export function TeacherAssignments() {
       setIsLoading(true);
       setSelectedAssignment(assignment);
       const classId = assignment.classId || assignment.class?._id || assignment.class;
-      const response = await assignmentAPI.getClassAssignmentSubmissions(classId, assignment._id);
+      const assignmentId = getEntityId(assignment);
+      const response = await assignmentAPI.getClassAssignmentSubmissions(classId, assignmentId);
       setSubmissions(response.data?.data || []);
       setShowSubmissions(true);
     } catch (error) {
@@ -140,7 +149,8 @@ export function TeacherAssignments() {
   const handleDownloadSubmission = async (submission) => {
     try {
       const classId = selectedAssignment?.classId || selectedAssignment?.class?._id || selectedAssignment?.class;
-      const response = await assignmentAPI.downloadClassSubmissionFile(classId, submission._id);
+      const submissionId = getEntityId(submission);
+      const response = await assignmentAPI.downloadClassSubmissionFile(classId, submissionId);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -160,7 +170,8 @@ export function TeacherAssignments() {
   const handleDownloadAssignment = async (assignment) => {
     try {
       const classId = assignment.classId || assignment.class?._id || assignment.class;
-      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignment._id);
+      const assignmentId = getEntityId(assignment);
+      const response = await assignmentAPI.downloadClassAssignmentFile(classId, assignmentId);
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -172,6 +183,21 @@ export function TeacherAssignments() {
     } catch (error) {
       console.error('Download failed:', error);
       setErrors({ submit: error.response?.data?.message || 'Failed to download file' });
+    }
+  };
+
+  const handleDeleteAssignment = async (assignment) => {
+    if (!window.confirm('Are you sure you want to delete this assignment? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      const classId = assignment.classId || assignment.class?._id || assignment.class;
+      const assignmentId = getEntityId(assignment);
+      await assignmentAPI.deleteClassAssignment(classId, assignmentId);
+      await fetchAllAssignments(classes);
+    } catch (error) {
+      console.error('Delete failed:', error);
+      setErrors({ submit: error.response?.data?.message || 'Failed to delete assignment' });
     }
   };
 
@@ -340,7 +366,7 @@ export function TeacherAssignments() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 dark:bg-dark-hover text-text-dark dark:text-slate-100">
+                <thead className="bg-primary-50 dark:bg-dark-hover text-text-dark dark:text-slate-100">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Student Name</th>
                     <th className="px-4 py-3 text-left font-semibold">Email</th>
@@ -348,9 +374,9 @@ export function TeacherAssignments() {
                     <th className="px-4 py-3 text-left font-semibold">File</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-stone-700">
+                <tbody className="divide-y divide-primary-100 dark:divide-dark-border">
                   {submissions.map((submission) => (
-                    <tr key={submission._id} className="hover:bg-gray-50 dark:hover:bg-dark-hover transition-colors">
+                    <tr key={getEntityId(submission)} className="hover:bg-bg-light dark:hover:bg-dark-hover transition-colors">
                       <td className="px-4 py-3 text-text-dark dark:text-slate-100">
                         {submission.student?.name || 'Unknown'}
                       </td>
@@ -390,7 +416,7 @@ export function TeacherAssignments() {
             />
           ) : (
             assignments.map((assignment) => (
-              <Card key={assignment._id} className="hover:shadow-md transition-shadow">
+              <Card key={getEntityId(assignment)} className="hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-text-dark dark:text-slate-100">
@@ -410,7 +436,7 @@ export function TeacherAssignments() {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-3 border-t border-gray-200 dark:border-slate-700 items-center">
+                <div className="flex gap-3 pt-3 border-t border-primary-100 dark:border-dark-border items-center">
                   {assignment.file && (
                     <Button size="sm" variant="ghost" onClick={() => handleDownloadAssignment(assignment)}>
                       Download Attachment
@@ -425,6 +451,15 @@ export function TeacherAssignments() {
                   <Button size="sm" onClick={() => handleViewSubmissions(assignment)}>
                     View Submissions
                   </Button>
+                  <button
+                    onClick={() => handleDeleteAssignment(assignment)}
+                    className="p-2 text-text-muted dark:text-slate-400 hover:text-error-500 dark:hover:text-error-400 hover:bg-error-50 dark:hover:bg-error-900/20 rounded-lg transition-colors"
+                    title="Delete Assignment"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
                 </div>
               </Card>
             ))

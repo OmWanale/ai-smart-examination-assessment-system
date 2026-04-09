@@ -10,6 +10,7 @@ const {
   submitAssignment,
   getSubmissions,
   downloadSubmissionFile,
+  deleteAssignment,
 } = require("../controllers/assignmentController");
 
 // All assignment routes require authentication
@@ -49,6 +50,13 @@ router.get(
   "/submissions/:submissionId/download",
   authorize("teacher"),
   downloadSubmissionFile
+);
+
+// DELETE /api/classes/:classId/assignments/:assignmentId — delete assignment
+router.delete(
+  "/:assignmentId",
+  authorize("teacher"),
+  deleteAssignment
 );
 
 module.exports = router;

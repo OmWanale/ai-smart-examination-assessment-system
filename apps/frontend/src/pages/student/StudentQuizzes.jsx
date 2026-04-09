@@ -109,13 +109,13 @@ export function StudentQuizzes() {
                 <Card key={quizId} className="hover:shadow-warm hover:-translate-y-0.5 transition-all duration-300">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
                     <div>
-                      <h3 className="text-xl font-display font-semibold text-text-dark dark:text-dark-text">{quiz.title}</h3>
-                      <p className="text-sm text-neutral-500 dark:text-dark-muted mt-1">From: {quiz.className}</p>
+                      <h3 className="text-xl font-display font-semibold text-text-dark dark:text-slate-100">{quiz.title}</h3>
+                      <p className="text-sm text-neutral-500 dark:text-slate-400 mt-1">From: {quiz.className}</p>
                     </div>
                     <Badge variant={status.variant}>{status.label}</Badge>
                   </div>
                   
-                  <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-dark-muted mb-5">
+                  <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-slate-400 mb-5">
                     <span className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

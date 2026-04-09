@@ -8,8 +8,8 @@ export function NotFoundPage() {
         <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 text-white text-4xl font-bold mb-6 shadow-lg">
           404
         </div>
-        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-dark-text mb-3">Page Not Found</h2>
-        <p className="text-neutral-600 dark:text-dark-muted mb-8 max-w-md">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-slate-100 mb-3">Page Not Found</h2>
+        <p className="text-neutral-600 dark:text-slate-400 mb-8 max-w-md">
           Oops! The page you're looking for seems to have wandered off.
         </p>
         <Link to="/">
@@ -32,8 +32,8 @@ export function UnauthorizedPage() {
         <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-error-400 to-error-600 text-white text-4xl font-bold mb-6 shadow-lg">
           403
         </div>
-        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-dark-text mb-3">Unauthorized</h2>
-        <p className="text-neutral-600 dark:text-dark-muted mb-8 max-w-md">
+        <h2 className="text-2xl font-display font-bold text-text-dark dark:text-slate-100 mb-3">Unauthorized</h2>
+        <p className="text-neutral-600 dark:text-slate-400 mb-8 max-w-md">
           Sorry, you don't have permission to access this page.
         </p>
         <Link to="/">

@@ -549,12 +549,11 @@ export function QuestionPaper() {
                 <select
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
-                  className="w-full px-4 py-3 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-slate-100"
-                  style={{ color: '#202124' }}
+                  className="w-full h-[50px] px-4 bg-neutral-50 dark:bg-dark-hover border border-neutral-200 dark:border-dark-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 text-text-dark dark:text-slate-100"
                 >
-                  <option value="easy">Easy</option>
-                  <option value="medium">Medium</option>
-                  <option value="hard">Hard</option>
+                  <option value="easy" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Easy</option>
+                  <option value="medium" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Medium</option>
+                  <option value="hard" style={{ color: '#202124', backgroundColor: '#ffffff' }}>Hard</option>
                 </select>
               </div>
 

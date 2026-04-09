@@ -17,9 +17,27 @@ export function QuizAttempt() {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [tabSwitchWarnings, setTabSwitchWarnings] = useState(0);
 
   const timerRef = useRef(null);
+  const lastViolationAtRef = useRef(0);
+  const examTerminatedRef = useRef(false);
+  const answersRef = useRef({});
+  const isSubmittingRef = useRef(false);
+  const hasSubmittedRef = useRef(false);
   const { submitQuiz } = useQuizStore();
+
+  useEffect(() => {
+    answersRef.current = answers;
+  }, [answers]);
+
+  useEffect(() => {
+    isSubmittingRef.current = isSubmitting;
+  }, [isSubmitting]);
+
+  useEffect(() => {
+    hasSubmittedRef.current = hasSubmitted;
+  }, [hasSubmitted]);
 
   useEffect(() => {
     loadQuiz();
@@ -82,16 +100,21 @@ export function QuizAttempt() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleSubmit = async (finalAnswers) => {
+  const handleSubmit = async (finalAnswers, options = {}) => {
+    const { forceSubmit = false } = options;
     if (isSubmitting || hasSubmitted) return;
 
-    // Transform answers from { questionIndex: selectedOptionIndex } to backend format
-    const answersArray = Object.entries(finalAnswers)
-      .filter(([_, optionIdx]) => optionIdx !== null)
-      .map(([questionIdx, selectedOptionIdx]) => ({
-        questionIndex: parseInt(questionIdx, 10),
-        selectedOptionIndex: selectedOptionIdx,
-      }));
+    // Transform answers from { questionIndex: selectedOptionIndex } to backend format.
+    // For forced termination, unanswered questions are auto-filled with option 0 so submission is final.
+    const answersArray = (quiz?.questions || []).map((question, questionIdx) => {
+      const selectedOptionIdx = finalAnswers[questionIdx];
+      const fallbackOption = question?.options?.length ? 0 : 0;
+      return {
+        questionIndex: questionIdx,
+        selectedOptionIndex:
+          typeof selectedOptionIdx === 'number' ? selectedOptionIdx : fallbackOption,
+      };
+    });
 
     console.log('QuizAttempt: Submitting quiz', {
       quizId,
@@ -100,8 +123,8 @@ export function QuizAttempt() {
       quizQuestionsCount: quiz?.questions?.length,
     });
 
-    // Validate we have answers for all questions
-    if (answersArray.length !== (quiz?.questions?.length || 0)) {
+    // Validate all questions answered for normal manual submit
+    if (!forceSubmit && Object.values(finalAnswers).some((value) => value === null)) {
       setError(`Please answer all ${quiz?.questions?.length || 0} questions before submitting.`);
       return;
     }
@@ -133,6 +156,61 @@ export function QuizAttempt() {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (!quiz || hasSubmitted) return undefined;
+
+    const handleViolation = () => {
+      if (examTerminatedRef.current || isSubmittingRef.current || hasSubmittedRef.current) {
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastViolationAtRef.current < 800) {
+        return;
+      }
+      lastViolationAtRef.current = now;
+
+      setTabSwitchWarnings((prev) => {
+        const nextCount = prev + 1;
+
+        if (nextCount >= 3) {
+          examTerminatedRef.current = true;
+          clearInterval(timerRef.current);
+          window.alert(
+            'This is your 3rd tab switch. Your exam is terminated and you cannot attempt this quiz again.'
+          );
+          handleSubmit(answersRef.current, { forceSubmit: true });
+          return nextCount;
+        }
+
+        const remainingWarnings = 2 - nextCount;
+        window.alert(
+          `Warning ${nextCount}/2: Do not switch tabs or leave the exam screen. ${remainingWarnings} warning${remainingWarnings === 1 ? '' : 's'} left before termination.`
+        );
+        return nextCount;
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation();
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleViolation();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [quiz, hasSubmitted]);
 
   const handleAnswerChange = (questionIdx, optionIdx) => {
     setAnswers({
@@ -234,6 +312,10 @@ export function QuizAttempt() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
+        <Alert type="warning" className="mb-6">
+          Switching tabs/leaving screen gives 2 warnings. On the 3rd violation, your exam is terminated and cannot be attempted again.
+        </Alert>
+
         {error && (
           <Alert type="error" className="mb-6" dismissible onDismiss={() => setError(null)}>
             {error}

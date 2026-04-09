@@ -36,7 +36,7 @@ const ChevronIcon = ({ open }) => (
 /* ══════════════════════════════════════════════════════════
    Sidebar  —  Google Classroom layout
    ══════════════════════════════════════════════════════════ */
-export function Sidebar() {
+export function Sidebar({ isVisible = true }) {
   const { user } = useAuthStore();
   const { classes } = useQuizStore();
   const location = useLocation();
@@ -51,7 +51,7 @@ export function Sidebar() {
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   return (
-    <aside className="gc-sidebar">
+    <aside className={`gc-sidebar ${isVisible ? '' : 'gc-sidebar-collapsed'}`}>
       {/* ── Top nav: Home & Calendar ── */}
       <div className="pt-2 pb-1">
         <Link
